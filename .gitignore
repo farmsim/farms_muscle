@@ -1,0 +1,11 @@
+#: CPP
+build
+*.so
+*.dylib
+*.exe
+
+#: Python
+*.pyc
+
+#: Temp
+*.*~
