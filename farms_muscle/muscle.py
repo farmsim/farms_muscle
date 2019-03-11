@@ -2,10 +2,14 @@
 
 """Muscle abstract class"""
 
-from abc import ABC, abstractmethod
+import abc
+import six
+
+# SIX is only suppported for python2 and will be deprecated soon
 
 
-class Muscle(ABC):
+@six.add_metaclass(abc.ABCMeta)
+class Muscle():
     """Muscle abstract class.
     """
 
