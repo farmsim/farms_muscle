@@ -8,8 +8,87 @@ import six
 # SIX is only suppported for python2 and will be deprecated soon
 
 
+########## DATA CONTAINERS ##########
+class MuscleLengthInfo(object):
+    """Container for Muscle Length Info attributes.
+    """
+
+    def __init__(self):
+        """Initialize"""
+        super(MuscleLengthInfo, self).__init__()
+        #: Attributes
+        self.fiber_length = 0.0
+        self.fiber_length_along_tendon = 0.0
+        self.norm_fiber_length = 0.0
+
+        self.tendon_length = 0.0
+        self.norm_tendon_length = 0.0
+        self.tendon_strain = 0.0
+
+        self.pennation_angle = 0.0
+        self.cos_pennation_angle = 0.0
+        self.sin_pennation_angle = 0.0
+
+
+class MuscleVelocityInfo(object):
+    """Container for Muscle Velocity info attributes.
+    """
+
+    def __init__(self):
+        """Initialize.
+        """
+        super(MuscleVelocityInfo, self).__init__()
+        #: Attributes
+        self.fiber_velocity = 0.0
+        self.fiber_velocity_along_tendon = 0.0
+        self.norm_fiber_velocity = 0.0
+        self.tendon_velocity = 0.0
+        self.norm_tendon_velocity = 0.0
+
+
 @six.add_metaclass(abc.ABCMeta)
-class Muscle():
+class MuscleDynamicsInfo():
+    """Container for Muscle Dynamics info attributes.
+    """
+
+    def __init__(self):
+        super(MuscleDynamicsInfo, self).__init__()
+        self._activation = 0.0
+
+        self._fiber_force = 0.0
+        self._fiber_force_along_tendon = 0.0
+        self._norm_fiber_force = 0.0
+        self._active_fibre_force = 0.0
+        self._passive_fiber_force = 0.0
+
+        self._tendon_force = 0.0
+        self._norm_tendon_force = 0.0
+
+        self._fiber_stiffness = 0.0
+        self._fiber_stiffness_along_tendon = 0.0
+        self._tendon_stiffness = 0.0
+        self._muscle_stiffness = 0.0
+
+        self._fiber_active_power = 0.0
+        self._fiber_passive_power = 0.0
+        self._tendon_power = 0.0
+        self._muscle_power = 0.0
+
+    @property
+    @abc.abstractmethod
+    def tendon_force(self):
+        """Get the tendon force.  """
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def fiber_force(self):
+        """Get the tendon force.  """
+        raise NotImplementedError()
+
+
+@six.add_metaclass(abc.ABCMeta)
+class Muscle(MuscleLengthInfo, MuscleVelocityInfo, MuscleDynamicsInfo):
     """Muscle abstract class.
     """
 
