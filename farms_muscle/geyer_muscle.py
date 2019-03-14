@@ -198,7 +198,7 @@ class GeyerMuscle(Muscle):
             ['f_v'])
 
     def _setup_contractile_velocity(self):
-        """ Define the contractile velocity.  """
+        """ Define the contractile velocity."""
         _f_v = cas.SX.sym('f_v')
         _v_ce_1 = self._v_max.val*self._l_opt.val * \
             (1. - _f_v)/(1. + _f_v*GeyerMuscle.K)
