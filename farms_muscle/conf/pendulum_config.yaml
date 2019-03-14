@@ -1,0 +1,27 @@
+animal : 'pendulum'
+
+##############################
+#                            #
+#          MUSCLES           #
+#                            #
+##############################
+
+muscles:
+  muscle:
+    model: 'geyer'
+    m_id: '1'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'

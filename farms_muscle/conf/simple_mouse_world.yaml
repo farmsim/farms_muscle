@@ -1,0 +1,333 @@
+animal: mouse
+
+##############################
+#                            #
+#          MUSCLES           #
+#                            #
+##############################
+
+muscles:
+  LH_M_PMA:
+    name: LH_M_PMA
+    model: geyer
+    m_id: LH_M_PMA
+    l_opt: 0.00697
+    joint_attach: LH_J_HIP
+    theta_ref: 18.6868
+    f_max: 1.338
+    muscle_type: mono
+    theta_max: 43.9393
+    v_max: -12
+    l_slack: 0.00501
+    pennation: 0.728
+    r_0: 0.0019686
+    direction: cclockwise
+  LH_M_CF:
+    name: LH_M_CF
+    model: geyer
+    m_id: LH_M_CF
+    l_opt: 0.01137
+    joint_attach: LH_J_HIP
+    theta_ref: 13.63636
+    f_max: 0.554
+    muscle_type: mono
+    theta_max: -16.6667
+    v_max: -12
+    l_slack: 0.00307
+    pennation: 1
+    r_0: 0.00252498
+    direction: clockwise
+  LH_M_SM:
+    name: LH_M_SM
+    model: geyer
+    m_id: LH_M_SM
+    l_opt: 0.01165
+    joint_attach2: LH_J_KNEE
+    joint_attach: LH_J_HIP
+    theta_ref: 35.8585
+    theta_ref2: -99.5959
+    f_max: 1.916
+    muscle_type: bi
+    theta_max: 10.606061
+    theta_max2: -95.20202
+    v_max: -12
+    l_slack: 0.00409
+    pennation: 1
+    r_0: 0.00558936
+    r_02: 0.00574158
+    direction: clockwise
+    direction2: clockwise
+  LH_M_POP:
+    name: LH_M_POP
+    model: geyer
+    m_id: LH_M_POP
+    l_opt: 0.00206
+    joint_attach: LH_J_KNEE
+    theta_ref: -118.6363
+    f_max: 0.307
+    muscle_type: mono
+    theta_max: -136.21212
+    v_max: -12
+    l_slack: 0.00203
+    pennation: 1
+    r_0: 0.00087184
+    direction: clockwise
+  LH_M_RF:
+    name: LH_M_RF
+    model: geyer
+    m_id: LH_M_RF
+    l_opt: 0.00534
+    joint_attach: LH_J_KNEE
+    theta_ref: -103.98989
+    f_max: 4.162
+    muscle_type: mono
+    theta_max: -29.29292
+    v_max: -12
+    l_slack: 0.00853
+    pennation: 0.7226
+    r_0: 0.00162329
+    direction: cclockwise
+  LH_M_TA:
+    name: LH_M_TA
+    model: geyer
+    m_id: LH_M_TA
+    l_opt: 0.0049
+    joint_attach: LH_J_ANKLE
+    theta_ref: 22.7273
+    f_max: 2.422
+    muscle_type: mono
+    theta_max: 10.6061
+    v_max: -12
+    l_slack: 0.0118
+    pennation: 1
+    r_0: 0.0007748
+    direction: cclockwise
+  LH_M_SOL:
+    name: LH_M_SOL
+    model: geyer
+    m_id: LH_M_SOL
+    l_opt: 0.00316
+    joint_attach: LH_J_ANKLE
+    theta_ref: -2.5253
+    f_max: 0.591
+    muscle_type: mono
+    theta_max: 2.5253
+    v_max: -12
+    l_slack: 0.0074
+    pennation: 1
+    r_0: 0.00184
+    direction: clockwise
+  LH_M_LG:
+    name: LH_M_LG
+    model: geyer
+    m_id: LH_M_LG
+    l_opt: 0.00541
+    joint_attach2: LH_J_ANKLE
+    joint_attach: LH_J_KNEE
+    theta_ref: -38.0808
+    theta_ref2: 20.70707
+    f_max: 3.784
+    muscle_type: bi
+    theta_max: -45.404
+    theta_max2: -0.505
+    v_max: -12
+    l_slack: 0.01389
+    pennation: 0.6984
+    r_0: 0.001221
+    r_02: 0.001996
+    direction: clockwise
+    direction2: clockwise
+  RH_M_PMA:
+    name: RH_M_PMA
+    model: geyer
+    m_id: RH_M_PMA
+    l_opt: 0.00697
+    joint_attach: RH_J_HIP
+    theta_ref: 18.6868
+    f_max: 1.338
+    muscle_type: mono
+    theta_max: 43.9393
+    v_max: -12
+    l_slack: 0.00501
+    pennation: 0.728
+    r_0: 0.0019686
+    direction: cclockwise
+  RH_M_CF:
+    name: RH_M_CF
+    model: geyer
+    m_id: RH_M_CF
+    l_opt: 0.01137
+    joint_attach: RH_J_HIP
+    theta_ref: 13.63636
+    f_max: 0.554
+    muscle_type: mono
+    theta_max: -16.6667
+    v_max: -12
+    l_slack: 0.00307
+    pennation: 1
+    r_0: 0.00252498
+    direction: clockwise
+  RH_M_SM:
+    name: RH_M_SM
+    model: geyer
+    m_id: RH_M_SM
+    l_opt: 0.01165
+    joint_attach2: RH_J_KNEE
+    joint_attach: RH_J_HIP
+    theta_ref: 35.8585
+    theta_ref2: -99.5959
+    f_max: 1.916
+    muscle_type: bi
+    theta_max: 10.606061
+    theta_max2: -95.20202
+    v_max: -12
+    l_slack: 0.00409
+    pennation: 1
+    r_0: 0.00558936
+    r_02: 0.00574158
+    direction: clockwise
+    direction2: clockwise
+  RH_M_POP:
+    name: RH_M_POP
+    model: geyer
+    m_id: RH_M_POP
+    l_opt: 0.00206
+    joint_attach: RH_J_KNEE
+    theta_ref: -118.6363
+    f_max: 0.307
+    muscle_type: mono
+    theta_max: -136.21212
+    v_max: -12
+    l_slack: 0.00203
+    pennation: 1
+    r_0: 0.00087184
+    direction: clockwise
+  RH_M_RF:
+    name: RH_M_RF
+    model: geyer
+    m_id: RH_M_RF
+    l_opt: 0.00534
+    joint_attach: RH_J_KNEE
+    theta_ref: -103.98989
+    f_max: 4.162
+    muscle_type: mono
+    theta_max: -29.29292
+    v_max: -12
+    l_slack: 0.00853
+    pennation: 0.7226
+    r_0: 0.00162329
+    direction: cclockwise
+  RH_M_TA:
+    name: RH_M_TA
+    model: geyer
+    m_id: RH_M_TA
+    l_opt: 0.0049
+    joint_attach: RH_J_ANKLE
+    theta_ref: 22.7273
+    f_max: 2.422
+    muscle_type: mono
+    theta_max: 10.6061
+    v_max: -12
+    l_slack: 0.0118
+    pennation: 1
+    r_0: 0.0007748
+    direction: cclockwise
+  RH_M_SOL:
+    name: RH_M_SOL
+    model: geyer
+    m_id: RH_M_SOL
+    l_opt: 0.00316
+    joint_attach: RH_J_ANKLE
+    theta_ref: -2.5253
+    f_max: 0.591
+    muscle_type: mono
+    theta_max: 2.5253
+    v_max: -12
+    l_slack: 0.0074
+    pennation: 1
+    r_0: 0.00184
+    direction: clockwise
+  RH_M_LG:
+    name: RH_M_LG
+    model: geyer
+    m_id: RH_M_LG
+    l_opt: 0.00541
+    joint_attach2: RH_J_ANKLE
+    joint_attach: RH_J_KNEE
+    theta_ref: -38.0808
+    theta_ref2: 20.70707
+    f_max: 3.784
+    muscle_type: bi
+    theta_max: -45.404
+    theta_max2: -0.505
+    v_max: -12
+    l_slack: 0.01389
+    pennation: 0.6984
+    r_0: 0.001221
+    r_02: 0.001996
+    direction: clockwise
+    direction2: clockwise
+
+##############################
+#                            #
+#          JOINTS            #
+#                            #
+##############################
+joints:
+  LH_J_HIP:
+    name: LH_J_HIP
+    model: geyer
+    theta_max: 50
+    reference_angle: 50
+    init_angle: 0
+    theta_min: -50
+    joint_type: CONSTANT
+  LH_J_KNEE:
+    name: LH_J_KNEE
+    model: geyer
+    theta_max: -45
+    reference_angle: -150
+    theta_min: -150
+    joint_type: CONSTANT
+  LH_J_ANKLE:
+    name: LH_J_ANKLE
+    model: geyer
+    joint_type: CONSTANT
+    theta_min: -50
+    reference_angle: 30
+    theta_max: 50
+  LH_J_MTP:
+    name: LH_J_MTP
+    model: geyer
+    joint_type: CONSTANT
+    theta_min: 0
+    reference_angle: 0
+    theta_max: 50
+  RH_J_HIP:
+    name: RH_J_HIP
+    model: geyer
+    theta_max: 50
+    reference_angle: 50
+    theta_min: -50
+    joint_type: CONSTANT
+  RH_J_KNEE:
+    name: RH_J_KNEE
+    model: geyer
+    theta_max: -45
+    reference_angle: -150
+    theta_min: -150
+    joint_type: CONSTANT
+  RH_J_ANKLE:
+    name: RH_J_ANKLE
+    model: geyer
+    joint_type: CONSTANT
+    theta_min: -50
+    reference_angle: 30
+    theta_max: 50
+  RH_J_MTP:
+    name: RH_J_MTP
+    model: geyer
+    joint_type: CONSTANT
+    theta_min: 0
+    reference_angle: 0
+    theta_max: 50
