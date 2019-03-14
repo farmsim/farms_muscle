@@ -89,7 +89,7 @@ class GeyerMuscle(Muscle):
         #: Muscle Contractile Length
         self._l_ce = self.dae.add_x('l_ce_' + self.m_id,
                                     parameters.l_ce0)
-        #: Muscle Acitvation
+        #: Muscle Activation
         self._activation = self.dae.add_x('A_' + self.m_id,
                                           parameters.a0)
 
@@ -98,102 +98,204 @@ class GeyerMuscle(Muscle):
         #: External Muscle stimulation
         self._stim = self.dae.add_u('stim_' + self.m_id)
 
-        def ode_rhs(self):
-            """Muscle Model ODE rhs.
+    ########## SETUP METHODS ##########
+
+    def _setup_tendon_force(self):
+        """ Setup the casadi equations for tendon force. """
+        _l_se = cas.SX.sym('l_se')
+        _eqn = (self._f_max.val * (
+            (_l_se - self._l_slack.val) / (
+                self._l_slack.val * self.e_ref))**2) * (
+                    _l_se > self._l_slack.val)
+        self._tendon_force = cas.Function(
+            'tendon_force', {_l_se},
+            {_eqn}, {'l_se'}, {'f_se'})
+
+    def _setup_parallel_star_force(self):
+        """ Setup the casadi equations for parallell star pe*  """
+        _l_ce = cas.SX.sym('l_ce')
+        _eqn = (self._f_max.val * (
+            (_l_ce - self._l_opt.val) / (self._l_opt.val * self.w))**2)*(
+            _l_ce > self._l_opt.val)
+        self._parallel_star_force = cas.Function(
+            'parallel_star_force', {_l_ce},
+            {_eqn}, {'l_ce'}, {'f_pe_star'})
+
+    def _setup_belly_force(self):
+        """ Setup the casadi equations for belly force  """
+        _l_ce = cas.SX.sym('l_ce')
+        _f_be_cond = self._l_opt.val * (1.0 - self.w)
+        _eqn = ((self._f_max.val * (
+                (_l_ce - self._l_opt.val * (1.0 - self.w)) / (
+                    self._l_opt.val * self.w / 2.0))**2)) * (
+            _l_ce <= _f_be_cond)
+        self._belly_force = cas.Function(
+            'belly_force', {_l_ce},
+            {_eqn}, {'l_ce'}, {'f_be'})
+
+    def _setup_activation_rate(self):
+        """ Define the change in activation. dA/dt. """
+        _act = cas.SX.sym('act')
+        _stim = cas.SX.sym('stim')
+        _stim_range = cas.fmax(0.01, cas.fmin(_stim, 1.))
+        _eqn = (_stim_range - _act)/GeyerMuscle.tau_act
+        self._d_act = cas.Function(
+            'activation_rate', {_act, _stim}, {_eqn},
+            {'act, stim'}, {'dA/dt'})
+
+    def _setup_force_length(self):
+        """ Define the force length relationship. """
+        _l_ce = cas.SX.sym('l_ce')
+        val = cas.fabs(
+            (_l_ce - self._l_opt.val) / (self._l_opt.val * self.w))
+        exposant = GeyerMuscle.c * val**3
+        _eqn = cas.exp(exposant)
+        self._force_length = cas.Function(
+            'force_length', {_l_ce},
+            {_eqn}, {'l_ce'}, {'f_l'})
+
+    def _setup_force_velocity(self):
+        """ Define the force velocity relationship. """
+        _v_ce = cas.SX.sym('v_ce')
+        _f_v_ce_eqn_1 = (
+            self._v_max.val - _v_ce)/(self._v_max.val + GeyerMuscle.K*_v_ce)
+        _f_v_ce_eqn_2 = GeyerMuscle.N + ((GeyerMuscle.N - 1)*(
+            self._v_max.val + _v_ce)/(7.56*GeyerMuscle.K*_v_ce - self._v_max.val))
+        _eqn = cas.if_else(_v_ce >= 0.0, _f_v_ce_eqn_1, _f_v_ce_eqn_2)
+        self._force_velocity = cas.Function(
+            'force_velocity', {_v_ce},
+            {_eqn}, {'v_ce'}, {'f_v'})
+
+    def _setup_force_velocity_from_force(self):
+        """ Define the force velocity relationship from forces."""
+        _f_se = cas.SX.sym('f_se')
+        _f_be = cas.SX.sym('f_be')
+        _act = cas.SX.sym('act')
+        _f_l = cas.SX.sym('f_l')
+        _f_pe_star = cas.SX.sym('f_pe_star')
+        _f_v_ce_eqn_1 = (
+            _f_se + _f_be)/((self._f_max.val*_act*_f_l) + _f_pe_star)
+        #: Check these TOLERANCES
+        _eqn = cas.if_else(
+            -1e-6 < (self._f_max.val*_act*_f_l)+_f_pe_star < 1e-6, 0.0,
+            _f_v_ce_eqn_1)
+        self._force_velocity_from_force = cas.Function(
+            'force_velocity_from_forces',
+            {_f_se, _f_be, _act, _f_l, _f_pe_star},
+            {_eqn}, {'_f_se', '_f_be', '_act', '_f_l', '_f_pe_star'},
+            {'f_v'})
+
+    def _setup_contractile_velocity(self):
+        """ Define the contractile velocity.  """
+        _f_v = cas.SX.sym('f_v')
+        _v_ce_1 = self._v_max.val*self._l_opt.val * \
+            (1. - _f_v)/(1. + _f_v*GeyerMuscle.K)
+        _v_ce_2 = self._v_max.val*self._l_opt.val * \
+            (_f_v - 1.0)/(7.56*GeyerMuscle.K *
+                          (_f_v - GeyerMuscle.N) + 1. - GeyerMuscle.N)
+        _eqn = cas.if_else(_f_v < 1.0, _v_ce_1, _v_ce_2)
+        self._contractile_velocity = cas.Function(
+            'contractile_velocity',
+            {_f_v},
+            {_eqn}, {'_f_v'},
+            {'v_ce'})
+
+    @property
+    def tendon_force(self):
+        """ Get the tendon force. """
+        return self._tendon_force(self.tendon_length)
+
+    def ode_rhs(self):
+        """Muscle Model ODE rhs.
             Returns
             ----------
             ode_rhs: list<cas.SX>
                 description
-            """
+        """
 
-            #: Bandpass l_ce
-            #b, a = signal.butter(2, 50, 'low', analog=True)
-            #l_ce_filt = signal.lfilter(b, a, self._l_ce.sym)
+        #: Bandpass l_ce
+        # b, a = signal.butter(2, 50, 'low', analog=True)
+        # l_ce_filt = signal.lfilter(b, a, self._l_ce.sym)
 
-            l_ce_tol = cas.fmax(self._l_ce.sym, 0.0)
-            _stim = cas.fmax(0.01, cas.fmin(self._stim.sym, 1.))
+        l_ce_tol = cas.fmax(self._l_ce.sym, 0.0)
+        _stim = cas.fmax(0.01, cas.fmin(self._stim.sym, 1.))
 
-            #: Algrebaic Equation
-            l_mtc = self._l_slack.val + self._l_opt.val + self._delta_length.sym
-            l_se = l_mtc - l_ce_tol
+        #: Algrebaic Equation
+        l_mtc = self._l_slack.val + self._l_opt.val + self._delta_length.sym
+        l_se = l_mtc - l_ce_tol
 
-            #: Muscle Acitvation Dynamics
-            self._dA.sym = (
-                _stim - self._activation.sym)/GeyerMuscle.tau_act
+        #: Muscle Acitvation Dynamics
+        self._dA.sym = (
+            _stim - self._activation.sym)/GeyerMuscle.tau_act
 
-            #: Muscle Dynamics
-            #: Series Force
+        #: Muscle Dynamics
+        #: Series Force
 
-            _f_se = (self._f_max.val * (
-                (l_se - self._l_slack.val) / (
-                    self._l_slack.val * self.e_ref))**2) * (
-                        l_se > self._l_slack.val)
+        _f_se = (self._f_max.val * (
+            (l_se - self._l_slack.val) / (
+                self._l_slack.val * self.e_ref))**2) * (
+            l_se > self._l_slack.val)
 
-            _f_se_eqn = cas.Function(
-                'tendon_force',
-                [self._l_ce_sym, self._delta_length.sym],
-                _f_se)
+        #: Muscle Belly Force
+        _f_be_cond = self._l_opt.val * (1.0 - self.w)
 
-            #: Muscle Belly Force
-            _f_be_cond = self._l_opt.val * (1.0 - self.w)
+        _f_be = (
+            (self._f_max.val * (
+                (l_ce_tol - self._l_opt.val * (1.0 - self.w)) / (
+                    self._l_opt.val * self.w / 2.0))**2)) * (
+            l_ce_tol <= _f_be_cond)
 
-            _f_be = (
-                (self._f_max.val * (
-                    (l_ce_tol - self._l_opt.val * (1.0 - self.w)) / (
-                        self._l_opt.val * self.w / 2.0))**2)) * (
-                l_ce_tol <= _f_be_cond)
+        #: Force-Length Relationship
+        val = cas.fabs(
+            (l_ce_tol - self._l_opt.val) / (self._l_opt.val * self.w))
+        exposant = GeyerMuscle.c * val**3
+        _f_l = cas.exp(exposant)
 
-            #: Force-Length Relationship
-            val = cas.fabs(
-                (l_ce_tol - self._l_opt.val) / (self._l_opt.val * self.w))
-            exposant = GeyerMuscle.c * val**3
-            _f_l = cas.exp(exposant)
+        #: Force Parallel Element
+        _f_pe_star = (self._f_max.val * (
+            (l_ce_tol - self._l_opt.val) / (self._l_opt.val * self.w))**2)*(
+            l_ce_tol > self._l_opt.val)
 
-            #: Force Parallel Element
-            _f_pe_star = (self._f_max.val * (
-                (l_ce_tol - self._l_opt.val) / (self._l_opt.val * self.w))**2)*(
-                    l_ce_tol > self._l_opt.val)
+        #: Force Velocity Inverse Relation
+        _f_v_eq = ((
+            self._f_max.val * self._activation.sym * _f_l) + _f_pe_star)
 
-            #: Force Velocity Inverse Relation
-            _f_v_eq = ((
-                self._f_max.val * self._activation.sym * _f_l) + _f_pe_star)
+        f_v_cond = cas.logic_and(
+            _f_v_eq < self.tol, _f_v_eq > -self.tol)
 
-            f_v_cond = cas.logic_and(
-                _f_v_eq < self.tol, _f_v_eq > -self.tol)
+        _f_v = cas.if_else(f_v_cond, 0.0, (_f_se + _f_be) / ((
+            self._f_max.val * self._activation.sym * _f_l) + _f_pe_star))
 
-            _f_v = cas.if_else(f_v_cond, 0.0, (_f_se + _f_be) / ((
-                self._f_max.val * self._activation.sym * _f_l) + _f_pe_star))
+        f_v = cas.fmax(0.0, cas.fmin(_f_v, 1.5))
 
-            f_v = cas.fmax(0.0, cas.fmin(_f_v, 1.5))
+        self._v_ce.sym = cas.if_else(
+            f_v < 1.0, self._v_max.sym * self._l_opt.val * (
+                1.0 - f_v) / (1.0 + f_v * GeyerMuscle.K),
+            self._v_max.sym*self._l_opt.val * (f_v - 1.0) / (
+                7.56 * GeyerMuscle.K *
+                (f_v - GeyerMuscle.N) + 1.0 - GeyerMuscle.N
+            ))
 
-            self._v_ce.sym = cas.if_else(
-                f_v < 1.0, self._v_max.sym * self._l_opt.val * (
-                    1.0 - f_v) / (1.0 + f_v * GeyerMuscle.K),
-                self._v_max.sym*self._l_opt.val * (f_v - 1.0) / (
-                    7.56 * GeyerMuscle.K *
-                    (f_v - GeyerMuscle.N) + 1.0 - GeyerMuscle.N
-                ))
+        #: Active, Passive, Tendon Force Computation
+        _f_v_ce = cas.if_else(
+            self._v_ce.sym < 0.,
+            (self._v_max.sym*self._l_opt.val - self._v_ce.sym) /
+            (self._v_max.sym*self._l_opt.val + GeyerMuscle.K * self._v_ce.sym),
+            GeyerMuscle.N + (GeyerMuscle.N - 1) * (
+                self._v_max.sym*self._l_opt.val + self._v_ce.sym
+            ) / (
+                7.56 * GeyerMuscle.K * self._v_ce.sym - self._v_max.sym*self._l_opt.val
+            ))
 
-            #: Active, Passive, Tendon Force Computation
-            _f_v_ce = cas.if_else(
-                self._v_ce.sym < 0.,
-                (self._v_max.sym*self._l_opt.val - self._v_ce.sym) /
-                (self._v_max.sym*self._l_opt.val + GeyerMuscle.K * self._v_ce.sym),
-                GeyerMuscle.N + (GeyerMuscle.N - 1) * (
-                    self._v_max.sym*self._l_opt.val + self._v_ce.sym
-                ) / (
-                    7.56 * GeyerMuscle.K * self._v_ce.sym - self._v_max.sym*self._l_opt.val
-                ))
+        self._a_force = self._activation.sym * _f_v_ce * _f_l * self._f_max.val
+        self._p_force = _f_pe_star*_f_v - _f_be
+        self._t_force = _f_se
 
-            self._a_force = self._activation.sym * _f_v_ce * _f_l * self._f_max.val
-            self._p_force = _f_pe_star*_f_v - _f_be
-            self._t_force = _f_se
+        self._alg_tendon_force.sym = self._z_tendon_force.sym - self._t_force
+        self._alg_active_force.sym = self._z_active_force.sym - self._a_force
+        self._alg_passive_force.sym = self._z_passive_force.sym - self._p_force
+        self._alg_v_ce.sym = self._z_v_ce.sym - self._v_ce.sym
+        self._alg_l_mtc.sym = self._z_l_mtc.sym - l_mtc
+        self._alg_dact.sym = self._z_dact.sym - self._dA.sym
 
-            self._alg_tendon_force.sym = self._z_tendon_force.sym - self._t_force
-            self._alg_active_force.sym = self._z_active_force.sym - self._a_force
-            self._alg_passive_force.sym = self._z_passive_force.sym - self._p_force
-            self._alg_v_ce.sym = self._z_v_ce.sym - self._v_ce.sym
-            self._alg_l_mtc.sym = self._z_l_mtc.sym - l_mtc
-            self._alg_dact.sym = self._z_dact.sym - self._dA.sym
-
-            return True
+        return True
