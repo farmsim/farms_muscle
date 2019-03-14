@@ -106,6 +106,9 @@ class GeyerMuscle(Muscle):
         #: Setup all functions
         self._setup_all()
 
+        #: Generate the ODE
+        self.ode_rhs()
+
     ########## SETUP METHODS ##########
 
     def _setup_tendon_force(self):
@@ -273,6 +276,35 @@ class GeyerMuscle(Muscle):
 
         self._v_ce.sym = self._contractile_velocity(_f_v)
         return True
+
+    def update(self, stim, delta_length):
+        """ Applies force to the joint and computes change in muscle length """
+        self._stim.val = stim
+        self._delta_length.val = delta_length
+
+    def initialize_muscle_length(self):
+        """ Initialize muscle length."""
+        delta_length = 0.0
+
+        #: Algrebaic Equation
+        l_mtc = self._l_slack.val + \
+            self._l_opt.val + delta_length
+
+        if l_mtc < (self._l_slack.val + self._l_opt.val):
+            l_ce = self._l_opt.val
+            l_se = l_mtc - l_ce
+        else:
+            if self._l_opt.val * self.w + self.e_ref * self._l_slack.val != 0.0:
+                l_se = self._l_slack.val * ((self._l_opt.val * self.w + self.e_ref * (
+                    l_mtc - self._l_opt.val)) / (
+                        self._l_opt.val * self.w + self.e_ref * self._l_slack.val))
+            else:
+                l_se = self._l_slack.val
+
+            l_ce = l_mtc - l_se
+
+        #: Initialize the muscle length
+        self._l_ce.val = l_ce
 
 
 def main():
