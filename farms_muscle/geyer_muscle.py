@@ -232,6 +232,12 @@ class GeyerMuscle(Muscle):
         return self._tendon_force(self.tendon_length)
 
     @property
+    def tendon_length(self):
+        """ Get tendon length  """
+        return self._l_opt.val + self._l_slack.val + \
+            self._delta_length.val - self._l_ce.val
+
+    @property
     def fiber_force(self):
         """Get the tendon force.  """
         pass
@@ -251,8 +257,8 @@ class GeyerMuscle(Muscle):
         l_se = l_mtc - l_ce_tol
 
         #: Muscle Acitvation Dynamics
-        self._dA.sym = self._d_act(self._stim.sym,
-                                   self._activation.sym)
+        self._dA.sym = self._d_act(self._activation.sym,
+                                   self._stim.sym)
 
         # #: Muscle Dynamics
         # #: Series Force
