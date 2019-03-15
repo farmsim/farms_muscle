@@ -9,8 +9,8 @@ import numpy as np
 import yaml
 
 from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
-from geyer_muscle import GeyerMuscle
-from parameters import MuscleParameters
+from .geyer_muscle import GeyerMuscle
+from .parameters import MuscleParameters
 
 biolog.set_level('debug')
 
