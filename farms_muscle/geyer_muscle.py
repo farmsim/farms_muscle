@@ -1,6 +1,6 @@
 """Implementation of Geyer muscle model."""
 
-from muscle import Muscle
+from .muscle import Muscle
 import numpy as np
 import casadi as cas
 
@@ -114,10 +114,9 @@ class GeyerMuscle(Muscle):
     def _setup_tendon_force(self):
         """ Setup the casadi equations for tendon force. """
         _l_se = cas.SX.sym('l_se')
-        _eqn = (self._f_max.val * (
-            (_l_se - self._l_slack.val) / (
-                self._l_slack.val * self.e_ref))**2) * (
-                    _l_se > self._l_slack.val)
+        _strain = (_l_se - self._l_slack.val) / (self._l_slack.val)
+        _eqn = (self._f_max.val * (_strain / self.e_ref)**2) * (
+            _l_se > self._l_slack.val)
         self._tendon_force = cas.Function(
             'tendon_force', [_l_se],
             [_eqn], ['l_se'], ['f_se'])
@@ -136,10 +135,9 @@ class GeyerMuscle(Muscle):
         """ Setup the casadi equations for belly force  """
         _l_ce = cas.SX.sym('l_ce')
         _f_be_cond = self._l_opt.val * (1.0 - self.w)
-        _eqn = ((self._f_max.val * (
-            (_l_ce - self._l_opt.val * (1.0 - self.w)) / (
-                self._l_opt.val * self.w / 2.0))**2)) * (
-            _l_ce <= _f_be_cond)
+        _num = _l_ce - self._l_opt.val * (1.0 - self.w)
+        _den = self._l_opt.val * self.w * 0.5
+        _eqn = self._f_max.val * ((_num/_den)**2) * (_l_ce <= _f_be_cond)
         self._belly_force = cas.Function(
             'belly_force', [_l_ce],
             [_eqn], ['l_ce'], ['f_be'])
