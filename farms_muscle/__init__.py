@@ -1,1 +1,1 @@
-from muscle_system import MuscleSystem
+from .muscle_system import MuscleSystem
