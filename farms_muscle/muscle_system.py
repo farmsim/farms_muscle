@@ -12,7 +12,7 @@ from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
 from geyer_muscle import GeyerMuscle
 from parameters import MuscleParameters
 
-biolog.set_level('info')
+biolog.set_level('debug')
 
 
 class MuscleSystem(object):
@@ -74,8 +74,12 @@ class MuscleSystem(object):
         else:
             self.opts = {'tf': 0.001,
                          'jit': False,
-                         "print_stats": False,
-                         "verbose": False}
+                         "enable_jacobian": True,
+                         "print_time": True,
+                         "print_stats": True,
+                         "reltol": 1e-6,
+                         "abstol": 1e-6,
+                         "max_num_steps": 100}
 
     def generate_muscle_position_container(self):
         """Generate muscle position container. """
@@ -107,9 +111,9 @@ class MuscleSystem(object):
 
     def step(self, delta_length):
         """Step integrator."""
-        self.fin['p'][:] = list(itertools.chain(*self.dae.params))
         for name, muscle in self.muscles.items():
-            muscle.update(self.activations.get(name, 0.05), delta_length)
+            muscle.update(1., delta_length[name])
+        self.fin['p'][:] = list(itertools.chain(*self.dae.params))
         res = self.integrator.call(self.fin)
         self.fin['x0'][:] = res['xf'].full()[:, 0]
         self.fin['z0'][:] = res['zf'].full()[:, 0]

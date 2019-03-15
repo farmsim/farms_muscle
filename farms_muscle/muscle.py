@@ -21,7 +21,7 @@ class MuscleLengthInfo(object):
         self.fiber_length_along_tendon = 0.0
         self.norm_fiber_length = 0.0
 
-        self.tendon_length = 0.0
+        self._tendon_length = 0.0
         self.norm_tendon_length = 0.0
         self.tendon_strain = 0.0
 
