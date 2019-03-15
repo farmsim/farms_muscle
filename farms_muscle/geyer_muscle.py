@@ -1,6 +1,6 @@
 """Implementation of Geyer muscle model."""
 
-from .muscle import Muscle
+from muscle import Muscle
 import numpy as np
 import casadi as cas
 

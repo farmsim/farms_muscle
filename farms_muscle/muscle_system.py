@@ -8,15 +8,17 @@ import farms_pylog as biolog
 import numpy as np
 import yaml
 
+from muscle_factory import MuscleFactory
 from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
-from .geyer_muscle import GeyerMuscle
-from .parameters import MuscleParameters
+from parameters import MuscleParameters
 
 biolog.set_level('debug')
 
 
-class MuscleSystem(object):
+class MuscleSystem(OrderedDict):
     """Generate Muscle Models for the the animal.
+    Inherit from Ordered Dictionary so the muscles can directly be 
+    stored within the class instead of a new container. 
     """
 
     def __init__(self, muscle_config_path, dae):
@@ -31,7 +33,6 @@ class MuscleSystem(object):
         self.muscle_config_path = muscle_config_path
         self.muscle_config = None  #: Muscle Configuration data
         #: Attributes
-        self.muscles = OrderedDict()  #: Muscle models in the system
         self.activations = {}  #: Muscle activations in the system
         self.dae = dae
         self.opts = {}  #: Integration parameters
@@ -41,7 +42,7 @@ class MuscleSystem(object):
         #: Methods
         self.load_config_file()
         self.generate_muscles()
-        self.generate_muscle_position_container()
+        self.generate_muscle_activation_container()
 
     def load_config_file(self):
         """Load the animal configuration file"""
@@ -59,13 +60,14 @@ class MuscleSystem(object):
 
     def generate_muscles(self):
         """ Generate muscles. """
+        factory = MuscleFactory()
         for _, muscle in sorted(self.muscle_config['muscles'].items()):
-            if muscle['model'].lower() == 'geyer':
-                self.muscles[muscle['name']] = GeyerMuscle(
-                    self.dae,
-                    MuscleParameters(**muscle))
+            _muscle = factory.gen_muscle(muscle['model'].lower())
+            self[muscle['name']] = _muscle(
+                self.dae,
+                MuscleParameters(**muscle))
             biolog.debug('Created muscle {}'.format(
-                self.muscles[muscle['name']].name))
+                self[muscle['name']].name))
 
     def generate_opts(self, opts):
         """ Generate options for integration."""
@@ -81,9 +83,9 @@ class MuscleSystem(object):
                          "abstol": 1e-6,
                          "max_num_steps": 100}
 
-    def generate_muscle_position_container(self):
-        """Generate muscle position container. """
-        for name in list(self.muscles.keys()):
+    def generate_muscle_activation_container(self):
+        """Generate muscle activation container. """
+        for name in list(self.keys()):
             self.activations[name] = 0.05
 
     #: pylint: disable=invalid-name
@@ -111,7 +113,8 @@ class MuscleSystem(object):
 
     def step(self, delta_length):
         """Step integrator."""
-        for name, muscle in self.muscles.items():
+        delta_length = {'flexor': 0.0}
+        for name, muscle in self.items():
             muscle.update(1., delta_length[name])
         self.fin['p'][:] = list(itertools.chain(*self.dae.params))
         res = self.integrator.call(self.fin)
