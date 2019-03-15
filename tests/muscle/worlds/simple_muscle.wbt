@@ -1,0 +1,64 @@
+#VRML_SIM R2019a utf8
+WorldInfo {
+  physics "fix"
+  basicTimeStep 1
+  FPS 25
+}
+Viewpoint {
+  orientation -0.9037536923451592 -0.40375489580792506 0.14216626774176325 0.1669651613892338
+  position 0.0968010022130415 1.0919535694244225 2.6062123361839036
+}
+TexturedBackgroundLight {
+}
+Floor {
+}
+DEF Base Robot {
+  translation 0 1 0
+  children [
+    DEF Base Shape {
+      appearance Appearance {
+        material Material {
+        }
+      }
+      geometry Box {
+        size 1 0.1 1
+      }
+    }
+    SliderJoint {
+      jointParameters JointParameters {
+        axis 0 1 0
+      }
+      device [
+        PositionSensor {
+          name "muscle_pos"
+        }
+        LinearMotor {
+          name "muscle"
+          maxForce 5000
+        }
+      ]
+      endPoint DEF Mass Solid {
+        translation 0 -0.75 0
+        children [
+          DEF Mass Shape {
+            appearance Appearance {
+              material Material {
+              }
+            }
+            geometry Sphere {
+              radius 0.1
+            }
+          }
+        ]
+        boundingObject USE Mass
+        physics Physics {
+          density -1
+          mass 10
+        }
+      }
+    }
+  ]
+  boundingObject USE Base
+  physics Physics {
+  }
+}
