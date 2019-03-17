@@ -24,7 +24,7 @@ dae = CasadiDaeGenerator()
 muscles = MuscleSystem('conf/test_config.yml', dae)
 muscles.dae.print_dae()
 muscles.setup_integrator()
-muscles.muscles['flexor'].initialize_muscle_length()
+muscles['flexor'].initialize_muscle_length()
 
 #: Get motor
 actuator = robot.getMotor('muscle')
@@ -37,7 +37,7 @@ delta_pos = {'flexor': pos()}
 while robot.step(timestep) != -1:
     delta_pos['flexor'] = -1*pos()
     res = muscles.step(delta_pos)
-    force = float(muscles.muscles['flexor'].tendon_force)
-    print(force, res['xf'].full()[:, 0], )
+    force = float(muscles['flexor'].tendon_force)
+    # print(force, res['xf'].full()[:, 0], )
     actuator.setForce(force)
 # Enter here exit cleanup code.

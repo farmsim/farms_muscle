@@ -5,8 +5,8 @@ WorldInfo {
   FPS 25
 }
 Viewpoint {
-  orientation -0.9037536923451592 -0.40375489580792506 0.14216626774176325 0.1669651613892338
-  position 0.0968010022130415 1.0919535694244225 2.6062123361839036
+  orientation -0.47112894046291204 -0.8770525327312382 -0.09389556053410716 0.6571658393817777
+  position -1.724776614422721 1.4768213725559087 2.7150281957334266
 }
 TexturedBackgroundLight {
 }
@@ -34,7 +34,18 @@ DEF Base Robot {
         }
         LinearMotor {
           name "muscle"
+          maxPosition 2
           maxForce 5000
+          muscles [
+            Muscle {
+              maxRadius 0.1
+              endOffset 0.001 0 0
+              color [
+                0 0 1
+                1 0 0
+              ]
+            }
+          ]
         }
       ]
       endPoint DEF Mass Solid {
@@ -53,12 +64,16 @@ DEF Base Robot {
         boundingObject USE Mass
         physics Physics {
           density -1
-          mass 10
+          mass 100
         }
       }
     }
   ]
+  name "Base"
   boundingObject USE Base
   physics Physics {
+    density -1
+    mass 10
   }
+  controller "muscle_test"
 }

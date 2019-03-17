@@ -17,8 +17,8 @@ biolog.set_level('debug')
 
 class MuscleSystem(OrderedDict):
     """Generate Muscle Models for the the animal.
-    Inherit from Ordered Dictionary so the muscles can directly be 
-    stored within the class instead of a new container. 
+    Inherit from Ordered Dictionary so the muscles can directly be
+    stored within the class instead of a new container.
     """
 
     def __init__(self, muscle_config_path, dae):
@@ -77,8 +77,8 @@ class MuscleSystem(OrderedDict):
             self.opts = {'tf': 0.001,
                          'jit': False,
                          "enable_jacobian": True,
-                         "print_time": True,
-                         "print_stats": True,
+                         "print_time": False,
+                         "print_stats": False,
                          "reltol": 1e-6,
                          "abstol": 1e-6,
                          "max_num_steps": 100}
@@ -113,7 +113,7 @@ class MuscleSystem(OrderedDict):
 
     def step(self, delta_length):
         """Step integrator."""
-        delta_length = {'flexor': 0.0}
+        # delta_length = {'flexor': 0.0}
         for name, muscle in self.items():
             muscle.update(1., delta_length[name])
         self.fin['p'][:] = list(itertools.chain(*self.dae.params))
