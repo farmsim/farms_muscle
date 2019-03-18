@@ -41,7 +41,7 @@ class TestGeyerMuscleForces(unittest.TestCase):
         _l_se = _l_slack + _l_slack*0.1
         _strain = (_l_se - _l_slack)/_l_slack
         _f_max = self.muscle._f_max.val
-        _computed_tendon_force = _f_max*(_strain/self.muscle.e_ref)**2
+        _computed_tendon_force = _f_max*(_strain/GeyerMuscle.E_REF)**2
         tendon_force = float(self.muscle._tendon_force(_l_se))
         self.assertAlmostEqual(tendon_force, _computed_tendon_force)
 
@@ -69,7 +69,7 @@ class TestGeyerMuscleForces(unittest.TestCase):
         _l_ce = _l_opt + _l_opt*0.1
         _f_max = self.muscle._f_max.val
         _num = _l_ce - _l_opt
-        _den = _l_opt * self.muscle.w
+        _den = _l_opt * GeyerMuscle.W
         parallel_force = float(self.muscle._parallel_star_force(_l_ce))
         self.assertAlmostEqual(parallel_force, _f_max*(_num/_den)**2)
 
@@ -80,7 +80,7 @@ class TestGeyerMuscleForces(unittest.TestCase):
 
     def test_belly_force_l_ce_equal_l_opt(self):
         """ Test belly force when l_ce is equal to l_opt """
-        _l_ce = round(self.muscle._l_opt.val*(1.0 - self.muscle.w), 3)
+        _l_ce = round(self.muscle._l_opt.val*(1.0 - GeyerMuscle.W), 3)
         belly_force = float(self.muscle._belly_force(_l_ce))
         self.assertNotEqual(belly_force, 0.0)
 
@@ -94,7 +94,7 @@ class TestGeyerMuscleForces(unittest.TestCase):
     def test_belly_force_l_ce_lesser_l_opt_value(self):
         """ Test the belly force when l_ce is lesser than l_opt. """
         _l_opt = self.muscle._l_opt.val
-        _w = self.muscle.w
+        _w = GeyerMuscle.W
         _l_ce = _l_opt*(1.0 - _w) - _l_opt*(1.0 - _w)*0.1
         _f_max = self.muscle._f_max.val
         _num = _l_ce - _l_opt*(1.0 - _w)
@@ -107,7 +107,7 @@ class TestGeyerMuscleForces(unittest.TestCase):
         _l_opt = self.muscle._l_opt.val
         _l_ce = self.muscle._l_opt.val
         _val = abs(
-            (_l_ce - _l_opt) / (_l_opt * self.muscle.w))
+            (_l_ce - _l_opt) / (_l_opt * GeyerMuscle.W))
         _exposant = GeyerMuscle.c * _val**3
         _f_l = self.muscle._force_length(_l_ce)
         self.assertAlmostEqual(_f_l, np.exp(_exposant))

@@ -1,6 +1,6 @@
 """Implementation of Geyer muscle model."""
 
-from muscle import Muscle
+from farms_muscle.muscle import Muscle
 import numpy as np
 import casadi as cas
 
@@ -14,6 +14,8 @@ class GeyerMuscle(Muscle):
     c = np.log(0.05)  # pylint: disable=no-member
     N = 1.5
     K = 5.0
+    E_REF = 0.04  #: Reference strain
+    W = 0.56  #: Shape factor pylint: disable=invalid-name
     tau_act = 0.01  # Time constant for the activation function
     F_per_m2 = 300000  # Force per m2 of muscle PCSA
     density = 1060
@@ -24,6 +26,8 @@ class GeyerMuscle(Muscle):
 
         Parameters
         ----------
+        dae : <CasadiDaeGenerator>
+            Instance of CasadiDaeGenerator class
         parameters : <MuscleParameters>
             Instance of MuscleParameters class
 
@@ -32,32 +36,11 @@ class GeyerMuscle(Muscle):
         Muscle : <Muscle>
             Returns an instance of class Muscle
 
-        Attributes:
-        ----------
-
-        Methods:
-        --------
-        step : func
-            Integrates muscle state by time step dt
-
-        Example:
-        --------
-        >>> from SystemParameters import MuscleParameters
-        >>> import Muscle
-        >>> muscle_parameters = MuscleParameters()
-        >>> muscle1 = GeyerMuscle.Muscle(muscle_parameters)
-        >>> muscle1.stim = 0.05
-        >>> muscle1.deltaLength = 0.01
-        >>> muscle1.step(dt)
         """
         super(GeyerMuscle, self).__init__()
 
         self.tol = 1e-6  #: Tolerance
         self.dae = dae
-
-        #:  Muscle specific parameters initialization
-        self.e_ref = 0.04  #: Reference strain
-        self.w = 0.56  #: Shape factor pylint: disable=invalid-name
 
         self.name = parameters.name  #: Muscle name
         self.m_id = parameters.m_id  #: Unique muscle id
@@ -115,7 +98,7 @@ class GeyerMuscle(Muscle):
         """ Setup the casadi equations for tendon force. """
         _l_se = cas.SX.sym('l_se')
         _strain = (_l_se - self._l_slack.val) / (self._l_slack.val)
-        _eqn = (self._f_max.val * (_strain / self.e_ref)**2) * (
+        _eqn = (self._f_max.val * (_strain / GeyerMuscle.E_REF)**2) * (
             _l_se > self._l_slack.val)
         self._tendon_force = cas.Function(
             'tendon_force', [_l_se],
@@ -125,7 +108,7 @@ class GeyerMuscle(Muscle):
         """ Setup the casadi equations for parallell star pe*  """
         _l_ce = cas.SX.sym('l_ce')
         _eqn = (self._f_max.val * (
-            (_l_ce - self._l_opt.val) / (self._l_opt.val * self.w))**2)*(
+            (_l_ce - self._l_opt.val) / (self._l_opt.val * GeyerMuscle.W))**2)*(
             _l_ce > self._l_opt.val)
         self._parallel_star_force = cas.Function(
             'parallel_star_force', [_l_ce],
@@ -134,9 +117,9 @@ class GeyerMuscle(Muscle):
     def _setup_belly_force(self):
         """ Setup the casadi equations for belly force  """
         _l_ce = cas.SX.sym('l_ce')
-        _f_be_cond = self._l_opt.val * (1.0 - self.w)
-        _num = _l_ce - self._l_opt.val * (1.0 - self.w)
-        _den = self._l_opt.val * self.w * 0.5
+        _f_be_cond = self._l_opt.val * (1.0 - GeyerMuscle.W)
+        _num = _l_ce - self._l_opt.val * (1.0 - GeyerMuscle.W)
+        _den = self._l_opt.val * GeyerMuscle.W * 0.5
         _eqn = self._f_max.val * ((_num/_den)**2) * (_l_ce <= _f_be_cond)
         self._belly_force = cas.Function(
             'belly_force', [_l_ce],
@@ -156,7 +139,7 @@ class GeyerMuscle(Muscle):
         """ Define the force length relationship. """
         _l_ce = cas.SX.sym('l_ce')
         val = cas.fabs(
-            (_l_ce - self._l_opt.val) / (self._l_opt.val * self.w))
+            (_l_ce - self._l_opt.val) / (self._l_opt.val * GeyerMuscle.W))
         exposant = GeyerMuscle.c * val**3
         _eqn = cas.exp(exposant)
         self._force_length = cas.Function(
@@ -298,10 +281,10 @@ class GeyerMuscle(Muscle):
             l_ce = self._l_opt.val
             l_se = l_mtc - l_ce
         else:
-            if self._l_opt.val * self.w + self.e_ref * self._l_slack.val != 0.0:
-                l_se = self._l_slack.val * ((self._l_opt.val * self.w + self.e_ref * (
+            if self._l_opt.val * GeyerMuscle.W + GeyerMuscle.E_REF * self._l_slack.val != 0.0:
+                l_se = self._l_slack.val * ((self._l_opt.val * GeyerMuscle.W + GeyerMuscle.E_REF * (
                     l_mtc - self._l_opt.val)) / (
-                        self._l_opt.val * self.w + self.e_ref * self._l_slack.val))
+                        self._l_opt.val * GeyerMuscle.W + GeyerMuscle.E_REF * self._l_slack.val))
             else:
                 l_se = self._l_slack.val
 
