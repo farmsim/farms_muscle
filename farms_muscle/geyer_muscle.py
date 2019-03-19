@@ -207,21 +207,66 @@ class GeyerMuscle(Muscle):
         self._setup_force_velocity_from_force()
         self._setup_contractile_velocity()
 
+    #: Properties
+    #: LengthInfo
+    @property
+    def fiber_tendon_length(self):
+        """ Get the length of muscle tendon unit.  """
+        #### CHECK THIS ####
+        return self._l_opt.val*self._pennation.val + self._l_slack.val \
+            + self._delta_length.val
+
+    @property
+    def fiber_length(self):
+        """ Get the fiber length of the muscle.  """
+        return self._l_ce.val
+
+    @property
+    def tendon_length(self):
+        """ Get the length of series tendon length  """
+        return self.fiber_tendon_length - self.fiber_length
+
+    @property
+    def pennation_angle(self):
+        """ Get the pennation angle.  """
+        return cas.acosh(self._pennation.val)
+
+    #: Velocity Info
+    @property
+    def fiber_velocity(self):
+        """ Get the fiber velocity.  """
+        return self._contractile_velocity(self.force_velocity)
+
+    #: Dynamics Info
+    @property
+    def activation(self):
+        """ Get the muscle activation.  """
+        return self._activation.val
+
+    @property
+    def parallel_star_force(self):
+        """ Get the force in parallel element*  """
+        return self._parallel_star_force(self.fiber_length)
+
+    @property
+    def belly_force(self):
+        """ Get the force in muscle belly.  """
+        return self._belly_force(self.fiber_length)
+
     @property
     def tendon_force(self):
         """ Get the tendon force. """
         return self._tendon_force(self.tendon_length)
 
     @property
-    def tendon_length(self):
-        """ Get tendon length  """
-        return self._l_opt.val + self._l_slack.val + \
-            self._delta_length.val - self._l_ce.val
+    def fiber_force(self):
+        """  """
+        return None
 
     @property
-    def fiber_force(self):
-        """Get the tendon force.  """
-        pass
+    def force_velocity(self):
+        """ Get the force from force velocity relationship.  """
+        return 0.0
 
     def ode_rhs(self):
         """Muscle Model ODE rhs.
@@ -234,7 +279,8 @@ class GeyerMuscle(Muscle):
         l_ce_tol = cas.fmax(self._l_ce.sym, 0.0)
 
         #: Algrebaic Equation
-        l_mtc = self._l_slack.val + self._l_opt.val + self._delta_length.sym
+        l_mtc = self._l_slack.val + self._l_opt.val * \
+            self._pennation.val + self._delta_length.sym
         l_se = l_mtc - l_ce_tol
 
         #: Muscle Acitvation Dynamics
