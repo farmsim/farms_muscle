@@ -37,6 +37,7 @@ class MuscleSystem(OrderedDict):
         self.dae = dae
         self.opts = {}  #: Integration parameters
         self.fin = {}
+        self.num = 0  # : Number of muscles
         self.integrator = None
 
         #: Methods
@@ -66,6 +67,8 @@ class MuscleSystem(OrderedDict):
             self[muscle['name']] = _muscle(
                 self.dae,
                 MuscleParameters(**muscle))
+            #: Update the muscle count
+            self.num += 1
             biolog.debug('Created muscle {}'.format(
                 self[muscle['name']].name))
 
@@ -111,18 +114,32 @@ class MuscleSystem(OrderedDict):
                                          self.opts)
         return self.integrator
 
-    def step(self, delta_length):
+    def step(self):
         """Step integrator."""
-        # delta_length = {'flexor': 0.0}
-        for name, muscle in self.items():
-            muscle.update(1., delta_length[name])
         self.fin['p'][:] = list(itertools.chain(*self.dae.params))
+        #: Step the integrator
         res = self.integrator.call(self.fin)
+
+        #: Update states
+        self._update_states(res['xf'].reshape((self.num, 2)).full())
+
+        #: Restart the state for next time step
         self.fin['x0'][:] = res['xf'].full()[:, 0]
         self.fin['z0'][:] = res['zf'].full()[:, 0]
         self.fin['rx0'] = res['rxf']
         self.fin['rz0'] = res['rzf']
         return res
+
+    def _update_states(self, results):
+        """ Update all the states of the muscle """
+        list(map(self._update_internal_muscle_state, self.values(),
+                 results))
+
+    def _update_internal_muscle_state(self, muscle, result):
+        """ Update the internal state of the muscle every time the 
+        step function is called"""
+        muscle.state.activation = result[1]
+        muscle.state.fiber_length = result[0]
 
 
 def main():
@@ -131,8 +148,12 @@ def main():
     muscles = MuscleSystem('conf/pendulum_config.yaml', dae)
     muscles.dae.print_dae()
     muscles.setup_integrator()
-    res = muscles.step(0.0)
-    print(res['xf'].full()[:, 0])
+    muscle_inputs = muscles.dae.u
+    for j in range(1, 800):
+        muscle_inputs.set_val('l_delta_1', 0.0)
+        muscle_inputs.set_val('stim_1', 0.5)
+        res = muscles.step()
+    print(muscles['flexor'].state.activation)
 
 
 if __name__ == '__main__':

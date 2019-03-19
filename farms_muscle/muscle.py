@@ -17,17 +17,27 @@ class MuscleLengthInfo(object):
         """Initialize"""
         super(MuscleLengthInfo, self).__init__()
         #: Attributes
-        self.fiber_length = 0.0
-        self.fiber_length_along_tendon = 0.0
-        self.norm_fiber_length = 0.0
+        self._fiber_length = 0.0
+        self._fiber_length_along_tendon = 0.0
+        self._norm_fiber_length = 0.0
 
         self._tendon_length = 0.0
-        self.norm_tendon_length = 0.0
-        self.tendon_strain = 0.0
+        self._norm_tendon_length = 0.0
+        self._tendon_strain = 0.0
 
-        self.pennation_angle = 0.0
-        self.cos_pennation_angle = 0.0
-        self.sin_pennation_angle = 0.0
+        self._pennation_angle = 0.0
+        self._cos_pennation_angle = 0.0
+        self._sin_pennation_angle = 0.0
+
+    @property
+    def fiber_length(self):
+        """ Get the fiber lenght of the muscle.  """
+        return self._fiber_length
+
+    @fiber_length.setter
+    def fiber_length(self, value):
+        """ Set the fiber length  """
+        self._fiber_length = value
 
 
 class MuscleVelocityInfo(object):
@@ -87,6 +97,54 @@ class MuscleDynamicsInfo():
         raise NotImplementedError()
 
 
+class MuscleState(object):
+    """Container muscle state.
+    * Activation : act
+    * Contractile Lenght : l_se
+    """
+
+    def __init__(self):
+        """ Initialization. """
+        super(MuscleState, self).__init__()
+        self._activation_val = 0.0
+        self._fiber_length_val = 0.0
+
+        self.activation = 0.0
+        self.fiber_length = 0.0
+
+    @property
+    def activation(self):
+        """ Activation of the muscle.  """
+        return self._activation_val
+
+    @activation.setter
+    def activation(self, value):
+        """
+        Set the value of the activation.
+        Parameters
+        ----------
+        value : <float>
+            Activation value between [0, 1]
+        """
+        self._activation_val = value
+
+    @property
+    def fiber_length(self):
+        """ Get contractile length of the muscle.  """
+        return self._fiber_length_val
+
+    @fiber_length.setter
+    def fiber_length(self, value):
+        """
+        Set the value of the contractile_length.
+        Parameters
+        ----------
+        value : <float>
+            Contractile length
+        """
+        self._fiber_length_val = value
+
+
 @six.add_metaclass(abc.ABCMeta)
 class Muscle(MuscleLengthInfo, MuscleVelocityInfo, MuscleDynamicsInfo):
     """Muscle abstract class.
@@ -102,6 +160,7 @@ class Muscle(MuscleLengthInfo, MuscleVelocityInfo, MuscleDynamicsInfo):
         self._tendon_slack_length = 0.0
         self._pennation_angle = 0.0
         self._max_contraction_velocity = 0.0
+        self.state = MuscleState()
 
     @property
     def max_isometric_force(self):
