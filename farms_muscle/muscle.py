@@ -49,11 +49,11 @@ class MuscleVelocityInfo(object):
         """
         super(MuscleVelocityInfo, self).__init__()
         #: Attributes
-        self.fiber_velocity = 0.0
-        self.fiber_velocity_along_tendon = 0.0
-        self.norm_fiber_velocity = 0.0
-        self.tendon_velocity = 0.0
-        self.norm_tendon_velocity = 0.0
+        self._fiber_velocity = 0.0
+        self._fiber_velocity_along_tendon = 0.0
+        self._norm_fiber_velocity = 0.0
+        self._tendon_velocity = 0.0
+        self._norm_tendon_velocity = 0.0
 
 
 @six.add_metaclass(abc.ABCMeta)
