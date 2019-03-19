@@ -21,7 +21,7 @@ muscles:
     pennation: 1.0
     name: 'flexor'
     r_0: 0.1
-    l_ce0 : 0.1088
+    l_ce0 : 0.5
     a0 : 0.05
     muscle_type : mono
     direction: 'cclockwise'
