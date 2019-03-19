@@ -2,7 +2,7 @@
 import itertools
 import os
 from collections import OrderedDict
-
+import timeit
 import casadi as cas
 import farms_pylog as biolog
 import numpy as np
@@ -139,15 +139,19 @@ class MuscleSystem(OrderedDict):
 
 def main():
     """Main test function."""
-    dae = CasadiDaeGenerator()
-    muscles = MuscleSystem('conf/pendulum_config.yaml', dae)
-    muscles.dae.print_dae()
-    muscles.setup_integrator()
-    muscle_inputs = muscles.dae.u
-    for j in range(1, 8000):
-        muscle_inputs.set_val('l_delta_1', 0.0)
-        muscle_inputs.set_val('stim_1', 0.15)
-        res = muscles.step()
+    _setup = """
+from farms_muscle.muscle_system import MuscleSystem
+from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
+dae = CasadiDaeGenerator();
+muscles = MuscleSystem('conf/pendulum_config.yaml', dae)
+muscles.dae.print_dae()
+muscles.setup_integrator()
+muscle_inputs = muscles.dae.u
+"""
+    res = timeit.timeit(setup=_setup,
+                        stmt="muscles.step()",
+                        number=1000)
+    print('Execution time {}'.format(res))
 
 
 if __name__ == '__main__':

@@ -7,9 +7,405 @@ animal : 'pendulum'
 ##############################
 
 muscles:
-  muscle:
+  geyer1:
     model: 'geyer'
     m_id: '1'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer2:
+    model: 'geyer'
+    m_id: '2'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer3:
+    model: 'geyer'
+    m_id: '3'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer4:
+    model: 'geyer'
+    m_id: '4'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer5:
+    model: 'geyer'
+    m_id: '5'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer6:
+    model: 'geyer'
+    m_id: '6'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer7:
+    model: 'geyer'
+    m_id: '7'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer8:
+    model: 'geyer'
+    m_id: '8'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer9:
+    model: 'geyer'
+    m_id: '9'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer10:
+    model: 'geyer'
+    m_id: '10'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer11:
+    model: 'geyer'
+    m_id: '11'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer12:
+    model: 'geyer'
+    m_id: '12'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer13:
+    model: 'geyer'
+    m_id: '13'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer14:
+    model: 'geyer'
+    m_id: '14'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer15:
+    model: 'geyer'
+    m_id: '15'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer16:
+    model: 'geyer'
+    m_id: '16'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer20:
+    model: 'geyer'
+    m_id: '20'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer21:
+    model: 'geyer'
+    m_id: '21'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer22:
+    model: 'geyer'
+    m_id: '22'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer23:
+    model: 'geyer'
+    m_id: '23'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer24:
+    model: 'geyer'
+    m_id: '24'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer25:
+    model: 'geyer'
+    m_id: '25'
+    l_opt: 0.11
+    joint_attach: 'joint1'
+    theta_ref: 0.0
+    f_max: 1000.0
+    type: mono
+    theta_max: 0.0
+    v_max: 1.2
+    l_slack: 0.13
+    pennation: 1.0
+    name: 'flexor'
+    r_0: 0.01
+    l_ce0 : 0.1088
+    a0 : 0.05
+    muscle_type : mono
+    direction: 'cclockwise'
+  geyer26:
+    model: 'geyer'
+    m_id: '26'
     l_opt: 0.11
     joint_attach: 'joint1'
     theta_ref: 0.0
