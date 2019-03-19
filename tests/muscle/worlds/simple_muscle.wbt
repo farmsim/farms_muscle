@@ -5,15 +5,20 @@ WorldInfo {
   FPS 25
 }
 Viewpoint {
-  orientation -0.47112894046291204 -0.8770525327312382 -0.09389556053410716 0.6571658393817777
-  position -1.724776614422721 1.4768213725559087 2.7150281957334266
+  orientation 0.24031479335615558 0.9533130782122661 0.18287420540809565 4.895366749622414
+  position -7.580077016454696 4.331245455502912 1.7098665687971593
 }
 TexturedBackgroundLight {
+}
+SpotLight {
+  attenuation 0 0 1
+  beamWidth 0.785398
+  direction 0 1 0
 }
 Floor {
 }
 DEF Base Robot {
-  translation 0 1 0
+  translation 0 2 0
   children [
     DEF Base Shape {
       appearance Appearance {
@@ -21,7 +26,7 @@ DEF Base Robot {
         }
       }
       geometry Box {
-        size 1 0.1 1
+        size 0.25 0.1 0.25
       }
     }
     SliderJoint {
@@ -34,6 +39,7 @@ DEF Base Robot {
         }
         LinearMotor {
           name "muscle"
+          maxVelocity 12
           maxPosition 2
           maxForce 5000
           muscles [
@@ -41,15 +47,15 @@ DEF Base Robot {
               maxRadius 0.1
               endOffset 0.001 0 0
               color [
-                0 0 1
                 1 0 0
+                0 0 1
               ]
             }
           ]
         }
       ]
       endPoint DEF Mass Solid {
-        translation 0 -0.75 0
+        translation 0 -1 0
         children [
           DEF Mass Shape {
             appearance Appearance {
