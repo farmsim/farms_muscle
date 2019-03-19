@@ -46,28 +46,28 @@ class GeyerMuscle(Muscle):
         self.m_id = parameters.m_id  #: Unique muscle id
 
         self._l_slack = self.dae.add_c('l_slack_' + self.m_id,
-                                       parameters.l_slack, param_type='val')
+                                       parameters.l_slack)
 
         self._l_opt = self.dae.add_c('l_opt_' + self.m_id,
-                                     parameters.l_opt, param_type='val')
+                                     parameters.l_opt)
         self._v_max = self.dae.add_c('v_max_' + self.m_id,
-                                     parameters.v_max, param_type='val')
+                                     parameters.v_max)
         self._f_max = self.dae.add_c('f_max_' + self.m_id,
-                                     parameters.f_max, param_type='val')
+                                     parameters.f_max)
         self._pennation = self.dae.add_c('pennation_' + self.m_id,
-                                         parameters.pennation, param_type='val')
+                                         parameters.pennation)
 
         self._td_to_sc = self.dae.add_c('td_to_sc_' + self.m_id,
-                                        parameters.td_to_sc, param_type='val')
+                                        parameters.td_to_sc)
         self._td_from_sc = self.dae.add_c('td_from_sc_' + self.m_id,
-                                          parameters.td_from_sc, param_type='val')
+                                          parameters.td_from_sc)
 
         if parameters.motiontype == 'flexor':
             self._motiontype = self.dae.add_c('motiontype_' + self.m_id,
-                                              1, param_type='val')
+                                              1)
         else:
             self._motiontype = self.dae.add_c('motiontype_' + self.m_id,
-                                              1, param_type='val')
+                                              1)
 
         #: MUSCLE STATES
         #: Muscle Contractile Length
@@ -97,9 +97,9 @@ class GeyerMuscle(Muscle):
     def _setup_tendon_force(self):
         """ Setup the casadi equations for tendon force. """
         _l_se = cas.SX.sym('l_se')
-        _strain = (_l_se - self._l_slack.param) / (self._l_slack.param)
-        _eqn = (self._f_max.param * (_strain / GeyerMuscle.E_REF)**2) * (
-            _l_se > self._l_slack.param)
+        _strain = (_l_se - self._l_slack.val) / (self._l_slack.val)
+        _eqn = (self._f_max.val * (_strain / GeyerMuscle.E_REF)**2) * (
+            _l_se > self._l_slack.val)
         self._tendon_force = cas.Function(
             'tendon_force', [_l_se],
             [_eqn], ['l_se'], ['f_se'])
@@ -107,9 +107,9 @@ class GeyerMuscle(Muscle):
     def _setup_parallel_star_force(self):
         """ Setup the casadi equations for parallell star pe*  """
         _l_ce = cas.SX.sym('l_ce')
-        _eqn = (self._f_max.param * (
-            (_l_ce - self._l_opt.param) / (self._l_opt.param * GeyerMuscle.W))**2)*(
-            _l_ce > self._l_opt.param)
+        _eqn = (self._f_max.val * (
+            (_l_ce - self._l_opt.val) / (self._l_opt.val * GeyerMuscle.W))**2)*(
+            _l_ce > self._l_opt.val)
         self._parallel_star_force = cas.Function(
             'parallel_star_force', [_l_ce],
             [_eqn], ['l_ce'], ['f_pe_star'])
@@ -117,10 +117,10 @@ class GeyerMuscle(Muscle):
     def _setup_belly_force(self):
         """ Setup the casadi equations for belly force  """
         _l_ce = cas.SX.sym('l_ce')
-        _f_be_cond = self._l_opt.param * (1.0 - GeyerMuscle.W)
-        _num = _l_ce - self._l_opt.param * (1.0 - GeyerMuscle.W)
-        _den = self._l_opt.param * GeyerMuscle.W * 0.5
-        _eqn = self._f_max.param * ((_num/_den)**2) * (_l_ce <= _f_be_cond)
+        _f_be_cond = self._l_opt.val * (1.0 - GeyerMuscle.W)
+        _num = _l_ce - self._l_opt.val * (1.0 - GeyerMuscle.W)
+        _den = self._l_opt.val * GeyerMuscle.W * 0.5
+        _eqn = self._f_max.val * ((_num/_den)**2) * (_l_ce <= _f_be_cond)
         self._belly_force = cas.Function(
             'belly_force', [_l_ce],
             [_eqn], ['l_ce'], ['f_be'])
@@ -139,7 +139,7 @@ class GeyerMuscle(Muscle):
         """ Define the force length relationship. """
         _l_ce = cas.SX.sym('l_ce')
         val = cas.fabs(
-            (_l_ce - self._l_opt.param) / (self._l_opt.param * GeyerMuscle.W))
+            (_l_ce - self._l_opt.val) / (self._l_opt.val * GeyerMuscle.W))
         exposant = GeyerMuscle.c * val**3
         _eqn = cas.exp(exposant)
         self._force_length = cas.Function(
@@ -150,9 +150,9 @@ class GeyerMuscle(Muscle):
         """ Define the force velocity relationship. """
         _v_ce = cas.SX.sym('v_ce')
         _f_v_ce_eqn_1 = (
-            self._v_max.param - _v_ce)/(self._v_max.param + GeyerMuscle.K*_v_ce)
+            self._v_max.val - _v_ce)/(self._v_max.val + GeyerMuscle.K*_v_ce)
         _f_v_ce_eqn_2 = GeyerMuscle.N + ((GeyerMuscle.N - 1)*(
-            self._v_max.param + _v_ce)/(7.56*GeyerMuscle.K*_v_ce - self._v_max.param))
+            self._v_max.val + _v_ce)/(7.56*GeyerMuscle.K*_v_ce - self._v_max.val))
         _eqn = cas.if_else(_v_ce >= 0.0, _f_v_ce_eqn_1, _f_v_ce_eqn_2)
         self._force_velocity = cas.Function(
             'force_velocity', [_v_ce],
@@ -166,7 +166,7 @@ class GeyerMuscle(Muscle):
         _f_l = cas.SX.sym('f_l')
         _f_pe_star = cas.SX.sym('f_pe_star')
         _f_v_ce_eqn_num = (_f_se + _f_be)
-        _f_v_ce_eqn_den = (self._f_max.param*_act*_f_l) + _f_pe_star
+        _f_v_ce_eqn_den = (self._f_max.val*_act*_f_l) + _f_pe_star
         #: Check these TOLERANCES
         _f_v_ce_eqn = cas.if_else(
             cas.logic_and(
@@ -184,9 +184,9 @@ class GeyerMuscle(Muscle):
     def _setup_contractile_velocity(self):
         """ Define the contractile velocity."""
         _f_v = cas.SX.sym('f_v')
-        _v_ce_1 = self._v_max.param*self._l_opt.param * \
+        _v_ce_1 = self._v_max.val*self._l_opt.val * \
             (1. - _f_v)/(1. + _f_v*GeyerMuscle.K)
-        _v_ce_2 = self._v_max.param*self._l_opt.param * \
+        _v_ce_2 = self._v_max.val*self._l_opt.val * \
             (_f_v - 1.0)/(7.56*GeyerMuscle.K *
                           (_f_v - GeyerMuscle.N) + 1. - GeyerMuscle.N)
         _eqn = cas.if_else(_f_v < 1.0, _v_ce_1, _v_ce_2)
@@ -213,13 +213,13 @@ class GeyerMuscle(Muscle):
     def fiber_tendon_length(self):
         """ Get the length of muscle tendon unit.  """
         #### CHECK THIS ####
-        return self._l_opt.param*self._pennation.param + self._l_slack.param \
-            + self._delta_length.param
+        return self._l_opt.val*self._pennation.val + self._l_slack.val \
+            + self._delta_length.val
 
     @property
     def fiber_length(self):
         """ Get the fiber length of the muscle.  """
-        return self._l_ce.param
+        return self._l_ce.val
 
     @property
     def tendon_length(self):
@@ -229,7 +229,7 @@ class GeyerMuscle(Muscle):
     @property
     def pennation_angle(self):
         """ Get the pennation angle.  """
-        return cas.acosh(self._pennation.param)
+        return cas.acosh(self._pennation.val)
 
     #: Velocity Info
     @property
@@ -241,7 +241,7 @@ class GeyerMuscle(Muscle):
     @property
     def activation(self):
         """ Get the muscle activation.  """
-        return self._activation.param
+        return self._activation.val
 
     @property
     def parallel_star_force(self):
@@ -276,16 +276,16 @@ class GeyerMuscle(Muscle):
                 description
         """
 
-        l_ce_tol = cas.fmax(self._l_ce.param, 0.0)
+        l_ce_tol = cas.fmax(self._l_ce.sym, 0.0)
 
         #: Algrebaic Equation
-        l_mtc = self._l_slack.param + self._l_opt.param * \
-            self._pennation.param + self._delta_length.param
+        l_mtc = self._l_slack.val + self._l_opt.val * \
+            self._pennation.val + self._delta_length.sym
         l_se = l_mtc - l_ce_tol
 
         #: Muscle Acitvation Dynamics
-        self._dA.param = self._d_act(self._activation.param,
-                                     self._stim.param)
+        self._dA.sym = self._d_act(self._activation.sym,
+                                   self._stim.sym)
 
         # #: Muscle Dynamics
         # #: Series Force
@@ -303,7 +303,7 @@ class GeyerMuscle(Muscle):
         # #: Force Velocity Inverse Relation
         _f_v = self._force_velocity_from_force(_f_se,
                                                _f_be,
-                                               self._activation.param,
+                                               self._activation.sym,
                                                _f_l,
                                                _f_pe_star)
 
@@ -312,32 +312,32 @@ class GeyerMuscle(Muscle):
 
     def update(self, stim, delta_length):
         """ Applies force to the joint and computes change in muscle length """
-        self._stim.param = stim
-        self._delta_length.param = delta_length
+        self._stim.val = stim
+        self._delta_length.val = delta_length
 
     def initialize_muscle_length(self):
         """ Initialize muscle length."""
         delta_length = 0.0
 
         #: Algrebaic Equation
-        l_mtc = self._l_slack.param + \
-            self._l_opt.param + delta_length
+        l_mtc = self._l_slack.val + \
+            self._l_opt.val + delta_length
 
-        if l_mtc < (self._l_slack.param + self._l_opt.param):
-            l_ce = self._l_opt.param
+        if l_mtc < (self._l_slack.val + self._l_opt.val):
+            l_ce = self._l_opt.val
             l_se = l_mtc - l_ce
         else:
-            if self._l_opt.param * GeyerMuscle.W + GeyerMuscle.E_REF * self._l_slack.param != 0.0:
-                l_se = self._l_slack.param * ((self._l_opt.param * GeyerMuscle.W + GeyerMuscle.E_REF * (
-                    l_mtc - self._l_opt.param)) / (
-                        self._l_opt.param * GeyerMuscle.W + GeyerMuscle.E_REF * self._l_slack.param))
+            if self._l_opt.val * GeyerMuscle.W + GeyerMuscle.E_REF * self._l_slack.val != 0.0:
+                l_se = self._l_slack.val * ((self._l_opt.val * GeyerMuscle.W + GeyerMuscle.E_REF * (
+                    l_mtc - self._l_opt.val)) / (
+                        self._l_opt.val * GeyerMuscle.W + GeyerMuscle.E_REF * self._l_slack.val))
             else:
-                l_se = self._l_slack.param
+                l_se = self._l_slack.val
 
             l_ce = l_mtc - l_se
 
         #: Initialize the muscle length
-        self._l_ce.param = l_ce
+        self._l_ce.val = l_ce
 
 
 def main():

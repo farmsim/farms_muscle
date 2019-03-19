@@ -71,6 +71,13 @@ DEF Base Robot {
         physics Physics {
           density -1
           mass 100
+          centerOfMass [
+            0 0 0
+          ]
+          inertiaMatrix [
+            0.01675516081914557 0.01675516081914557 0.01675516081914557
+            0 0 0
+          ]
         }
       }
     }
@@ -80,6 +87,13 @@ DEF Base Robot {
   physics Physics {
     density -1
     mass 10
+    centerOfMass [
+      0 0 0
+    ]
+    inertiaMatrix [
+      0.03776041666666667 0.06510416666666667 0.03776041666666667
+      0 0 0
+    ]
   }
   controller "muscle_test"
 }
