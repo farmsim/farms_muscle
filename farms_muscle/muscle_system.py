@@ -8,9 +8,9 @@ import farms_pylog as biolog
 import numpy as np
 import yaml
 
-from muscle_factory import MuscleFactory
+from farms_muscle.muscle_factory import MuscleFactory
 from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
-from parameters import MuscleParameters
+from farms_muscle.parameters import MuscleParameters
 
 biolog.set_level('debug')
 
@@ -43,7 +43,6 @@ class MuscleSystem(OrderedDict):
         #: Methods
         self.load_config_file()
         self.generate_muscles()
-        self.generate_muscle_activation_container()
 
     def load_config_file(self):
         """Load the animal configuration file"""
@@ -78,18 +77,13 @@ class MuscleSystem(OrderedDict):
             self.opts = opts
         else:
             self.opts = {'tf': 0.001,
-                         'jit': False,
+                         'jit': True,
                          "enable_jacobian": True,
                          "print_time": False,
                          "print_stats": False,
-                         "reltol": 1e-6,
-                         "abstol": 1e-6,
-                         "max_num_steps": 100}
-
-    def generate_muscle_activation_container(self):
-        """Generate muscle activation container. """
-        for name in list(self.keys()):
-            self.activations[name] = 0.05
+                         "reltol": 1e-2,
+                         "abstol": 1e-2,
+                         "max_num_steps": 10}
 
     #: pylint: disable=invalid-name
     def setup_integrator(self,
@@ -119,24 +113,25 @@ class MuscleSystem(OrderedDict):
         self.fin['p'][:] = list(itertools.chain(*self.dae.params))
         #: Step the integrator
         res = self.integrator.call(self.fin)
-
+        _xf = res['xf'].full()[:, 0]
         #: Update states
-        self._update_states(res['xf'].reshape((self.num, 2)).full())
-
+        self.dae.x.set_all_val_array(_xf)
+        # self._update_states(res['xf'].reshape((self.num, 2)).full())
         #: Restart the state for next time step
-        self.fin['x0'][:] = res['xf'].full()[:, 0]
-        self.fin['z0'][:] = res['zf'].full()[:, 0]
-        self.fin['rx0'] = res['rxf']
-        self.fin['rz0'] = res['rzf']
+        self.fin['x0'][:] = _xf
+        # self.fin['z0'][:] = res['zf'].full()[:, 0]
+        # self.fin['rx0'] = res['rxf']
+        # self.fin['rz0'] = res['rzf']
         return res
 
+    #: Deprecated
     def _update_states(self, results):
         """ Update all the states of the muscle """
         list(map(self._update_internal_muscle_state, self.values(),
                  results))
 
     def _update_internal_muscle_state(self, muscle, result):
-        """ Update the internal state of the muscle every time the 
+        """ Update the internal state of the muscle every time the
         step function is called"""
         muscle.state.activation = result[1]
         muscle.state.fiber_length = result[0]
@@ -149,11 +144,10 @@ def main():
     muscles.dae.print_dae()
     muscles.setup_integrator()
     muscle_inputs = muscles.dae.u
-    for j in range(1, 800):
+    for j in range(1, 8000):
         muscle_inputs.set_val('l_delta_1', 0.0)
-        muscle_inputs.set_val('stim_1', 0.5)
+        muscle_inputs.set_val('stim_1', 0.15)
         res = muscles.step()
-    print(muscles['flexor'].state.activation)
 
 
 if __name__ == '__main__':

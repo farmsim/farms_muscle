@@ -1,5 +1,5 @@
 from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
-from farms_muscle import MuscleSystem
+from farms_muscle.muscle_system import MuscleSystem
 from controller import Robot
 """muscle_test controller."""
 
@@ -32,12 +32,20 @@ actuator_pos = robot.getPositionSensor('muscle_pos')
 actuator_pos.enable(int(robot.getBasicTimeStep()))
 pos = actuator_pos.getValue
 delta_pos = {'flexor': pos()}
+
 # Main loop:
 # - perform simulation steps until Webots is stopping the controller
+muscle_inputs = muscles.dae.u
 while robot.step(timestep) != -1:
-    delta_pos['flexor'] = -1*pos()
-    res = muscles.step(delta_pos)
+    muscle_inputs.set_val('l_delta_1', -1.*pos())
+    muscle_inputs.set_val('stim_1', 0.95)
+    res = muscles.step()
     force = float(muscles['flexor'].tendon_force)
     # print(force, res['xf'].full()[:, 0], )
+    # print(muscles['flexor'].tendon_length
+    #       + muscles['flexor'].fiber_length)
+    # print(muscles['flexor'].tendon_length)
+    # print(muscles['flexor'].fiber_length)
+
     actuator.setForce(force)
 # Enter here exit cleanup code.
