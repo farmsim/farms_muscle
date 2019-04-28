@@ -15,7 +15,8 @@ setuptools.setup(
         'numpy',
         'casadi',
         'farms_pylog',
-        'pyaml'
+        'pyaml',
+        'six'
     ],
     zip_safe=False
 )
