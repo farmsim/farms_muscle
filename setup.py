@@ -10,11 +10,12 @@ setuptools.setup(
     license='MIT',
     packages=setuptools.find_packages(exclude=['tests*']),
     dependency_links=[
-        'https://gitlab.com/FARMSIM/farms_muscle.git'],
+        "https://gitlab.com/FARMSIM/farms_pylog.git"],
     install_requires=[
         'numpy',
         'casadi',
-        'farms_pylog'
+        'farms_pylog',
+        'pyaml'
     ],
     zip_safe=False
 )
