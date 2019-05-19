@@ -9,7 +9,7 @@ import numpy as np
 import yaml
 
 from farms_muscle.muscle_factory import MuscleFactory
-from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
+from farms_dae_generator.dae_generator import DaeGenerator
 from farms_muscle.parameters import MuscleParameters
 
 biolog.set_level('debug')
@@ -105,7 +105,8 @@ class MuscleSystem(OrderedDict):
         self.integrator = cas.integrator('muscles',
                                          integration_method,
                                          self.dae.generate_dae(),
-                                         self.opts)
+                                         # self.opts
+        )
         return self.integrator
 
     def step(self):
@@ -139,18 +140,24 @@ class MuscleSystem(OrderedDict):
 
 def main():
     """Main test function."""
+    from farms_muscle.muscle_system import MuscleSystem
+    from farms_dae_generator.dae_generator import DaeGenerator
+    dae = DaeGenerator();
+    muscles = MuscleSystem('conf/two_muscle.yaml', dae)
+    muscles.dae.print_dae()
+    muscles.setup_integrator()
     _setup = """
 from farms_muscle.muscle_system import MuscleSystem
-from farms_casadi_dae.casadi_dae_generator import CasadiDaeGenerator
-dae = CasadiDaeGenerator();
-muscles = MuscleSystem('conf/pendulum_config.yaml', dae)
+from farms_dae_generator.dae_generator import DaeGenerator
+dae = DaeGenerator();
+muscles = MuscleSystem('conf/two_muscle.yaml', dae)
 muscles.dae.print_dae()
 muscles.setup_integrator()
 muscle_inputs = muscles.dae.u
 """
     res = timeit.timeit(setup=_setup,
                         stmt="muscles.step()",
-                        number=1000)
+                        number=1)
     print('Execution time {}'.format(res))
 
 
