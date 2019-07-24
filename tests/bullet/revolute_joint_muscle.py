@@ -51,7 +51,7 @@ sphereRadius = 0.05
 mass = 0
 visualShapeId = -1
 
-num_links = 1
+num_links = 2
 basePosition = [0,0,4+num_links]
 baseOrientation = [0, 0, 0, 1]
 baseColId = p.createCollisionShape(p.GEOM_CAPSULE,
@@ -118,13 +118,25 @@ muscle_act = {'m1': 0.75}
 muscles.dae.initialize_dae()
 
 x0 = np.array([0.11, 0.0])
-# (pos, _) = p.getBasePositionAndOrientation(boxUid)
-# mline = p.addUserDebugLine(
-#     lineFromXYZ=[0, 0, 4],
-#     lineToXYZ=pos,
-#     lineColorRGB=[1, 0, 0],
-#     lineWidth=2,
-#     lifeTime=0)
+pbase = p.getBasePositionAndOrientation(chainUid)
+plink = p.getLinkState(chainUid, 0)
+mattach1 = p.addUserDebugLine(
+    lineFromXYZ=[0.2, 0, 0],
+    lineToXYZ=[0.2, 0,-0.3],
+    lineColorRGB=[1, 1, 0],
+    lineWidth=2,
+    lifeTime=0,
+    parentObjectUniqueId=chainUid,
+    parentLinkIndex=0)
+
+mattach2 = p.addUserDebugLine(
+    lineFromXYZ=[0.2, 0, 0],
+    lineToXYZ=[0.2, 0, 1.2],
+    lineColorRGB=[1, 0, 1],
+    lineWidth=2,
+    lifeTime=0,
+    parentObjectUniqueId=chainUid,
+    parentLinkIndex=1)
 
 
 #: integrator
