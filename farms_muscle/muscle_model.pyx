@@ -125,9 +125,6 @@ cdef class GeyerMuscle(Muscle):
 
         #: Outputs
         self._l_se = dae.add_y("tendon_length_"+self.m_id, self._l_slack)
-        self._l_mtu = dae.add_y(
-            "muscle_length_"+self.m_id, self._l_slack+self._l_opt)
-
         self._f_be = dae.add_y("belly_force_"+self.m_id, 0.0)
         self._f_pe = dae.add_y("parallel_force_"+self.m_id, 0.0)
         self._f_lce = dae.add_y("force_length_"+self.m_id, 0.0)
