@@ -9,11 +9,11 @@ animal : 'animal'
 muscles:
   m1:
     model: geyer
-    m_id: m01
+    m_id: m1
     l_opt: 0.11
     joint_attach: RF_TC_PRO_RE
     theta_ref: 0.0
-    f_max: 1500.0
+    f_max: 150.0
     theta_max: 0.0
     v_max: 10
     l_slack: 0.13
