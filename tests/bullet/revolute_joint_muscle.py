@@ -11,6 +11,7 @@ from farms_muscle.musculo_skeletal_parameters import MuscleParameters
 from farms_muscle.musculo_skeletal_system import MusculoSkeletalSystem
 import farms_pylog as pylog
 import numpy as np
+import matplotlib.pyplot as plt
 p.connect(p.GUI)
 # without GUI: p.connect(p.DIRECT)
 p.resetSimulation()
@@ -40,64 +41,65 @@ plane = p.loadURDF("plane.urdf", [0, 0, 0], globalScaling=1)
 
 ########## LINKS ##########
 sphereRadius = 0.05
-colBoxId = p.createCollisionShape(
-    p.GEOM_BOX,
-    halfExtents=[0.05, 0.05, 0.5],
-    collisionFramePosition=[0,0,-0.5],
-    collisionFrameOrientation=[0,0,0,1],)
-visBoxId = p.createVisualShape(
-    p.GEOM_BOX,
-    visualFramePosition=[0,0,-0.5],
-    visualFrameOrientation=[0,0,0,1],
-    halfExtents=[0.05, 0.05, 0.5])
+
+# visBoxId = p.createVisualShape(
+#     p.GEOM_BOX,
+#     visualFramePosition=[0,0,-0.5],
+#     visualFrameOrientation=[0,0,0,1],
+#     halfExtents=[0.05, 0.05, 0.5])
 
 mass = 0
 visualShapeId = -1
 
-
-link_Masses = [1]
-linkCollisionShapeIndices = [colBoxId]
+num_links = 1
+basePosition = [0,0,4+num_links]
+baseOrientation = [0, 0, 0, 1]
+baseColId = p.createCollisionShape(p.GEOM_CAPSULE,
+                       height=1.,
+                       radius=0.05,
+                       collisionFramePosition=[0,0,-0.5])
+link_Masses = [1 for j in range(num_links)]
+linkCollisionShapeIndices = [p.createCollisionShape(p.GEOM_CAPSULE,
+                                                    height=1.,
+                                                    radius=0.05,
+                                                    collisionFramePosition=[0,0,-0.5]
+) for j in range(num_links)]
 # linkVisualShapeIndices = [visBoxId]
-linkVisualShapeIndices = [-1]
-linkPositions = [[0, 0, -1]]
-linkOrientations = [[np.pi/2, 0, 0, 1]]
-linkInertialFramePositions = [[0, 0, -0.5]]
-linkInertialFrameOrientations = [[0, 0, 0, 1]]
-indices = [0]
-jointTypes = [p.JOINT_REVOLUTE]
-axis = [[1, 0, 0]]
+linkVisualShapeIndices = [-1 for j in range(num_links)]
+linkPositions = [[0, 0, -1] for j in range(num_links)]
+linkOrientations = [[0, 0, 0, 1] for j in range(num_links)]
+linkInertialFramePositions = [[0, 0, -0.5*(j+1)] for j in range(num_links)]
+linkInertialFrameOrientations = [[0, 0, 0, 1] for j in range(num_links)]
+indices = [j for j in range(num_links)]
+jointTypes = [p.JOINT_REVOLUTE for j in range(num_links)]
+axis = [[1, 0, 0] for j in range(num_links)]
 
-
-for k in range(1):
-    basePosition = [0,0,4]
-    baseOrientation = [0, 0, 0, 1]
-    # if not (k & 2):
-    sphereUid = p.createMultiBody(
-        mass, colBoxId, visualShapeId, basePosition, baseOrientation,
-        linkMasses=link_Masses, linkCollisionShapeIndices=linkCollisionShapeIndices,
-        linkVisualShapeIndices=linkVisualShapeIndices,
-        linkPositions=linkPositions, linkOrientations=linkOrientations,
-        linkInertialFramePositions=linkInertialFramePositions,
-        linkInertialFrameOrientations=linkInertialFrameOrientations,
-        linkParentIndices=indices, linkJointTypes=jointTypes,
-        linkJointAxis=axis)
-    p.changeDynamics(sphereUid, -1, spinningFriction=0.0,
-                     rollingFriction=0.0, linearDamping=0.0)
+chainUid = p.createMultiBody(
+    mass, baseColId, visualShapeId, basePosition, baseOrientation,
+    linkMasses=link_Masses, linkCollisionShapeIndices=linkCollisionShapeIndices,
+    linkVisualShapeIndices=linkVisualShapeIndices,
+    linkPositions=linkPositions, linkOrientations=linkOrientations,
+    linkInertialFramePositions=linkInertialFramePositions,
+    linkInertialFrameOrientations=linkInertialFrameOrientations,
+    linkParentIndices=indices, linkJointTypes=jointTypes,
+    linkJointAxis=axis)
+p.changeDynamics(chainUid, -1, spinningFriction=0.0,
+                 rollingFriction=0.0, linearDamping=0.0)
     
-    # for joint in range(p.getNumJoints(sphereUid)):
-        # p.setJointMotorControl2(
-        #     sphereUid, joint, p.VELOCITY_CONTROL,force=1, targetVelocity=1)
+# for joint in range(p.getNumJoints(chainUid)):
+    # p.setJointMotorControl2(
+#     chainUid, joint, p.VELOCITY_CONTROL,force=1, targetVelocity=1)
 
-    p.setJointMotorControlArray(
-        sphereUid,
-        np.arange(1),
-        p.VELOCITY_CONTROL,
-        forces=np.zeros(1))
+p.setJointMotorControlArray(
+    chainUid,
+    np.arange(num_links),
+    p.VELOCITY_CONTROL,
+    forces=np.zeros(num_links))
 
 
-p.getNumJoints(sphereUid)
-for i in range(p.getNumJoints(sphereUid)):
-    p.getJointInfo(sphereUid, i)
+p.getNumJoints(chainUid)
+for i in range(p.getNumJoints(chainUid)):
+    p.getJointInfo(chainUid, i)
 
 
 ########## DEBUG ##########
@@ -129,12 +131,23 @@ x0 = np.array([0.11, 0.0])
 muscles.setup_integrator(x0)
 u = muscles.dae.u
 force = muscles.dae.y.get_param('tendon_force_m1')
-for j in range(1000000):
-    
-    p.setJointMotorControl2(
-        sphereUid, 0, p.TORQUE_CONTROL,force=0)
+N = 10000
+pos_world = np.zeros((N, 3))
+pos_cart = np.zeros((N, 3))
+pos_inert = np.zeros((N, 3))
+for j in range(N):    
+    p.setJointMotorControlArray(
+        chainUid, np.arange(num_links), p.TORQUE_CONTROL,
+        forces=np.arange(num_links))
+    ls = p.getLinkState(chainUid, 0)
+
+    # print(ls[4])
+    # print(ls[0])
+    pos_cart[j] = np.array(ls[0])
+    pos_world[j] = np.array(ls[4])
+    pos_inert[j] = np.array(ls[2])
     # p.setJointMotorControl2(
-    #     sphereUid, 0,p.VELOCITY_CONTROL,targetVelocity=-1,force=100)
+    #     chainUid, 0,p.VELOCITY_CONTROL,targetVelocity=-1,force=100)
     keys = p.getKeyboardEvents()
     if keys.get(113):
         break
@@ -155,6 +168,20 @@ for j in range(1000000):
     #     replaceItemUniqueId=mline)
     time.sleep(0.001)
     p.stepSimulation()
+
+# plt.figure()
+# plt.plot(pos_world)
+# plt.legend(('x', 'y', 'z'))
+# plt.grid(True)
+# plt.figure()
+# plt.plot(pos_cart)
+# plt.legend(('x', 'y', 'z'))
+# plt.grid(True)
+# plt.figure()
+# plt.plot(pos_inert)
+# plt.legend(('x', 'y', 'z'))
+# plt.grid(True)
+# plt.show()
 
 # musculo_dae = muscles.dae
 # #: Muscle Logging
