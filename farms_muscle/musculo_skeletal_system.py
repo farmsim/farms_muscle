@@ -85,7 +85,7 @@ class MusculoSkeletalSystem(object):
 
         #: Initialize DAE
         self.dae.initialize_dae()
-        if x0 is not None:
+        if x0 is None:
             self.integrator.set_initial_value(self.dae.x.values, 0.0)
         else:
             self.integrator.set_initial_value(x0, 0.0)
