@@ -40,7 +40,6 @@ rendering(0)
 plane = p.loadURDF("plane.urdf", [0, 0, 0], globalScaling=1)
 
 ########## LINKS ##########
-sphereRadius = 0.05
 
 # visBoxId = p.createVisualShape(
 #     p.GEOM_BOX,
@@ -48,27 +47,30 @@ sphereRadius = 0.05
 #     visualFrameOrientation=[0,0,0,1],
 #     halfExtents=[0.05, 0.05, 0.5])
 
+length = 0.5
 mass = 0
 visualShapeId = -1
 
 num_links = 2
-basePosition = [0,0,4+num_links]
+basePosition = [0, 0, 4*length+num_links]
 baseOrientation = [0, 0, 0, 1]
 baseColId = p.createCollisionShape(p.GEOM_CAPSULE,
-                       height=1.,
-                       radius=0.05,
-                       collisionFramePosition=[0,0,-0.5])
+                                   height=length,
+                                   radius=length*0.05,
+                                   collisionFramePosition=[0, 0, -length*0.5])
 link_Masses = [1 for j in range(num_links)]
 linkCollisionShapeIndices = [p.createCollisionShape(p.GEOM_CAPSULE,
-                                                    height=1.,
-                                                    radius=0.05,
-                                                    collisionFramePosition=[0,0,-0.5]
-) for j in range(num_links)]
+                                                    height=length,
+                                                    radius=length*0.05,
+                                                    collisionFramePosition=[
+                                                        0, 0, -length*0.5]
+                                                    ) for j in range(num_links)]
 # linkVisualShapeIndices = [visBoxId]
 linkVisualShapeIndices = [-1 for j in range(num_links)]
-linkPositions = [[0, 0, -1] for j in range(num_links)]
+linkPositions = [[0, 0, -length] for j in range(num_links)]
 linkOrientations = [[0, 0, 0, 1] for j in range(num_links)]
-linkInertialFramePositions = [[0, 0, -0.5*(j+1)] for j in range(num_links)]
+linkInertialFramePositions = [
+    [0, 0, -length*0.5*(j+1)] for j in range(num_links)]
 linkInertialFrameOrientations = [[0, 0, 0, 1] for j in range(num_links)]
 indices = [j for j in range(num_links)]
 jointTypes = [p.JOINT_REVOLUTE for j in range(num_links)]
@@ -85,9 +87,9 @@ chainUid = p.createMultiBody(
     linkJointAxis=axis)
 p.changeDynamics(chainUid, -1, spinningFriction=0.0,
                  rollingFriction=0.0, linearDamping=0.0)
-    
+
 # for joint in range(p.getNumJoints(chainUid)):
-    # p.setJointMotorControl2(
+# p.setJointMotorControl2(
 #     chainUid, joint, p.VELOCITY_CONTROL,force=1, targetVelocity=1)
 
 p.setJointMotorControlArray(
@@ -118,25 +120,29 @@ muscle_act = {'m1': 0.75}
 muscles.dae.initialize_dae()
 
 x0 = np.array([0.11, 0.0])
-pbase = p.getBasePositionAndOrientation(chainUid)
-plink = p.getLinkState(chainUid, 0)
-mattach1 = p.addUserDebugLine(
-    lineFromXYZ=[0.2, 0, 0],
-    lineToXYZ=[0.2, 0,-0.3],
-    lineColorRGB=[1, 1, 0],
-    lineWidth=2,
-    lifeTime=0,
-    parentObjectUniqueId=chainUid,
-    parentLinkIndex=0)
 
-mattach2 = p.addUserDebugLine(
-    lineFromXYZ=[0.2, 0, 0],
-    lineToXYZ=[0.2, 0, 1.2],
-    lineColorRGB=[1, 0, 1],
-    lineWidth=2,
-    lifeTime=0,
-    parentObjectUniqueId=chainUid,
-    parentLinkIndex=1)
+pbase = p.getBasePositionAndOrientation(chainUid)
+
+plink = p.getLinkState(chainUid, 0)
+
+
+# mattach1 = p.addUserDebugLine(
+#     lineFromXYZ=[0.2, 0, 0],
+#     lineToXYZ=[0.2, 0, -0.3],
+#     lineColorRGB=[1, 1, 0],
+#     lineWidth=2,
+#     lifeTime=0,
+#     parentObjectUniqueId=chainUid,
+#     parentLinkIndex=0)
+
+# mattach2 = p.addUserDebugLine(
+#     lineFromXYZ=[0.2, 0, 0],
+#     lineToXYZ=[0.2, 0, 1.2],
+#     lineColorRGB=[1, 0, 1],
+#     lineWidth=2,
+#     lifeTime=0,
+#     parentObjectUniqueId=chainUid,
+#     parentLinkIndex=1)
 
 
 #: integrator
@@ -147,11 +153,12 @@ N = 10000
 pos_world = np.zeros((N, 3))
 pos_cart = np.zeros((N, 3))
 pos_inert = np.zeros((N, 3))
-for j in range(N):    
+for j in range(N):
     p.setJointMotorControlArray(
         chainUid, np.arange(num_links), p.TORQUE_CONTROL,
         forces=np.arange(num_links))
-    ls = p.getLinkState(chainUid, 0)
+    ls = p.getLinkState(chainUid, 1)
+    print(ls[0], ls[4])
 
     # print(ls[4])
     # print(ls[0])
