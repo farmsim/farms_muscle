@@ -107,8 +107,8 @@ for i in range(p.getNumJoints(chainUid)):
 
 
 ########## DEBUG ##########
-activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.5)
-activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 1.)
+activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.2)
+activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.05)
 # p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 rendering(1)
 
@@ -121,8 +121,6 @@ muscle_act = {'m1': 0.75}
 
 #: Initialize DAE
 muscles.dae.initialize_dae()
-
-x0 = np.array([0.11, 0.0])
 
 pbase = p.getBasePositionAndOrientation(chainUid)
 
@@ -137,72 +135,80 @@ m2a2 = np.array([0.0, -0.025, -0.5, 1.])
 m2a3 = np.array([0.0, -0.025, -0.15, 1.])
 
 
-# m1attach1 = p.addUserDebugLine(
-#     lineFromXYZ=m1a1[:3],
-#     lineToXYZ=(m1a1+np.array([0,0,-0.05,0]))[:3],
-#     lineColorRGB=[1, 1, 0],
-#     lineWidth=2,
-#     lifeTime=0,
-#     parentObjectUniqueId=chainUid,
-#     parentLinkIndex=-1)
+m1line1 = p.addUserDebugLine(
+        lineToXYZ=[0,0,0],
+        lineFromXYZ=[0,0,0],
+        lineColorRGB=[1, 0, 0],
+        lineWidth=4,
+        lifeTime=0)
+m1line2 = p.addUserDebugLine(
+        lineToXYZ=[0,0,0],
+        lineFromXYZ=[0,0,0],
+        lineColorRGB=[1, 0, 0],
+        lineWidth=4,
+        lifeTime=0)
 
-# m1attach2 = p.addUserDebugLine(
-#     lineFromXYZ=m1a2[:3],
-#     lineToXYZ=m1a3[:3],
-#     lineColorRGB=[1, 0, 1],
-#     lineWidth=2,
-#     lifeTime=0,
-#     parentObjectUniqueId=chainUid,
-#     parentLinkIndex=0)
+m2line1 = p.addUserDebugLine(
+        lineToXYZ=[0,0,0],
+        lineFromXYZ=[0,0,0],
+        lineColorRGB=[1, 0, 0],
+        lineWidth=4,
+        lifeTime=0)
 
+m2line2 = p.addUserDebugLine(
+        lineToXYZ=[0,0,0],
+        lineFromXYZ=[0,0,0],
+        lineColorRGB=[1, 0, 0],
+        lineWidth=4,
+        lifeTime=0)
 
 f1line1 = p.addUserDebugLine(
         lineToXYZ=[0,0,0],
         lineFromXYZ=[0,0,0],
         lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
-f1line2 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
+        lineWidth=2,
+        lifeTime=0,
+        # parentObjectUniqueId=chainUid,
+        # parentLinkIndex=0
+)
 
 f2line1 = p.addUserDebugLine(
         lineToXYZ=[0,0,0],
         lineFromXYZ=[0,0,0],
         lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
-f2line2 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
+        lineWidth=2,
+        lifeTime=0,
+        # parentObjectUniqueId=chainUid,
+        # parentLinkIndex=0
+)
 
 def distance_bw_points(p1, p2):
     """ Compute distance between two points. """
     return np.linalg.norm(np.array(p1)-np.array(p2))
 
 #: integrator
+x0 = np.array([0.25-0.13, 0.05, 0.25-0.13, 0.05])
 muscles.setup_integrator(x0)
 u = muscles.dae.u
 force1 = muscles.dae.y.get_param('tendon_force_m1')
 force2 = muscles.dae.y.get_param('tendon_force_m2')
-N = 2000
+N = 10000
 length1 = np.zeros((N,1))
 length2 = np.zeros((N,1))
 jangle = np.zeros((N,1))
 
-p.resetJointState(chainUid, 0, targetValue=0.)
+# p.resetJointState(chainUid, 0, targetValue=0.)
 
 #: Init
 for j in range(N):
     keys = p.getKeyboardEvents()
     if keys.get(113):
         break
+
+    #: Inertia
+    p.changeDynamics(chainUid, 0,
+                     localInertiaDiagonal=[0.04197, 0.000625, 0.04197])
+    
     # p.setJointMotorControlArray(
     #     chainUid, np.arange(num_links), p.POSITION_CONTROL,
     #     targetPositions=np.arange(num_links)*np.sin(2*np.pi*j/1000))
@@ -211,8 +217,8 @@ for j in range(N):
     #     forces=np.arange(num_links)*0.)
     # p.setJointMotorControl2(
     #     chainUid, 0, p.POSITION_CONTROL,
-    #     targetPosition=np.sin(2*np.pi*j/1000*1.))# *np.pi/2
-    p.setJointMotorControl2(chainUid, 0, p.TORQUE_CONTROL,force=0.)
+    #     targetPosition=np.sin(2*np.pi*j/1000*1.)*np.pi)# 
+    # p.setJointMotorControl2(chainUid, 0, p.TORQUE_CONTROL,force=0.)
     
     ls = p.getLinkState(chainUid, 0)
 
@@ -225,29 +231,32 @@ for j in range(N):
     p11 = np.dot(base_trans, m1a1)[:3]
     p12 = np.dot(base_trans, m1a2)[:3]
     p13 = np.dot(l1_trans, m1a3)[:3]
-    dist11 = distance_bw_points(p11, p12)
+    dist11 = distance_bw_points(p11, p13)
     dist12 = distance_bw_points(p12, p13)
-    _length1 = dist11+dist12
+    _length1 = dist11# +dist12
 
     p21 = np.dot(base_trans, m2a1)[:3]
     p22 = np.dot(base_trans, m2a2)[:3]
     p23 = np.dot(l1_trans, m2a3)[:3]
-    dist21 = distance_bw_points(p21, p22)
+    dist21 = distance_bw_points(p21, p23)
     dist22 = distance_bw_points(p22, p23)
-    _length2 = dist21+dist22
+    _length2 = dist21# +dist22
     
     length1[j] = _length1
     length2[j] = _length2
-    jangle[j] = p.getJointState(chainUid, 0)[0]
+    jstate = p.getJointState(chainUid, 0)
+    jangle[j] = jstate[0]
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
     u.values = np.array([_length1, _act1, _length2, _act2])
     muscles.step()
     _force1 = force1.value
     _force2 = force2.value
-    _f_vec1 = T.unit_vector(p13-p12)*_force1
-    _f_vec2 = T.unit_vector(p23-p22)*_force2
-    print(_f_vec1, _f_vec2)
+    dir1 = (p11-p13)/np.linalg.norm((p11-p13))
+    dir2 = (p21-p23)/np.linalg.norm((p21-p23))
+    _f_vec1 = dir1*_force1
+    _f_vec2 = dir2*_force2
+    # print(_f_vec1, _f_vec2)
     p.applyExternalForce(chainUid, 0, _f_vec1, p13, flags=p.WORLD_FRAME)
     p.applyExternalForce(chainUid, 0, _f_vec2, p23, flags=p.WORLD_FRAME)
     # _f_vec1 = T.unit_vector(p11-p12)*_force1
@@ -259,34 +268,50 @@ for j in range(N):
     #     print(length[j], _force1, _f_vec1, p13)
 
     # p.addUserDebugLine(
+    #     lineToXYZ=p13+dir1,
+    #     lineFromXYZ=p13,
+    #     lineColorRGB=[0, 1, 1],
+    #     lineWidth=2,
+    #     lifeTime=0,
+    #     replaceItemUniqueId=f1line1)
+
+    # p.addUserDebugLine(
+    #     lineToXYZ=p23+dir2,
+    #     lineFromXYZ=p23,
+    #     lineColorRGB=[1, 0, 1],
+    #     lineWidth=2,
+    #     lifeTime=0,
+    #     replaceItemUniqueId=f2line1)
+
+    # p.addUserDebugLine(
     #     lineFromXYZ=p11,
-    #     lineToXYZ=p12,
+    #     lineToXYZ=p13,
     #     lineColorRGB=[1, 0, 0],
     #     lineWidth=4,
-    #     replaceItemUniqueId=f1line1)
+    #     replaceItemUniqueId=m1line1)
         
     # p.addUserDebugLine(
     #     lineFromXYZ=p12,
     #     lineToXYZ=p13,
     #     lineColorRGB=[1, 0, 0],
     #     lineWidth=4,
-    #     replaceItemUniqueId=f1line2)
+         # replaceItemUniqueId=m1line2)
 
     # p.addUserDebugLine(
     #     lineFromXYZ=p21,
-    #     lineToXYZ=p22,
+    #     lineToXYZ=p23,
     #     lineColorRGB=[1, 1, 0],
     #     lineWidth=4,
-    #     replaceItemUniqueId=f2line1)
+    #     replaceItemUniqueId=m2line1)
         
     # p.addUserDebugLine(
     #     lineFromXYZ=p22,
     #     lineToXYZ=p23,
     #     lineColorRGB=[1, 1, 0],
     #     lineWidth=4,
-    #     replaceItemUniqueId=f2line2)
+         # replaceItemUniqueId=m2line2)
     
-    # time.sleep(0.001)
+    time.sleep(0.001)
     p.stepSimulation()
 
 # plt.figure()
@@ -296,12 +321,12 @@ for j in range(N):
 # plt.figure()
 # plt.plot(np.rad2deg(jangle), length)
 # plt.grid(True)
-plt.figure()
-plt.plot(jangle, length1)
-plt.plot(jangle, length2)
-plt.legend(('1', '2'))
-plt.grid(True)
-plt.show()
+# plt.figure()
+# plt.plot(jangle, length1)
+# plt.plot(jangle, length2)
+# plt.legend(('1', '2'))
+# plt.grid(True)
+# plt.show()
 
 musculo_dae = muscles.dae
 #: Muscle Logging
@@ -324,4 +349,4 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results
 import plot_results
-plot_results.main('./Results')
+# plot_results.main('./Results')
