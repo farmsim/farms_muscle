@@ -107,8 +107,8 @@ for i in range(p.getNumJoints(chainUid)):
 
 
 ########## DEBUG ##########
-activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.2)
-activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.05)
+activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.05)
+activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.5)
 # p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 rendering(1)
 
@@ -192,12 +192,12 @@ muscles.setup_integrator(x0)
 u = muscles.dae.u
 force1 = muscles.dae.y.get_param('tendon_force_m1')
 force2 = muscles.dae.y.get_param('tendon_force_m2')
-N = 10000
+N = 1000
 length1 = np.zeros((N,1))
 length2 = np.zeros((N,1))
 jangle = np.zeros((N,1))
 
-# p.resetJointState(chainUid, 0, targetValue=0.)
+p.resetJointState(chainUid, 0, targetValue=0)
 
 #: Init
 for j in range(N):
@@ -206,8 +206,8 @@ for j in range(N):
         break
 
     #: Inertia
-    p.changeDynamics(chainUid, 0,
-                     localInertiaDiagonal=[0.04197, 0.000625, 0.04197])
+    # p.changeDynamics(chainUid, 0,
+    #                  localInertiaDiagonal=[0.04197, 0.000625, 0.04197])
     
     # p.setJointMotorControlArray(
     #     chainUid, np.arange(num_links), p.POSITION_CONTROL,
@@ -248,7 +248,7 @@ for j in range(N):
     jangle[j] = jstate[0]
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
-    u.values = np.array([_length1, _act1, _length2, _act2])
+    u.values = np.array([_length1, 0.2, _length2, 0.05])
     muscles.step()
     _force1 = force1.value
     _force2 = force2.value
@@ -257,8 +257,11 @@ for j in range(N):
     _f_vec1 = dir1*_force1
     _f_vec2 = dir2*_force2
     # print(_f_vec1, _f_vec2)
-    p.applyExternalForce(chainUid, 0, _f_vec1, p13, flags=p.WORLD_FRAME)
-    p.applyExternalForce(chainUid, 0, _f_vec2, p23, flags=p.WORLD_FRAME)
+    #: TRY LOCAL
+    new_f1 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec1,[1]))[:3]
+    new_f2 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec2,[1]))[:3]
+    p.applyExternalForce(chainUid, 0, new_f1, m1a3[:3], flags=p.LINK_FRAME)
+    p.applyExternalForce(chainUid, 0, new_f2, m2a3[:3], flags=p.LINK_FRAME)
     # _f_vec1 = T.unit_vector(p11-p12)*_force1
     # _f_vec2 = T.unit_vector(p21-p22)*_force2
     # p.applyExternalForce(chainUid, -1, _f_vec1, p12, flags=p.WORLD_FRAME)
@@ -349,4 +352,4 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results
 import plot_results
-# plot_results.main('./Results')
+plot_results.main('./Results')
