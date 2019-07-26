@@ -186,13 +186,21 @@ def distance_bw_points(p1, p2):
     """ Compute distance between two points. """
     return np.linalg.norm(np.array(p1)-np.array(p2))
 
+def unit_vector(p1, p2):
+    """ Compute the unit vector between two points. """
+    return (p1-p2)/np.linalg.norm((p1-p2))
+
 #: integrator
 x0 = np.array([0.25-0.13, 0.05, 0.25-0.13, 0.05])
 muscles.setup_integrator(x0)
 u = muscles.dae.u
+lmtu1 = u.get_param('lmtu_m1')
+lmtu2 = u.get_param('lmtu_m2')
+stim1 = u.get_param('stim_m1')
+stim2 = u.get_param('stim_m2')
 force1 = muscles.dae.y.get_param('tendon_force_m1')
 force2 = muscles.dae.y.get_param('tendon_force_m2')
-N = 1000
+N = 10000
 length1 = np.zeros((N,1))
 length2 = np.zeros((N,1))
 jangle = np.zeros((N,1))
@@ -231,16 +239,16 @@ for j in range(N):
     p11 = np.dot(base_trans, m1a1)[:3]
     p12 = np.dot(base_trans, m1a2)[:3]
     p13 = np.dot(l1_trans, m1a3)[:3]
-    dist11 = distance_bw_points(p11, p13)
+    dist11 = distance_bw_points(p11, p12)
     dist12 = distance_bw_points(p12, p13)
-    _length1 = dist11# +dist12
+    _length1 = dist11+dist12
 
     p21 = np.dot(base_trans, m2a1)[:3]
     p22 = np.dot(base_trans, m2a2)[:3]
     p23 = np.dot(l1_trans, m2a3)[:3]
-    dist21 = distance_bw_points(p21, p23)
+    dist21 = distance_bw_points(p21, p22)
     dist22 = distance_bw_points(p22, p23)
-    _length2 = dist21# +dist22
+    _length2 = dist21+dist22
     
     length1[j] = _length1
     length2[j] = _length2
@@ -248,20 +256,48 @@ for j in range(N):
     jangle[j] = jstate[0]
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
-    u.values = np.array([_length1, 0.2, _length2, 0.05])
+    lmtu1.value = _length1
+    stim1.value = _act1
+    lmtu2.value = _length2
+    stim2.value = _act2
+    
     muscles.step()
+
     _force1 = force1.value
     _force2 = force2.value
-    dir1 = (p11-p13)/np.linalg.norm((p11-p13))
-    dir2 = (p21-p23)/np.linalg.norm((p21-p23))
-    _f_vec1 = dir1*_force1
-    _f_vec2 = dir2*_force2
-    # print(_f_vec1, _f_vec2)
-    #: TRY LOCAL
-    new_f1 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec1,[1]))[:3]
-    new_f2 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec2,[1]))[:3]
-    p.applyExternalForce(chainUid, 0, new_f1, m1a3[:3], flags=p.LINK_FRAME)
-    p.applyExternalForce(chainUid, 0, new_f2, m2a3[:3], flags=p.LINK_FRAME)
+
+    #: Muscle 1
+    _f_vec1 = unit_vector(p12, p11)*_force1
+    _f_vec2 = unit_vector(p13, p12)*_force1    
+    _f_vec3 = unit_vector(p11, p12)*_force1
+    _f_vec4 = unit_vector(p12, p13)*_force1
+    
+    new_f1 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec1,[1]))[:3]
+    new_f2 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec2,[1]))[:3]
+    new_f3 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec3,[1]))[:3]
+    new_f4 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec4,[1]))[:3]
+    
+    p.applyExternalForce(chainUid, -1, new_f1, m1a1[:3], flags=p.LINK_FRAME)
+    p.applyExternalForce(chainUid, -1, new_f2, m1a2[:3], flags=p.LINK_FRAME)
+    p.applyExternalForce(chainUid, -1, new_f3, m1a2[:3], flags=p.LINK_FRAME)
+    p.applyExternalForce(chainUid, 0, new_f4, m1a3[:3], flags=p.LINK_FRAME)
+
+    #: Muscle 2
+    _f_vec1 = unit_vector(p22, p21)*_force2
+    _f_vec2 = unit_vector(p23, p22)*_force2    
+    _f_vec3 = unit_vector(p21, p22)*_force2
+    _f_vec4 = unit_vector(p22, p23)*_force2
+    
+    new_f1 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec1,[1]))[:3]
+    new_f2 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec2,[1]))[:3]
+    new_f3 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec3,[1]))[:3]
+    new_f4 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec4,[1]))[:3]
+    
+    p.applyExternalForce(chainUid, -1, new_f1, m2a1[:3], flags=p.LINK_FRAME)
+    p.applyExternalForce(chainUid, -1, new_f2, m2a2[:3], flags=p.LINK_FRAME)
+    p.applyExternalForce(chainUid, -1, new_f3, m2a2[:3], flags=p.LINK_FRAME)
+    p.applyExternalForce(chainUid, 0, new_f4, m2a3[:3], flags=p.LINK_FRAME)
+    
     # _f_vec1 = T.unit_vector(p11-p12)*_force1
     # _f_vec2 = T.unit_vector(p21-p22)*_force2
     # p.applyExternalForce(chainUid, -1, _f_vec1, p12, flags=p.WORLD_FRAME)
@@ -271,8 +307,8 @@ for j in range(N):
     #     print(length[j], _force1, _f_vec1, p13)
 
     # p.addUserDebugLine(
-    #     lineToXYZ=p13+dir1,
-    #     lineFromXYZ=p13,
+    #     lineToXYZ=p13+unit_vector(p13, p11),
+    #     lineunit_vector(p23, p21)XYZ=p13,
     #     lineColorRGB=[0, 1, 1],
     #     lineWidth=2,
     #     lifeTime=0,
@@ -352,4 +388,4 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results
 import plot_results
-plot_results.main('./Results')
+# plot_results.main('./Results')

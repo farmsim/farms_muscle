@@ -12,28 +12,28 @@ muscles:
     m_id: m1
     l_opt: 0.11
     joint_attach: RF_TC_PRO_RE
-    theta_ref: 0.0
     f_max: 1500.0
-    theta_max: 0.0
     v_max: 10
     l_slack: 0.13
     pennation: 1.0
     name: m1
-    r_0: -0.007
     l_ce0 : 0.1088
     a0 : 0.05
+    attachments:
+      base : [0 0 0]
+      link_1 : [1 0 0]
   m2:
     model: geyer
     m_id: m2
     l_opt: 0.11
     joint_attach: RF_TC_PRO_RE
-    theta_ref: 0.0
     f_max: 1500.0
-    theta_max: 0.0
     v_max: 10
     l_slack: 0.13
     pennation: 1.0
     name: m1
-    r_0: -0.007
     l_ce0 : 0.1088
     a0 : 0.05
+    attachments:
+      base : [0 0 0]
+      link_1 : [1 0 0]

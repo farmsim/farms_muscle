@@ -15,12 +15,12 @@ def main(FILE_PATH):
     musculo_u = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_u.h5'))
 
 
-    # plt.figure()
-    # plt.title('musculo_l_ce')
-    # _names = [key for key in musculo_x.keys() if 'l_ce' in key]
-    # plt.plot(musculo_x[_names])
-    # plt.legend(tuple(_names))
-    # plt.grid(True)
+    plt.figure()
+    plt.title('musculo_l_ce')
+    _names = [key for key in musculo_x.keys() if 'l_ce' in key]
+    plt.plot(musculo_x[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
 
     plt.figure()
     plt.title('musculo_act')
@@ -79,12 +79,12 @@ def main(FILE_PATH):
     # plt.legend(tuple(_names))
     # plt.grid(True)
 
-    # plt.figure()
-    # plt.title('Length')
-    # _names = [key for key in musculo_u.keys() if 'lmtu_' in key]
-    # plt.plot(musculo_u[_names])
-    # plt.legend(tuple(_names))
-    # plt.grid(True)
+    plt.figure()
+    plt.title('Length')
+    _names = [key for key in musculo_u.keys() if 'lmtu_' in key]
+    plt.plot(musculo_u[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
 
     # plt.figure()
     # plt.title('Parallel Force')
