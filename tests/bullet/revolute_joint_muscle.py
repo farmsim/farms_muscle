@@ -51,6 +51,7 @@ plane = p.loadURDF("plane.urdf", [0, 0, 0], globalScaling=1)
 
 length = 0.5
 mass = 0
+link_mass = 1
 visualShapeId = -1
 
 num_links = 1
@@ -60,7 +61,7 @@ baseColId = p.createCollisionShape(p.GEOM_CAPSULE,
                                    height=length,
                                    radius=length*0.05,
                                    collisionFramePosition=[0, 0, -length*0.5])
-link_Masses = [2 for j in range(num_links)]
+link_Masses = [link_mass for j in range(num_links)]
 linkCollisionShapeIndices = [p.createCollisionShape(p.GEOM_CAPSULE,
                                                     height=length,
                                                     radius=length*0.05,
@@ -200,7 +201,7 @@ stim1 = u.get_param('stim_m1')
 stim2 = u.get_param('stim_m2')
 force1 = muscles.dae.y.get_param('tendon_force_m1')
 force2 = muscles.dae.y.get_param('tendon_force_m2')
-N = 10000
+N = 5000
 length1 = np.zeros((N,1))
 length2 = np.zeros((N,1))
 jangle = np.zeros((N,1))
@@ -322,37 +323,37 @@ for j in range(N):
     #     lifeTime=0,
     #     replaceItemUniqueId=f2line1)
 
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p11,
-    #     lineToXYZ=p13,
-    #     lineColorRGB=[1, 0, 0],
-    #     lineWidth=4,
-    #     replaceItemUniqueId=m1line1)
+    p.addUserDebugLine(
+        lineFromXYZ=p11,
+        lineToXYZ=p12,
+        lineColorRGB=[1, 0, 0],
+        lineWidth=4,
+        replaceItemUniqueId=m1line1)
         
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p12,
-    #     lineToXYZ=p13,
-    #     lineColorRGB=[1, 0, 0],
-    #     lineWidth=4,
-         # replaceItemUniqueId=m1line2)
+    p.addUserDebugLine(
+        lineFromXYZ=p12,
+        lineToXYZ=p13,
+        lineColorRGB=[1, 0, 0],
+        lineWidth=4,
+         replaceItemUniqueId=m1line2)
 
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p21,
-    #     lineToXYZ=p23,
-    #     lineColorRGB=[1, 1, 0],
-    #     lineWidth=4,
-    #     replaceItemUniqueId=m2line1)
+    p.addUserDebugLine(
+        lineFromXYZ=p21,
+        lineToXYZ=p22,
+        lineColorRGB=[1, 1, 0],
+        lineWidth=4,
+        replaceItemUniqueId=m2line1)
         
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p22,
-    #     lineToXYZ=p23,
-    #     lineColorRGB=[1, 1, 0],
-    #     lineWidth=4,
-         # replaceItemUniqueId=m2line2)
+    p.addUserDebugLine(
+        lineFromXYZ=p22,
+        lineToXYZ=p23,
+        lineColorRGB=[1, 1, 0],
+        lineWidth=4,
+         replaceItemUniqueId=m2line2)
     
-    time.sleep(0.001)
+    # time.sleep(0.001)
     p.stepSimulation()
-
+print(jangle[-1])
 # plt.figure()
 # plt.plot(rot_cart)
 # plt.legend(('x', 'y', 'z'))
@@ -388,4 +389,4 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results
 import plot_results
-# plot_results.main('./Results')
+plot_results.main('./Results')
