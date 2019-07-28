@@ -9,3 +9,11 @@ build
 
 #: Temp
 *.*~
+
+#: Cython
+*.c
+*.html
+
+#: Webots
+*.wbproj
+
