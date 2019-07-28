@@ -43,13 +43,15 @@ def isometric_contraction():
 
     start = time.time()
     N = 10000
-    dl = np.linspace(-0.1, 0.1, N/100.0)
+    l = np.linspace(0.2, 0.46, N/100.0)
     count = -1
     time_vec = np.linspace(0., N/1000., N)
+    _l_param = muscles.dae.u.get_param('lmtu_m1')
     for j in range(0, N):
         if j % 100 == 0:
             count += 1
-        muscles.dae.u.values = np.array([dl[count], 1.0])
+            print('l_mtu -> {}'.format(_l_param.value))
+        muscles.dae.u.values = np.array([l[count], 1.0])
         muscles.step()
         muscles.dae.update_log()
         muscles.muscle_sys.py_update_outputs()
@@ -58,37 +60,36 @@ def isometric_contraction():
 
     #: PLOTTING
     data_y = muscles.dae.y.log
+    data_u = muscles.dae.u.log
     print(muscles.dae.y.name_idx)
-    print(data_y)
-    plt.figure(1)
-    plt.title('Muscle Tendon Length')
-    plt.plot(time_vec[0:N:100], data_y[0:N:100, 0])
-    plt.plot(time_vec[0:N:100], data_y[0:N:100, 0], '*')
-    plt.grid(True)
-    plt.show()
+    # plt.figure(1)
+    # plt.title('Muscle Tendon Length')
+    # plt.plot(time_vec[0:N:100], data_y[0:N:100, 1])
+    # plt.plot(time_vec[0:N:100], data_y[0:N:100, 1], '*')
+    # plt.grid(True)
 
     # plt.figure(2)
-    # plt.title('Muscle Length')
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 1])
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 1], '*')
+    # plt.title('Muscle Tendon Length')
+    # plt.plot(data_y[0:N:100, 0])
+    # plt.plot(data_y[0:N:100, 0], '*')
     # plt.grid(True)
 
     # plt.figure(3)
     # plt.title('Belly Force')
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 2])
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 2], '*')
+    # plt.plot(data_y[0:N:100, 1])
+    # plt.plot(data_y[0:N:100, 1], '*')
     # plt.grid(True)
 
     # plt.figure(4)
     # plt.title('Parallel Force')
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 3])
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 3], '*')
+    # plt.plot(data_y[0:N:100, 2])
+    # plt.plot(data_y[0:N:100, 2], '*')
     # plt.grid(True)
 
     # plt.figure(5)
     # plt.title('Force-Length')
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 4])
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 4], '*')
+    # plt.plot(l, data_y[0:N:100, 5])
+    # plt.plot(l, data_y[0:N:100, 5], '*')
     # plt.grid(True)
 
     # plt.figure(6)
@@ -105,22 +106,22 @@ def isometric_contraction():
 
     # plt.figure(8)
     # plt.title('Tendon Force')
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 7])
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 7], '*')
-    # plt.grid(True)
-
-    # plt.figure(9)
-    # plt.title('Force-Profile')
     # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 6])
     # plt.plot(np.linspace(0, N*0.001, N/100.0), data_y[0:N:100, 6], '*')
-    # passive_force = data_y[0:N:100, 2] + data_y[0:N:100, 3]
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), passive_force)
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), passive_force, '*')
-    # total_force = data_y[0:N:100, 6] + passive_force
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), total_force)
-    # plt.plot(np.linspace(0, N*0.001, N/100.0), total_force, '*')
     # plt.grid(True)
-    # plt.show()
+
+    plt.figure(9)
+    plt.title('Force-Profile')
+    plt.plot(l, data_y[0:N:100, 5])
+    plt.plot(l, data_y[0:N:100, 5], '*')
+    passive_force = data_y[0:N:100, 1] + data_y[0:N:100, 2]
+    plt.plot(l, passive_force)
+    plt.plot(l, passive_force, '*')
+    total_force = data_y[0:N:100, 5] + passive_force
+    plt.plot(l, total_force)
+    plt.plot(l, total_force, '*')
+    plt.grid(True)
+    plt.show()
 
 
 if __name__ == '__main__':
