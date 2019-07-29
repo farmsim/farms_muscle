@@ -59,50 +59,49 @@ cdef class GeyerMuscle(Muscle):
         self.tol = 1e-6  #: Tolerance
 
         self._name = parameters.name  #: Muscle name
-        self.m_id = parameters.m_id  #: Unique muscle id
 
         #: Internal access to parameters inputs
         self.u = dae.u
 
         #: Internal properties
-        (self._l_slack, _) = dae.add_c('l_slack_' + self.m_id,
+        (self._l_slack, _) = dae.add_c('l_slack_' + self._name,
                                        parameters.l_slack)
-        (self._l_opt, _) = dae.add_c('l_opt_' + self.m_id,
+        (self._l_opt, _) = dae.add_c('l_opt_' + self._name,
                                      parameters.l_opt)
-        (self._v_max, _) = dae.add_c('v_max_' + self.m_id,
+        (self._v_max, _) = dae.add_c('v_max_' + self._name,
                                      parameters.v_max)
-        (self._f_max, _) = dae.add_c('f_max_' + self.m_id,
+        (self._f_max, _) = dae.add_c('f_max_' + self._name,
                                      parameters.f_max)
-        (self._pennation, _) = dae.add_c('pennation_' + self.m_id,
+        (self._pennation, _) = dae.add_c('pennation_' + self._name,
                                          parameters.pennation)
 
-        (self._td_to_sc, _) = dae.add_c('td_to_sc_' + self.m_id,
+        (self._td_to_sc, _) = dae.add_c('td_to_sc_' + self._name,
                                         parameters.td_to_sc)
-        (self._td_from_sc, _) = dae.add_c('td_from_sc_' + self.m_id,
+        (self._td_from_sc, _) = dae.add_c('td_from_sc_' + self._name,
                                           parameters.td_from_sc)
 
         if parameters.motiontype == 'flexor':
-            (self._motiontype, _) = dae.add_c('motiontype_' + self.m_id,
+            (self._motiontype, _) = dae.add_c('motiontype_' + self._name,
                                               1)
         else:
-            (self._motiontype, _) = dae.add_c('motiontype_' + self.m_id,
+            (self._motiontype, _) = dae.add_c('motiontype_' + self._name,
                                               1)
 
         self._type = parameters.muscle_type
 
         # #: MUSCLE STATES
         # #: Muscle Contractile Length
-        self._l_ce = dae.add_x('l_ce_' + self.m_id,
+        self._l_ce = dae.add_x('l_ce_' + self._name,
                                parameters.l_ce0)
         #: Muscle Activation
-        self._activation = dae.add_x('activation_' + self.m_id,
+        self._activation = dae.add_x('activation_' + self._name,
                                      parameters.a0)
 
         #: INPUTS TO THE MODEL
         #: Muscle length change
-        self._l_mtu = dae.add_u('lmtu_'+self.m_id)
+        self._l_mtu = dae.add_u('lmtu_'+self._name)
         #: External Muscle stimulation
-        self._stim = dae.add_u('stim_' + self.m_id)
+        self._stim = dae.add_u('stim_' + self._name)
 
         print('Type : {} and num joints {}'.format(
             self._type, self.num_joints))
@@ -120,17 +119,17 @@ cdef class GeyerMuscle(Muscle):
                     self._type))
 
         #: Derivatives
-        self._v_ce = dae.add_xdot("v_ce_" + self.m_id, 0.0)
-        self._adot = dae.add_xdot("dA_" + self.m_id, 0.0)
+        self._v_ce = dae.add_xdot("v_ce_" + self._name, 0.0)
+        self._adot = dae.add_xdot("dA_" + self._name, 0.0)
 
         #: Outputs
-        self._l_se = dae.add_y("tendon_length_"+self.m_id, self._l_slack)
-        self._f_be = dae.add_y("belly_force_"+self.m_id, 0.0)
-        self._f_pe = dae.add_y("parallel_force_"+self.m_id, 0.0)
-        self._f_lce = dae.add_y("force_length_"+self.m_id, 0.0)
-        self._f_vce = dae.add_y("force_velocity_"+self.m_id, 0.0)
-        self._f_ce = dae.add_y("active_force_"+self.m_id, 0.0)
-        self._f_se = dae.add_y("tendon_force_"+self.m_id, 0.0)
+        self._l_se = dae.add_y("tendon_length_"+self._name, self._l_slack)
+        self._f_be = dae.add_y("belly_force_"+self._name, 0.0)
+        self._f_pe = dae.add_y("parallel_force_"+self._name, 0.0)
+        self._f_lce = dae.add_y("force_length_"+self._name, 0.0)
+        self._f_vce = dae.add_y("force_velocity_"+self._name, 0.0)
+        self._f_ce = dae.add_y("active_force_"+self._name, 0.0)
+        self._f_se = dae.add_y("tendon_force_"+self._name, 0.0)
 
     ########## C Wrappers ##########
     def _py_tendon_force(self, l_se):

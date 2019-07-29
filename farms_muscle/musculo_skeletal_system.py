@@ -6,7 +6,6 @@ import sys
 import numpy as np
 
 from farms_muscle.muscle_system import MuscleSystemGenerator
-from farms_muscle.musculo_skeletal_parameters import MuscleJointParameters
 
 from farms_dae_generator.dae_generator import DaeGenerator
 
