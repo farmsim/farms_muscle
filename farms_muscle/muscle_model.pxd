@@ -47,9 +47,6 @@ cdef class GeyerMuscle(Muscle):
         Param _f_ce
         Param _f_se
 
-        #: Access to inputs of the system
-        Parameters u
-
     cdef:
         #: SUB-MUSCLE FUNCTIONS
         inline double c_tendon_force(self, double l_se) nogil

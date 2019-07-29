@@ -4,7 +4,7 @@ cdef class Muscle(object):
     """Muscle base class.
     """
 
-    def __init__(self):
+    def __init__(self, num_attachments=None):
         """Initialize"""
         super(Muscle, self).__init__()
         self._name = 'muscle'
