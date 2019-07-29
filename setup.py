@@ -22,6 +22,18 @@ extensions = [
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3']
+              ),
+    Extension("farms_muscle.physics_interface",
+              ["farms_muscle/physics_interface.pyx"],
+              include_dirs=[numpy.get_include()],
+              extra_compile_args=['-ffast-math', '-O3'],
+              extra_link_args=['-O3']
+              ),
+    Extension("farms_muscle.bullet_interface",
+              ["farms_muscle/bullet_interface.pyx"],
+              include_dirs=[numpy.get_include()],
+              extra_compile_args=['-ffast-math', '-O3'],
+              extra_link_args=['-O3']
               )
 ]
 
