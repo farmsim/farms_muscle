@@ -106,9 +106,6 @@ class MuscleParameters(SystemParameters):
         self.units['muscle_type'] = '<str>'
         self.units['l_ce0'] = 'm'
         self.units['a0'] = '[0-1]'
-        self.units['td_to_sc'] = 'ms'
-        self.units['td_from_sc'] = 'ms'
-        self.units['motiontype'] = '<str>'
         self.units['waypoints'] = '<list>'
 
         self.parameters['model'] = kwargs.get('model', 'geyer')
@@ -122,9 +119,6 @@ class MuscleParameters(SystemParameters):
         self.parameters['l_ce0'] = kwargs.get(
             'l_ce0', self.parameters['l_opt'])
         self.parameters['a0'] = kwargs.get('a0', 0.05)
-        self.parameters['td_to_sc'] = kwargs.get('td_to_sc', 5)
-        self.parameters['td_from_sc'] = kwargs.get('td_from_sc', 5)
-        self.parameters['motiontype'] = kwargs.get('motiontype', 'flexor')
         self.parameters['waypoints'] = kwargs.get('waypoints', [])
 
     @property
@@ -157,36 +151,6 @@ class MuscleParameters(SystemParameters):
             Set contractile element initial length
         """
         self.parameters['l_ce0'] = value
-
-    @property
-    def td_to_sc(self):
-        """ Time delay to spinal cord  """
-        return self.parameters['td_to_sc']
-
-    @td_to_sc.setter
-    def td_to_sc(self, value):
-        """
-        Parameters
-        ----------
-        value : <float>
-            Set time delay to spinal cord
-        """
-        self.parameters['td_to_sc'] = value
-
-    @property
-    def td_from_sc(self):
-        """ Time delay from spinal cord  """
-        return self.parameters['td_from_sc']
-
-    @td_from_sc.setter
-    def td_from_sc(self, value):
-        """
-        Parameters
-        ----------
-        value : <float>
-            Set time delay from spinal cord
-        """
-        self.parameters['td_from_sc'] = value
 
     @property
     def a0(self):
@@ -257,17 +221,6 @@ class MuscleParameters(SystemParameters):
         """ Keyword Arguments:
             value -- Muscle fiber pennation angle """
         self.parameters['pennation'] = value
-
-    @property
-    def motiontype(self):
-        """ Muscle motion direction, anatomical term  """
-        return self.parameters['motiontype']
-
-    @motiontype.setter
-    def motiontype(self, value):
-        """ Keyword Arguments:
-            value -- Muscle motion direction, anatomical term """
-        self.parameters['motiontype'] = value
 
     @property
     def name(self):

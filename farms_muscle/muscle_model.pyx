@@ -75,18 +75,6 @@ cdef class GeyerMuscle(Muscle):
         (self._pennation, _) = dae.add_c('pennation_' + self._name,
                                          parameters.pennation)
 
-        (self._td_to_sc, _) = dae.add_c('td_to_sc_' + self._name,
-                                        parameters.td_to_sc)
-        (self._td_from_sc, _) = dae.add_c('td_from_sc_' + self._name,
-                                          parameters.td_from_sc)
-
-        if parameters.motiontype == 'flexor':
-            (self._motiontype, _) = dae.add_c('motiontype_' + self._name,
-                                              1)
-        else:
-            (self._motiontype, _) = dae.add_c('motiontype_' + self._name,
-                                              1)
-
         self._type = parameters.muscle_type
 
         # #: MUSCLE STATES
@@ -102,21 +90,6 @@ cdef class GeyerMuscle(Muscle):
         self._l_mtu = dae.add_u('lmtu_'+self._name)
         #: External Muscle stimulation
         self._stim = dae.add_u('stim_' + self._name)
-
-        print('Type : {} and num joints {}'.format(
-            self._type, self.num_joints))
-
-        if self._type == 'mono':
-            #: Mono articular muscle
-            self.num_joints = 1
-        elif self._type == 'bi':
-            #: Bi articular muscle
-            self.num_joints = 2
-        else:
-            self.num_joints = 0
-            pylog.warning(
-                'Muscle type {} not valid. Is neither mono/bi'.format(
-                    self._type))
 
         #: Derivatives
         self._v_ce = dae.add_xdot("v_ce_" + self._name, 0.0)
