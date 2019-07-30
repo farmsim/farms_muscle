@@ -106,6 +106,7 @@ p.getNumJoints(chainUid)
 for i in range(p.getNumJoints(chainUid)):
     p.getJointInfo(chainUid, i)
 
+pylog.debug('Model id : {}'.format(chainUid))
 
 ########## DEBUG ##########
 activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.05)
@@ -201,7 +202,7 @@ stim1 = u.get_param('stim_m1')
 stim2 = u.get_param('stim_m2')
 force1 = muscles.dae.y.get_param('tendon_force_m1')
 force2 = muscles.dae.y.get_param('tendon_force_m2')
-N = 5000
+N = 10000
 length1 = np.zeros((N,1))
 length2 = np.zeros((N,1))
 jangle = np.zeros((N,1))
@@ -229,13 +230,14 @@ for j in range(N):
     #     targetPosition=np.sin(2*np.pi*j/1000*1.)*np.pi)# 
     # p.setJointMotorControl2(chainUid, 0, p.TORQUE_CONTROL,force=0.)
     
-    ls = p.getLinkState(chainUid, 0)
+    # ls = p.getLinkState(chainUid, 0)
+    (_, _, _, _, pos, orient, *_) = p.getLinkState(chainUid, 0)
 
     #: Build Homogeneous Matrix
     base_trans = T.compose_matrix(angles=p.getEulerFromQuaternion(pbase[1]),
                                translate=pbase[0])
-    l1_trans = T.compose_matrix(angles=p.getEulerFromQuaternion(ls[5]),
-                               translate=ls[4])
+    l1_trans = T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
+                                translate=pos)
 
     p11 = np.dot(base_trans, m1a1)[:3]
     p12 = np.dot(base_trans, m1a2)[:3]
@@ -257,9 +259,9 @@ for j in range(N):
     jangle[j] = jstate[0]
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
-    lmtu1.value = _length1
+    # lmtu1.value = _length1
     stim1.value = _act1
-    lmtu2.value = _length2
+    # lmtu2.value = _length2
     stim2.value = _act2
     
     muscles.step()
@@ -278,10 +280,10 @@ for j in range(N):
     new_f3 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec3,[1]))[:3]
     new_f4 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec4,[1]))[:3]
     
-    p.applyExternalForce(chainUid, -1, new_f1, m1a1[:3], flags=p.LINK_FRAME)
-    p.applyExternalForce(chainUid, -1, new_f2, m1a2[:3], flags=p.LINK_FRAME)
-    p.applyExternalForce(chainUid, -1, new_f3, m1a2[:3], flags=p.LINK_FRAME)
-    p.applyExternalForce(chainUid, 0, new_f4, m1a3[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, -1, new_f1, m1a1[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, -1, new_f2, m1a2[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, -1, new_f3, m1a2[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, 0, new_f4, m1a3[:3], flags=p.LINK_FRAME)
 
     #: Muscle 2
     _f_vec1 = unit_vector(p22, p21)*_force2
@@ -294,10 +296,10 @@ for j in range(N):
     new_f3 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec3,[1]))[:3]
     new_f4 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec4,[1]))[:3]
     
-    p.applyExternalForce(chainUid, -1, new_f1, m2a1[:3], flags=p.LINK_FRAME)
-    p.applyExternalForce(chainUid, -1, new_f2, m2a2[:3], flags=p.LINK_FRAME)
-    p.applyExternalForce(chainUid, -1, new_f3, m2a2[:3], flags=p.LINK_FRAME)
-    p.applyExternalForce(chainUid, 0, new_f4, m2a3[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, -1, new_f1, m2a1[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, -1, new_f2, m2a2[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, -1, new_f3, m2a2[:3], flags=p.LINK_FRAME)
+    # p.applyExternalForce(chainUid, 0, new_f4, m2a3[:3], flags=p.LINK_FRAME)
     
     # _f_vec1 = T.unit_vector(p11-p12)*_force1
     # _f_vec2 = T.unit_vector(p21-p22)*_force2
@@ -335,7 +337,7 @@ for j in range(N):
         lineToXYZ=p13,
         lineColorRGB=[1, 0, 0],
         lineWidth=4,
-         replaceItemUniqueId=m1line2)
+        replaceItemUniqueId=m1line2)
 
     p.addUserDebugLine(
         lineFromXYZ=p21,
@@ -389,4 +391,4 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results
 import plot_results
-plot_results.main('./Results')
+# plot_results.main('./Results')

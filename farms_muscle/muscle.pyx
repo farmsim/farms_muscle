@@ -1,13 +1,16 @@
 """Muscle abstract class"""
 
+import farms_pylog as pylog
+
 cdef class Muscle(object):
     """Muscle base class.
     """
 
-    def __init__(self, num_attachments=None):
+    def __init__(self, name, physics_engine):
         """Initialize"""
         super(Muscle, self).__init__()
-        self._name = 'muscle'
+        self._physics_engine = physics_engine
+        self._name = name
         self._l_slack = 0.0
         self._l_opt = 0.0
         self._f_max = 0.0

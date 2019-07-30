@@ -10,7 +10,7 @@ cdef class BulletInterface(PhysicsInterface):
     cdef:
         int model_id
         int num_attachments
-        cnp.ndarray attachment_points
+        cnp.ndarray waypoints
         cnp.ndarray _points
         
     #################### C-FUNCTIONS ####################    

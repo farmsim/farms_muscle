@@ -13,6 +13,8 @@ import cython
 import farms_pylog as pylog
 from farms_muscle.muscle cimport Muscle
 from farms_dae_generator.dae_generator import DaeGenerator
+from farms_muscle.physics_interface cimport PhysicsInterface
+from farms_muscle.bullet_interface cimport BulletInterface
 from libc.stdio cimport printf
 from libc.math cimport sqrt as csqrt
 from libc.math cimport sin as csin
@@ -28,7 +30,7 @@ cdef class GeyerMuscle(Muscle):
     The muscle model is based on the hill-type muscle model by Geyer et.al
     """
 
-    def __init__(self, dae, parameters):
+    def __init__(self, dae, parameters, physics_engine='BULLET', model_id=1):
         """This function initializes the muscle model.
         A default muscle name is given as muscle
 
@@ -38,6 +40,8 @@ cdef class GeyerMuscle(Muscle):
             Instance of CasadiDaeGenerator class
         parameters : <MuscleParameters>
             Instance of MuscleParameters class
+        model_id : <int>
+            Only needed for bullet engine
 
         Returns:
         -------
@@ -45,7 +49,7 @@ cdef class GeyerMuscle(Muscle):
             Returns an instance of class Muscle
 
         """
-        super(GeyerMuscle, self).__init__()
+        super(GeyerMuscle, self).__init__(parameters.name, physics_engine)
 
         self.c = float(np.log(0.05))  # pylint: disable=no-member
         self.N = 1.5
@@ -57,8 +61,6 @@ cdef class GeyerMuscle(Muscle):
 
         self.density = 1060
         self.tol = 1e-6  #: Tolerance
-
-        self._name = parameters.name  #: Muscle name
 
         #: Internal access to parameters inputs
         self.u = dae.u
@@ -103,6 +105,15 @@ cdef class GeyerMuscle(Muscle):
         self._f_vce = dae.add_y("force_velocity_"+self._name, 0.0)
         self._f_ce = dae.add_y("active_force_"+self._name, 0.0)
         self._f_se = dae.add_y("tendon_force_"+self._name, 0.0)
+
+        #: PhysicsInterface
+        if physics_engine == 'NONE':
+            self.p_interface = PhysicsInterface(self._l_mtu, self._f_se)
+            pylog.warning("Muscle {} connected to any physics engine".format(self._name))
+        elif physics_engine == 'BULLET':
+            self.p_interface = BulletInterface(
+                model_id, self._l_mtu, self._f_se, parameters.waypoints)
+            pylog.debug("Muscle {} connected to any Bullet engine".format(self._name))        
 
     ########## C Wrappers ##########
     def _py_tendon_force(self, l_se):
@@ -351,7 +362,7 @@ cdef class GeyerMuscle(Muscle):
         self._v_ce.c_set_value(-1*self.c_contractile_velocity(_f_v))
 
     cdef void c_output(self) nogil:
-        """ Compute the outputs of the system. """
+        """ Compute the outputs of the system. """        
         #: Attributes needed for output computation
         cdef double l_ce = self._l_ce.c_get_value()
         cdef double v_ce = self._v_ce.c_get_value()

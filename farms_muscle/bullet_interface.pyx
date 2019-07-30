@@ -21,59 +21,69 @@ import farms_pylog as pylog
 cdef class BulletInterface(PhysicsInterface):
     """Interface between bullet physics engine and muscle model.
     """
-    def __init__(self, model_id, lmtu, force, attachment_points):
+    def __init__(self, model_id, lmtu, force, waypoints):
         super(BulletInterface, self).__init__(lmtu, force, 'BULLET')
-        #: Number of attachment_points
+        #: Number of waypoints
         self.model_id = model_id
         pylog.debug('Model {} -> num points {}'.format(
-            self.model_id, len(attachment_points)))
+            self.model_id, len(waypoints)))
         
-        self.num_attachments = len(attachment_points)        
+        self.num_attachments = len(waypoints)        
 
         self._points = cnp.ndarray((self.num_attachments,),
-                                   dtype=[('p','(3,)f')])
+                                   dtype=('(3,)d'))
 
         
-        self.attachment_points = cnp.ndarray((self.num_attachments,),
+        self.waypoints = cnp.ndarray((self.num_attachments,),
                                             dtype=[('link_id','i'),
-                                                   ('point','(4,)f')])
+                                                   ('point','(4,)d')])
     
         
-        #: Add the attachment_points
-        self.add_attachment_points(attachment_points)
+        #: Add the waypoints
+        self.add_waypoints(waypoints)
 
     #################### PY-FUNCTIONS ####################
-    def add_attachment_points(self, attachment_points):
+    def add_waypoints(self, waypoints):
         """ Add new attachment point. 
         Parameters
         ----------
-        attachment_points: <list>
+        waypoints: <list>
             List containing link ids and attachment points
         """
 
+        print(self._points)
 
-        for j, attachment in enumerate(attachment_points):
-            self.attachment_points[j][0] = attachment[0]
-            self.attachment_points[j][1][0] = attachment[1][0]
-            self.attachment_points[j][1][1] = attachment[1][1]
-            self.attachment_points[j][1][2] = attachment[1][2]
-            self.attachment_points[j][1][3] = 1.
+        for j, attachment in enumerate(waypoints):
+            if attachment[0]['link'] == 'base':
+                _link_id = -1
+            else:
+                _link_id = 0
+            self.waypoints[j][0] = _link_id
+            self.waypoints[j][1][0] = attachment[1]['point'][0]
+            self.waypoints[j][1][1] = attachment[1]['point'][1]
+            self.waypoints[j][1][2] = attachment[1]['point'][2]
+            self.waypoints[j][1][3] = 1.
 
-        print(self.attachment_points)
+            self._points[j][:] = attachment[1]['point'][:3]
+
+        print(self.waypoints)
+
+    def py_compute_muscle_length(self):
+        self.c_compute_muscle_length()
         
     def py_dist_between_points(self, p1, p2):
         return self.c_dist_between_points(p1, p2)
 
-    def py_force_vector(self, p1, p2, force, dir_vec):        
-        return self.c_force_vector(p1, p2, force, dir_vec)
+    def py_force_vector(self, p1, p2, force, f_vec):        
+        return self.c_force_vector(p1, p2, force, f_vec)
     
     #################### C-FUNCTIONS ####################
     cdef void c_compute_muscle_length(self):
         """ Compute the muscle length based on the physics simulator. """
-        # cdef double[4] point
+
         cdef unsigned int _index = 0
         
-        for link_id, point in self.attachment_points:
+        for link_id, point in self.waypoints:
             if link_id == -1:
                 (pos, orient) = p.getBasePositionAndOrientation(
                     self.model_id)
@@ -82,15 +92,14 @@ cdef class BulletInterface(PhysicsInterface):
                     self.model_id, link_id)
             trans = T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
                              translate=pos)
-            self._points[_index] = np.dot(trans, point)[:3]
+            self._points[_index][:] = np.dot(trans, point)[:3]
+            _index += 1
             
         #: Compute the length
         cdef double _length = 0.0
         for j in range(self.num_attachments-1):
-            _length += self.c_dist_between_points(
-                self._points[_index], self.points[_index+j])
-            
-        pylog.debug('Length -> {}'.format(_length))
+            _length +=self.c_dist_between_points(self._points[j],
+                                                 self._points[j+1])
 
         #: Update the muscle length
         self.lmtu.c_set_value(_length)
@@ -105,7 +114,6 @@ cdef class BulletInterface(PhysicsInterface):
 
     cdef inline void c_force_vector(self, double[:] p1, double[:] p2, double force, double[:] f_vec) nogil:
         """ Compute the force vector between two given points. """
-
         for j in range(3):
             f_vec[j] = p1[j] - p2[j]
 
@@ -113,21 +121,20 @@ cdef class BulletInterface(PhysicsInterface):
         cdef double mag = 0.0
         for j in range(3):
             mag += f_vec[j]*f_vec[j]
-
+        mag = csqrt(mag)
         for j in range(3):
             f_vec[j] = f_vec[j]*force/mag
-        
+            
     cdef void c_apply_muscle_forces(self):
         """ Apply the forces generated by the muscle onto the physical links. """
         cdef double _force = self.force.value
-        cdef double[3] f_vec
-        cdef cnp.ndarray dir_vec = np.zeros((3,))
+        cdef double[:] f_vec = np.zeros((3,),dtype='d')
         cdef int _link_id
 
         #: Apply forces
         for j in range(self.num_attachments - 1):
             #: link id
-            _link_id = self.attachment_points[j][0]
+            _link_id = self.waypoints[j][0]
             
             self.c_force_vector(
                 self._points[j+1], self._points[j], _force, f_vec)
@@ -147,15 +154,15 @@ cdef class BulletInterface(PhysicsInterface):
 
             #: Apply the force
             p.applyExternalForce(
-                self.model_id, _link_id, f_vec, self._points[j],
+                self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],
                 flags=p.LINK_FRAME)
 
         for j in range(1, self.num_attachments):
             #: link id
-            _link_id = self.attachment_points[j][0]
+            _link_id = self.waypoints[j][0]
             
             self.c_force_vector(
-                self._points[j], self._points[j-1], _force, f_vec)
+                self._points[j-1], self._points[j], _force, f_vec)
             
             #: To be checked
             if _link_id == -1:
@@ -172,5 +179,5 @@ cdef class BulletInterface(PhysicsInterface):
 
             #: Apply the force
             p.applyExternalForce(
-                self.model_id, _link_id, f_vec, self._points[j],
+                self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],
                 flags=p.LINK_FRAME)

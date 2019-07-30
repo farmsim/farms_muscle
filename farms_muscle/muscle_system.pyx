@@ -94,7 +94,9 @@ cdef class MuscleSystemGenerator(object):
         #: Loop over all the muscles
         for j in range(self.num_muscles):
             m = self.c_muscles[j]
+            m.p_interface.c_compute_muscle_length()
             m.c_output()
+            m.p_interface.c_apply_muscle_forces()
 
     #################### C-WRAPPERS ####################
 
