@@ -51,13 +51,16 @@ cdef class BulletInterface(PhysicsInterface):
             List containing link ids and attachment points
         """
 
-        print(self._points)
+        _link_name_to_index = {p.getBodyInfo(self.model_id)[0].decode('UTF-8'):-1,}
+
+        for _id in range(p.getNumJoints(self.model_id)):
+            _name = p.getJointInfo(self.model_id, _id)[12].decode('UTF-8')
+            _link_name_to_index[_name] = _id                
+        pylog.debug('Link-Index -> {}'.format(_link_name_to_index))
 
         for j, attachment in enumerate(waypoints):
-            if attachment[0]['link'] == 'base':
-                _link_id = -1
-            else:
-                _link_id = 0
+            _link_id = _link_name_to_index[attachment[0]['link']]
+                
             self.waypoints[j][0] = _link_id
             self.waypoints[j][1][0] = attachment[1]['point'][0]
             self.waypoints[j][1][1] = attachment[1]['point'][1]
