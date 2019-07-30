@@ -16,4 +16,4 @@ cdef class PhysicsInterface(object):
     cdef:
         void c_compute_muscle_length(self)
         void c_apply_muscle_forces(self)
-        void c_show_muscle(self, bint VISUALIZATION=*)
+        void c_show_muscle(self)

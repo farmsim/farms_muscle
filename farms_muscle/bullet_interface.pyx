@@ -197,9 +197,9 @@ cdef class BulletInterface(PhysicsInterface):
                 self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],
                 flags=p.LINK_FRAME)
 
-    cdef void c_show_muscle(self, bint VISUALIZATION=True):
+    cdef void c_show_muscle(self):
         """ Visualize the muscle attachment. """
-        if VISUALIZATION:
+        if self.VISUALIZATION:
             for j in range(self.num_attachments-1):
                 p.addUserDebugLine(
                     lineFromXYZ=np.asarray(self._points[j]),

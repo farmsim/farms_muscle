@@ -107,6 +107,7 @@ class MuscleParameters(SystemParameters):
         self.units['l_ce0'] = 'm'
         self.units['a0'] = '[0-1]'
         self.units['waypoints'] = '<list>'
+        self.units['visualize'] = 'bool'
 
         self.parameters['model'] = kwargs.get('model', 'geyer')
         self.parameters['l_slack'] = kwargs.get('l_slack', 0.13)
@@ -120,6 +121,22 @@ class MuscleParameters(SystemParameters):
             'l_ce0', self.parameters['l_opt'])
         self.parameters['a0'] = kwargs.get('a0', 0.05)
         self.parameters['waypoints'] = kwargs.get('waypoints', [])
+        self.parameters['visualize'] = kwargs.get('visualize', True)
+
+    @property
+    def visualize(self):
+        """ Waypoints describing muscle attachments  """
+        return self.parameters['visualize']
+        
+    @visualize.setter
+    def visualize(self, value):
+        """
+        Parameters
+        ----------
+        value : <list>
+            List of visualize describing the muscle attachment in local link frame
+        """
+        self.parameters['visualize'] = value
 
     @property
     def waypoints(self):
@@ -136,7 +153,6 @@ class MuscleParameters(SystemParameters):
         """
         self.parameters['waypoints'] = value
         
-
     @property
     def l_ce0(self):
         """ Contractile element initial length  """

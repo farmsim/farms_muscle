@@ -21,4 +21,4 @@ cdef class BulletInterface(PhysicsInterface):
         inline void c_force_vector(self, double[:] p1, double[:] p2, double force, double[:] f_vec) nogil
         void c_compute_muscle_length(self)
         void c_apply_muscle_forces(self)
-        void c_show_muscle(self, bint VISUALIZATION=*)
+        void c_show_muscle(self)

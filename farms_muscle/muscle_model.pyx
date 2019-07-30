@@ -109,11 +109,14 @@ cdef class GeyerMuscle(Muscle):
         #: PhysicsInterface
         if physics_engine == 'NONE':
             self.p_interface = PhysicsInterface(self._l_mtu, self._f_se)
-            pylog.warning("Muscle {} connected to any physics engine".format(self._name))
+            pylog.warning(
+                "Muscle {} connected to any physics engine".format(self._name))
         elif physics_engine == 'BULLET':
             self.p_interface = BulletInterface(
-                model_id, self._l_mtu, self._f_se, self._stim, parameters.waypoints)
-            pylog.debug("Muscle {} connected to any Bullet engine".format(self._name))        
+                model_id, self._l_mtu, self._f_se, self._stim,
+                parameters.waypoints, parameters.visualize)
+            pylog.debug(
+                "Muscle {} connected to any Bullet engine".format(self._name))        
 
     ########## C Wrappers ##########
     def _py_tendon_force(self, l_se):

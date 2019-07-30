@@ -97,7 +97,7 @@ cdef class MuscleSystemGenerator(object):
             m.p_interface.c_compute_muscle_length()
             m.c_output()
             m.p_interface.c_apply_muscle_forces()
-            m.p_interface.c_show_muscle(VISUALIZATION=True)
+            m.p_interface.c_show_muscle()
 
     #################### C-WRAPPERS ####################
 
