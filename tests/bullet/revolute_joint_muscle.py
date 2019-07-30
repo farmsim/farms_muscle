@@ -238,76 +238,14 @@ for j in range(N):
                                translate=pbase[0])
     l1_trans = T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
                                 translate=pos)
-
-    p11 = np.dot(base_trans, m1a1)[:3]
-    p12 = np.dot(base_trans, m1a2)[:3]
-    p13 = np.dot(l1_trans, m1a3)[:3]
-    dist11 = distance_bw_points(p11, p12)
-    dist12 = distance_bw_points(p12, p13)
-    _length1 = dist11+dist12
-
-    p21 = np.dot(base_trans, m2a1)[:3]
-    p22 = np.dot(base_trans, m2a2)[:3]
-    p23 = np.dot(l1_trans, m2a3)[:3]
-    dist21 = distance_bw_points(p21, p22)
-    dist22 = distance_bw_points(p22, p23)
-    _length2 = dist21+dist22
-    
-    length1[j] = _length1
-    length2[j] = _length2
     jstate = p.getJointState(chainUid, 0)
     jangle[j] = jstate[0]
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
-    # lmtu1.value = _length1
     stim1.value = _act1
-    # lmtu2.value = _length2
     stim2.value = _act2
     
     muscles.step()
-
-    _force1 = force1.value
-    _force2 = force2.value
-
-    #: Muscle 1
-    _f_vec1 = unit_vector(p12, p11)*_force1
-    _f_vec2 = unit_vector(p13, p12)*_force1    
-    _f_vec3 = unit_vector(p11, p12)*_force1
-    _f_vec4 = unit_vector(p12, p13)*_force1
-    
-    new_f1 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec1,[1]))[:3]
-    new_f2 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec2,[1]))[:3]
-    new_f3 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec3,[1]))[:3]
-    new_f4 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec4,[1]))[:3]
-    
-    # p.applyExternalForce(chainUid, -1, new_f1, m1a1[:3], flags=p.LINK_FRAME)
-    # p.applyExternalForce(chainUid, -1, new_f2, m1a2[:3], flags=p.LINK_FRAME)
-    # p.applyExternalForce(chainUid, -1, new_f3, m1a2[:3], flags=p.LINK_FRAME)
-    # p.applyExternalForce(chainUid, 0, new_f4, m1a3[:3], flags=p.LINK_FRAME)
-
-    #: Muscle 2
-    _f_vec1 = unit_vector(p22, p21)*_force2
-    _f_vec2 = unit_vector(p23, p22)*_force2    
-    _f_vec3 = unit_vector(p21, p22)*_force2
-    _f_vec4 = unit_vector(p22, p23)*_force2
-    
-    new_f1 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec1,[1]))[:3]
-    new_f2 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec2,[1]))[:3]
-    new_f3 = np.dot(T.inverse_matrix(base_trans), np.append(_f_vec3,[1]))[:3]
-    new_f4 = np.dot(T.inverse_matrix(l1_trans), np.append(_f_vec4,[1]))[:3]
-    
-    # p.applyExternalForce(chainUid, -1, new_f1, m2a1[:3], flags=p.LINK_FRAME)
-    # p.applyExternalForce(chainUid, -1, new_f2, m2a2[:3], flags=p.LINK_FRAME)
-    # p.applyExternalForce(chainUid, -1, new_f3, m2a2[:3], flags=p.LINK_FRAME)
-    # p.applyExternalForce(chainUid, 0, new_f4, m2a3[:3], flags=p.LINK_FRAME)
-    
-    # _f_vec1 = T.unit_vector(p11-p12)*_force1
-    # _f_vec2 = T.unit_vector(p21-p22)*_force2
-    # p.applyExternalForce(chainUid, -1, _f_vec1, p12, flags=p.WORLD_FRAME)
-    # p.applyExternalForce(chainUid, -1, _f_vec2, p22, flags=p.WORLD_FRAME)
-
-    # if _force1 > 0.:
-    #     print(length[j], _force1, _f_vec1, p13)
 
     # p.addUserDebugLine(
     #     lineToXYZ=p13+unit_vector(p13, p11),
@@ -325,50 +263,35 @@ for j in range(N):
     #     lifeTime=0,
     #     replaceItemUniqueId=f2line1)
 
-    p.addUserDebugLine(
-        lineFromXYZ=p11,
-        lineToXYZ=p12,
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        replaceItemUniqueId=m1line1)
+    # p.addUserDebugLine(
+    #     lineFromXYZ=p11,
+    #     lineToXYZ=p12,
+    #     lineColorRGB=[1, 0, 0],
+    #     lineWidth=4,
+    #     replaceItemUniqueId=m1line1)
         
-    p.addUserDebugLine(
-        lineFromXYZ=p12,
-        lineToXYZ=p13,
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        replaceItemUniqueId=m1line2)
+    # p.addUserDebugLine(
+    #     lineFromXYZ=p12,
+    #     lineToXYZ=p13,
+    #     lineColorRGB=[1, 0, 0],
+    #     lineWidth=4,
+    #     replaceItemUniqueId=m1line2)
 
-    p.addUserDebugLine(
-        lineFromXYZ=p21,
-        lineToXYZ=p22,
-        lineColorRGB=[1, 1, 0],
-        lineWidth=4,
-        replaceItemUniqueId=m2line1)
+    # p.addUserDebugLine(
+    #     lineFromXYZ=p21,
+    #     lineToXYZ=p22,
+    #     lineColorRGB=[1, 1, 0],
+    #     lineWidth=4,
+    #     replaceItemUniqueId=m2line1)
         
-    p.addUserDebugLine(
-        lineFromXYZ=p22,
-        lineToXYZ=p23,
-        lineColorRGB=[1, 1, 0],
-        lineWidth=4,
-         replaceItemUniqueId=m2line2)
-    
+    # p.addUserDebugLine(
+    #     lineFromXYZ=p22,
+    #     lineToXYZ=p23,
+    #     lineColorRGB=[1, 1, 0],
+    #     lineWidth=4,
+    #      replaceItemUniqueId=m2line2)
     # time.sleep(0.001)
     p.stepSimulation()
-print(jangle[-1])
-# plt.figure()
-# plt.plot(rot_cart)
-# plt.legend(('x', 'y', 'z'))
-# plt.grid(True)
-# plt.figure()
-# plt.plot(np.rad2deg(jangle), length)
-# plt.grid(True)
-# plt.figure()
-# plt.plot(jangle, length1)
-# plt.plot(jangle, length2)
-# plt.legend(('1', '2'))
-# plt.grid(True)
-# plt.show()
 
 musculo_dae = muscles.dae
 #: Muscle Logging

@@ -21,8 +21,9 @@ import farms_pylog as pylog
 cdef class BulletInterface(PhysicsInterface):
     """Interface between bullet physics engine and muscle model.
     """
-    def __init__(self, model_id, lmtu, force, waypoints):
-        super(BulletInterface, self).__init__(lmtu, force, 'BULLET')
+    def __init__(self, model_id, lmtu, force, stim, waypoints, VISUALIZATION=True):
+        super(BulletInterface, self).__init__(lmtu, force, stim, 'BULLET')
+        #: [TO-DO] ADD KWARGS FOR VISUALIZATION
         #: Number of waypoints
         self.model_id = model_id
         pylog.debug('Model {} -> num points {}'.format(
@@ -37,13 +38,17 @@ cdef class BulletInterface(PhysicsInterface):
         self.waypoints = cnp.ndarray((self.num_attachments,),
                                             dtype=[('link_id','i'),
                                                    ('point','(4,)d')])
-    
+
+        self._vis_ids = cnp.ndarray((self.num_attachments,),
+                                    dtype=('I'))
+        
+        self.VISUALIZATION = VISUALIZATION        
         
         #: Add the waypoints
-        self.add_waypoints(waypoints)
+        self.add_waypoints(waypoints, VISUALIZATION)
 
     #################### PY-FUNCTIONS ####################
-    def add_waypoints(self, waypoints):
+    def add_waypoints(self, waypoints, VISUALIZATION):
         """ Add new attachment point. 
         Parameters
         ----------
@@ -69,7 +74,14 @@ cdef class BulletInterface(PhysicsInterface):
 
             self._points[j][:] = attachment[1]['point'][:3]
 
-        print(self.waypoints)
+            if VISUALIZATION and j <= self.num_attachments-2:
+                self._vis_ids[j] = p.addUserDebugLine(
+                    lineFromXYZ=self._points[j],
+                    lineToXYZ=self._points[j+1],
+                    lineColorRGB=[1, 0, 0],
+                    lineWidth=4,
+                    lifeTime=0)
+            
 
     def py_compute_muscle_length(self):
         self.c_compute_muscle_length()
@@ -184,3 +196,15 @@ cdef class BulletInterface(PhysicsInterface):
             p.applyExternalForce(
                 self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],
                 flags=p.LINK_FRAME)
+
+    cdef void c_show_muscle(self, bint VISUALIZATION=True):
+        """ Visualize the muscle attachment. """
+        if VISUALIZATION:
+            for j in range(self.num_attachments-1):
+                p.addUserDebugLine(
+                    lineFromXYZ=np.asarray(self._points[j]),
+                    lineToXYZ=np.asarray(self._points[j+1]),
+                    lineColorRGB=[self.stim.value, 0, 0],
+                    lineWidth=4,
+                    lifeTime=0,
+                    replaceItemUniqueId=self._vis_ids[j])
