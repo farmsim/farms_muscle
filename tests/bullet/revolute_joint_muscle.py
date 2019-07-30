@@ -50,11 +50,11 @@ plane = p.loadURDF("plane.urdf", [0, 0, 0], globalScaling=1)
 #     halfExtents=[0.05, 0.05, 0.5])
 
 length = 0.5
-mass = 0
+mass = 0.5
 link_mass = 1
 visualShapeId = -1
 
-num_links = 1
+num_links = 4
 basePosition = [0, 0,2*length+num_links]
 baseOrientation = [0, 0, 0, 1]
 baseColId = p.createCollisionShape(p.GEOM_CAPSULE,
@@ -118,83 +118,13 @@ rendering(1)
 #: DAE
 muscles = MusculoSkeletalSystem('../../farms_muscle/conf/muscles.yaml')
 
-#: Integrate the network
-muscle_act = {'m1': 0.75}
-
 #: Initialize DAE
 muscles.dae.initialize_dae()
 
-pbase = p.getBasePositionAndOrientation(chainUid)
-
-plink = p.getLinkState(chainUid, 0)
-
-m1a1 = np.array([0.0, 0.025, -0.4, 1.])
-m1a2 = np.array([0.0, 0.025, -0.5, 1.])
-m1a3 = np.array([0.0, 0.025, -0.15, 1.])
-
-m2a1 = np.array([0.0, -0.025, -0.4, 1.])
-m2a2 = np.array([0.0, -0.025, -0.5, 1.])
-m2a3 = np.array([0.0, -0.025, -0.15, 1.])
-
-
-m1line1 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
-m1line2 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
-
-m2line1 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
-
-m2line2 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=4,
-        lifeTime=0)
-
-f1line1 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=2,
-        lifeTime=0,
-        # parentObjectUniqueId=chainUid,
-        # parentLinkIndex=0
-)
-
-f2line1 = p.addUserDebugLine(
-        lineToXYZ=[0,0,0],
-        lineFromXYZ=[0,0,0],
-        lineColorRGB=[1, 0, 0],
-        lineWidth=2,
-        lifeTime=0,
-        # parentObjectUniqueId=chainUid,
-        # parentLinkIndex=0
-)
-
-def distance_bw_points(p1, p2):
-    """ Compute distance between two points. """
-    return np.linalg.norm(np.array(p1)-np.array(p2))
-
-def unit_vector(p1, p2):
-    """ Compute the unit vector between two points. """
-    return (p1-p2)/np.linalg.norm((p1-p2))
 
 #: integrator
-x0 = np.array([0.25-0.13, 0.05, 0.25-0.13, 0.05])
-muscles.setup_integrator(x0)
+# x0 = np.array([0.25-0.13, 0.05, 0.25-0.13, 0.05])
+muscles.setup_integrator()
 u = muscles.dae.u
 lmtu1 = u.get_param('lmtu_m1')
 lmtu2 = u.get_param('lmtu_m2')
@@ -214,10 +144,6 @@ for j in range(N):
     keys = p.getKeyboardEvents()
     if keys.get(113):
         break
-
-    #: Inertia
-    # p.changeDynamics(chainUid, 0,
-    #                  localInertiaDiagonal=[0.04197, 0.000625, 0.04197])
     
     # p.setJointMotorControlArray(
     #     chainUid, np.arange(num_links), p.POSITION_CONTROL,
@@ -234,62 +160,13 @@ for j in range(N):
     (_, _, _, _, pos, orient, *_) = p.getLinkState(chainUid, 0)
 
     #: Build Homogeneous Matrix
-    base_trans = T.compose_matrix(angles=p.getEulerFromQuaternion(pbase[1]),
-                               translate=pbase[0])
-    l1_trans = T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
-                                translate=pos)
     jstate = p.getJointState(chainUid, 0)
     jangle[j] = jstate[0]
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
     stim1.value = _act1
-    stim2.value = _act2
-    
+    stim2.value = _act2    
     muscles.step()
-
-    # p.addUserDebugLine(
-    #     lineToXYZ=p13+unit_vector(p13, p11),
-    #     lineunit_vector(p23, p21)XYZ=p13,
-    #     lineColorRGB=[0, 1, 1],
-    #     lineWidth=2,
-    #     lifeTime=0,
-    #     replaceItemUniqueId=f1line1)
-
-    # p.addUserDebugLine(
-    #     lineToXYZ=p23+dir2,
-    #     lineFromXYZ=p23,
-    #     lineColorRGB=[1, 0, 1],
-    #     lineWidth=2,
-    #     lifeTime=0,
-    #     replaceItemUniqueId=f2line1)
-
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p11,
-    #     lineToXYZ=p12,
-    #     lineColorRGB=[1, 0, 0],
-    #     lineWidth=4,
-    #     replaceItemUniqueId=m1line1)
-        
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p12,
-    #     lineToXYZ=p13,
-    #     lineColorRGB=[1, 0, 0],
-    #     lineWidth=4,
-    #     replaceItemUniqueId=m1line2)
-
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p21,
-    #     lineToXYZ=p22,
-    #     lineColorRGB=[1, 1, 0],
-    #     lineWidth=4,
-    #     replaceItemUniqueId=m2line1)
-        
-    # p.addUserDebugLine(
-    #     lineFromXYZ=p22,
-    #     lineToXYZ=p23,
-    #     lineColorRGB=[1, 1, 0],
-    #     lineWidth=4,
-    #      replaceItemUniqueId=m2line2)
     # time.sleep(0.001)
     p.stepSimulation()
 

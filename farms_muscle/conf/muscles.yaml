@@ -15,12 +15,13 @@ muscles:
     l_slack: 0.13
     pennation: 1.0
     name: m1
-    l_ce0 : 0.1088
+    l_ce0 : 0.12
     a0 : 0.05
     waypoints:
       [[{'link' : 'link0'}, {'point': [0.0, 0.025, -0.4]}],
       [{'link' : 'link0'}, {'point': [0.0, 0.025, -0.5]}],
       [{'link' : 'link1'}, {'point': [0.0, 0.025, -0.15]}]]
+    visualize : False
   m2:
     model: geyer
     l_opt: 0.11
@@ -29,9 +30,24 @@ muscles:
     l_slack: 0.13
     pennation: 1.0
     name: m2
-    l_ce0 : 0.1088
+    l_ce0 : 0.12
     a0 : 0.05
     waypoints:
       [[{'link' : 'link0'}, {'point': [0.0, -0.025, -0.4]}],
       [{'link' : 'link0'}, {'point': [0.0, -0.025, -0.5]}],
       [{'link' : 'link1'}, {'point': [0.0, -0.025, -0.15]}]]
+    visualize : False
+  m3:
+      model: geyer
+      l_opt: 0.11
+      f_max: 1500.0
+      v_max: 10
+      l_slack: 0.13
+      pennation: 1.0
+      name: m3
+      l_ce0 : 0.12
+      a0 : 0.05
+      waypoints:
+        [[{'link' : 'link1'}, {'point': [0.0, -0.025, -0.4]}],
+        [{'link' : 'link2'}, {'point': [0.0, -0.025,  -0.15]}]]
+      visualize : False
