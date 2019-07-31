@@ -50,8 +50,8 @@ setuptools.setup(
         "https://gitlab.com/FARMSIM/farms_pylog.git"],
     install_requires=['Cython',
                       'pyyaml',
-                      'casadi',
-                      'numpy'],
+                      'numpy',
+                      'scipy'],
     zip_safe=False,
     ext_modules=cythonize(extensions, annotate=True)
 )
