@@ -51,7 +51,8 @@ setuptools.setup(
     install_requires=['Cython',
                       'pyyaml',
                       'numpy',
-                      'scipy'],
+                      'scipy',
+                      'farms_pylog'],
     zip_safe=False,
     ext_modules=cythonize(extensions, annotate=True)
 )
