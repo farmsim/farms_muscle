@@ -202,9 +202,9 @@ cdef class BulletInterface(PhysicsInterface):
         if self.VISUALIZATION:
             for j in range(self.num_attachments-1):
                 p.addUserDebugLine(
-                    lineFromXYZ=np.asarray(self._points[j]),
-                    lineToXYZ=np.asarray(self._points[j+1]),
+                    lineFromXYZ=list(self._points[j]),
+                    lineToXYZ=list(self._points[j+1]),
                     lineColorRGB=[self.stim.value, 0, 0],
                     lineWidth=4,
-                    lifeTime=0,
+                    # lifeTime=0,
                     replaceItemUniqueId=self._vis_ids[j])
