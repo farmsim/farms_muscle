@@ -47,6 +47,23 @@ cdef class GeyerMuscle(Muscle):
         Param _f_ce
         Param _f_se
 
+        #: Afferents
+        double _kv
+        double _pv
+        double _k_dI
+        double _k_nI
+        double _const_I
+        double _lth
+
+        #: II afferent constants
+        double _kF
+        double _fth
+
+        #: Ib afferent constants
+        double _k_dII
+        double _k_nII
+        double _const_II
+
     cdef:
         #: SUB-MUSCLE FUNCTIONS
         inline double c_tendon_force(self, double l_se) nogil
@@ -60,6 +77,11 @@ cdef class GeyerMuscle(Muscle):
         inline double c_contractile_velocity(self, double f_v) nogil
         inline double c_contractile_force(
             self, double activation, double l_ce, double v_ce) nogil
+        #: Sensory afferents
+        void c_compute_Ia(self) nogil
+        void c_compute_II(self) nogil
+        void c_compute_Ib(self) nogil
+        void c_update_sensory_afferents(self) nogil
         #: ODE
         void c_ode_rhs(self) nogil
         #: OUTPUT

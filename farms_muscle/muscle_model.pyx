@@ -18,6 +18,7 @@ from farms_muscle.bullet_interface cimport BulletInterface
 from libc.stdio cimport printf
 from libc.math cimport sqrt as csqrt
 from libc.math cimport sin as csin
+from libc.math cimport pow as cpow
 from libc.math cimport cos as ccos
 from libc.math cimport fmax as cfmax
 from libc.math cimport fabs as cfabs
@@ -106,6 +107,28 @@ cdef class GeyerMuscle(Muscle):
         self._f_ce = dae.add_y("active_force_"+self._name, 0.0)
         self._f_se = dae.add_y("tendon_force_"+self._name, 0.0)
 
+        #: Sensory afferents
+        #: Ia afferent constants
+        self._kv = parameters.kv
+        self._pv = parameters.pv
+        self._k_dI = parameters.k_dI
+        self._k_nI = parameters.k_nI
+        self._const_I = parameters.const_I
+        self._lth = parameters.lth
+
+        #: Ib afferent constants
+        self._kF = parameters.kF
+        self._fth = parameters.fth
+
+        #: II afferent constants
+        self._k_dII = parameters.k_dII
+        self._k_nII = parameters.k_nII
+        self._const_II = parameters.const_II
+        
+        self._Ia_aff = dae.add_y("Ia_" + self._name, 0.0)
+        self._II_aff = dae.add_y("II_" + self._name, 0.0)
+        self._Ib_aff = dae.add_y("Ib_" + self._name, 0.0)
+        
         #: PhysicsInterface
         if physics_engine == 'NONE':
             self.p_interface = PhysicsInterface(self._l_mtu, self._f_se)
@@ -387,3 +410,37 @@ cdef class GeyerMuscle(Muscle):
         self._f_ce.c_set_value(self.c_contractile_force(act, l_ce, v_ce))
         #: Tendon force
         self._f_se.c_set_value(self.c_tendon_force(l_se))
+
+    #: Sensory afferents
+    cdef void c_compute_Ia(self) nogil:
+        """ Compute Ia afferent from muscle fiber. """
+        cdef double _v_norm = self._v_ce.c_get_value()/self._lth
+        
+        cdef double _d_norm = (
+            self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
+        
+        self._Ia_aff.c_set_value(self._kv*cpow(
+            _v_norm, self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
+
+    cdef void c_compute_II(self) nogil:
+        """ Compute II afferent from muscle fiber. """    
+        cdef double _d_norm = (
+            self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
+        
+        self._II_aff.c_set_value(
+            self._k_dII*_d_norm + self._k_nII*self._stim.c_get_value() + self._const_II)
+
+    cdef void c_compute_Ib(self) nogil:
+        """ Compute Ib afferent from muscle fiber. """
+        cdef double _f_norm = (
+            self._f_se.c_get_value() - self._fth)/self._f_max if self._f_se.c_get_value() >= self._fth else 0.0
+        
+        self._Ib_aff.c_set_value(self._kF*_f_norm)
+
+    cdef void c_update_sensory_afferents(self) nogil:
+        """ Compute all the sensory afferents and update them. """
+        self.c_compute_Ia()
+        self.c_compute_II()
+        self.c_compute_Ib()
+
+    
