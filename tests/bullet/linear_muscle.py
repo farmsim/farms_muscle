@@ -57,7 +57,7 @@ rendering(1)
 
 ########## MUSCLE ##########
 #: DAE
-muscles = MusculoSkeletalSystem('../../farms_muscle/conf/muscles.yaml')
+muscles = MusculoSkeletalSystem('../../farms_muscle/conf/linear_muscle.yaml')
 
 #: Integrate the network
 muscle_act = {'m1': 0.75}
@@ -67,12 +67,14 @@ muscles.dae.initialize_dae()
 
 x0 = np.array([0.11, 0.0])
 (pos, _) = p.getBasePositionAndOrientation(boxUid)
-# mline = p.addUserDebugLine(
-#     lineFromXYZ=[0, 0, 4],
-#     lineToXYZ=pos,
-#     lineColorRGB=[1, 0, 0],
-#     lineWidth=2,
-#     lifeTime=0)
+mline = p.addUserDebugLine(
+    lineFromXYZ=[0, 0, 4],
+    lineToXYZ=pos,
+    lineColorRGB=[1, 0, 0],
+    lineWidth=4,
+    # parentObjectUniqueId=boxUid,
+    # parentLinkIndex=-1,
+    lifeTime=0)
 
 
 #: integrator
@@ -94,9 +96,12 @@ for j in range(100000):
     # if _force > 0.:
     #     print(length, _force)
     # p.addUserDebugLine(
+    #     lineFromXYZ=[0, 1, 0],
     #     lineToXYZ=pos,
-    #     lineFromXYZ=[0, 0, 4],
     #     lineColorRGB=[1, 0, 0],
+    #     lineWidth=2,
+    #     parentObjectUniqueId=boxUid,
+    #     parentLinkIndex=-1,
     #     replaceItemUniqueId=mline)
     # time.sleep(0.001)
     p.stepSimulation()
@@ -122,5 +127,5 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results
 import plot_results
-plot_results.main('./Results')
+# plot_results.main('./Results')
 
