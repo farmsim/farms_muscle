@@ -26,8 +26,19 @@ cdef class Muscle(object):
     cdef:
         Parameters u
 
+    #: Sensory afferents
+    cdef:
+        Param _Ia_aff
+        Param _II_aff
+        Param _Ib_aff
+
     #: Methods
     cdef:
-        void c_ode_rhs(self) nogil
+        void c_ode_rhs(self) nogil        
         #: OUTPUT
         void c_output(self) nogil
+        #: Sensory afferents
+        void c_compute_Ia(self) nogil
+        void c_compute_II(self) nogil
+        void c_compute_Ib(self) nogil
+        void c_update_sensory_afferents(self) nogil
