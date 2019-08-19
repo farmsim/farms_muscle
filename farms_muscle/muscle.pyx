@@ -49,6 +49,22 @@ cdef class Muscle(object):
         return self._pennation
 
     #################### C-FUNCTIONS ####################
+    cdef void c_compute_Ia(self) nogil:
+        """ Function implementing the computation of Ia muscle afferent. """
+        pass
+
+    cdef void c_compute_II(self) nogil:
+        """ Function implementing the computation of II muscle afferent. """
+        pass
+        
+    cdef void c_compute_Ib(self) nogil:
+        """ Function implementing the computation of Ib muscle afferent. """
+        pass
+
+    cdef void c_update_sensory_afferents(self) nogil:
+        """ Function to update all sensory afferents. """
+        pass
+    
     cdef void c_ode_rhs(self) nogil:
         """ Function containing the ode of muscle model. """
         pass

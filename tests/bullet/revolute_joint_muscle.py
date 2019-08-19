@@ -50,7 +50,7 @@ plane = p.loadURDF("plane.urdf", [0, 0, 0], globalScaling=1)
 #     halfExtents=[0.05, 0.05, 0.5])
 
 length = 0.5
-mass = 0.5
+mass = 0.
 link_mass = 1
 visualShapeId = -1
 
@@ -191,4 +191,4 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results
 import plot_results
-# plot_results.main('./Results')
+plot_results.main('./Results')

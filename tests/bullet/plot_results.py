@@ -86,6 +86,27 @@ def main(FILE_PATH):
     plt.legend(tuple(_names))
     plt.grid(True)
 
+    plt.figure()
+    plt.title('Ia Afferents')
+    _names = [key for key in musculo_y.keys() if 'Ia' in key]
+    plt.plot(musculo_y[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
+
+    plt.figure()
+    plt.title('Ib Afferents')
+    _names = [key for key in musculo_y.keys() if 'Ib' in key]
+    plt.plot(musculo_y[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
+
+    plt.figure()
+    plt.title('II Afferents')
+    _names = [key for key in musculo_y.keys() if 'II' in key]
+    plt.plot(musculo_y[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
+
     # plt.figure()
     # plt.title('Parallel Force')
     # _names = [key for key in musculo_y.keys() if 'parallel_force' in key]
