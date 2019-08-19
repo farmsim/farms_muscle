@@ -96,6 +96,7 @@ cdef class MuscleSystemGenerator(object):
             m = self.c_muscles[j]
             m.p_interface.c_compute_muscle_length()
             m.c_output()
+            m.c_update_sensory_afferents()
             m.p_interface.c_apply_muscle_forces()
             m.p_interface.c_show_muscle()
 
