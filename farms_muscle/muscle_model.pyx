@@ -420,7 +420,7 @@ cdef class GeyerMuscle(Muscle):
             self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
         
         self._Ia_aff.c_set_value(self._kv*cpow(
-            _v_norm, self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
+            cfabs(_v_norm), self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
 
     cdef void c_compute_II(self) nogil:
         """ Compute II afferent from muscle fiber. """    
