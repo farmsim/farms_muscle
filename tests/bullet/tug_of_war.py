@@ -41,13 +41,13 @@ plane = p.loadURDF("plane.urdf", [0, 0, 0], globalScaling=1)
 
 vis_static_block = p.createVisualShapeArray(shapeTypes=[p.GEOM_BOX, p.GEOM_BOX],
                                             halfExtents=[
-                                                [0.5, 0.1, 0.1], [0.5, 0.1, 0.1]],
+                                                [0.25, 0.05, 0.05], [0.25, 0.05, 0.05]],
                                             visualFramePositions=[
                                                 [0., -0.35, 0.], [0., 0.35, 0.]])
 
 col_static_block = p.createCollisionShapeArray(shapeTypes=[p.GEOM_BOX, p.GEOM_BOX],
                                             halfExtents=[
-                                                [0.5, 0.1, 0.1], [0.5, 0.1, 0.1]],
+                                                [0.25, 0.05, 0.05], [0.25, 0.05, 0.05]],
                                             collisionFramePositions=[
                                                 [0., -0.35, 0.], [0., 0.35, 0.]])
 
@@ -55,13 +55,13 @@ vis_moving_block = p.createVisualShape(
     p.GEOM_BOX,
     visualFramePosition=[0,0,0.],
     visualFrameOrientation=[0,0,0,1],
-    halfExtents=[0.1, 0.1, 0.1])
+    halfExtents=[0.05, 0.05, 0.05])
 
 col_moving_block = p.createCollisionShape(
     p.GEOM_BOX,
     collisionFramePosition=[0,0,0.],
     collisionFrameOrientation=[0,0,0,1],
-    halfExtents=[0.1, 0.1, 0.1])
+    halfExtents=[0.05, 0.05, 0.05])
 
 base_mass = 0. #: Static
 base_position = [0., 0., 0.1]
@@ -69,7 +69,7 @@ base_orientation = [1., 0., 0., 0.]
 
 #: Moving block
 mass = 20.
-position = [0., 0., 0.]
+position = [0., 0.0, 0.]
 orientation = p.getQuaternionFromEuler([0., 0., 0.])
 
 system = p.createMultiBody(
@@ -87,6 +87,24 @@ p.changeDynamics(system, 0, lateralFriction=0.0,
 
 rendering(1)
 
+########## MUSCLE ##########
+#: DAE
+muscles = MusculoSkeletalSystem('../../farms_muscle/conf/test_tug_of_war.yaml')
+
+#: Initialize DAE
+muscles.dae.initialize_dae()
+
+#: integrator
+muscles.setup_integrator()
+
+u = muscles.dae.u
+stim1 = u.get_param('stim_m1')
+stim2 = u.get_param('stim_m2')
+activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.05)
+activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.05)
+position = p.addUserDebugParameter("Block Position", -0.3, 0.3, 0.0)
+
+
 #: RUN
 RUN = True
 while RUN:
@@ -94,5 +112,9 @@ while RUN:
     if keys.get(113):
         RUN=False
         break
-    time.sleep(0.001)
+    _act1 = p.readUserDebugParameter(activation1)
+    _act2 = p.readUserDebugParameter(activation2)
+    stim1.value = _act1
+    stim2.value = _act2
+    muscles.step()
     p.stepSimulation()
