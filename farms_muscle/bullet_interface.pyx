@@ -34,6 +34,9 @@ cdef class BulletInterface(PhysicsInterface):
         self._points = cnp.ndarray((self.num_attachments,),
                                    dtype=('(3,)d'))
 
+        self._base_pos = cnp.ndarray((1,3),
+                                   dtype=('3d'))
+
         
         self.waypoints = cnp.ndarray((self.num_attachments,),
                                             dtype=[('link_id','i'),
@@ -46,6 +49,11 @@ cdef class BulletInterface(PhysicsInterface):
         
         #: Add the waypoints
         self.add_waypoints(waypoints, VISUALIZATION)
+
+        #: Get base default position
+        pos, _ = p.getBasePositionAndOrientation(
+            self.model_id)
+        self._base_pos = np.array(pos, dtype=np.double)
 
     #################### PY-FUNCTIONS ####################
     def add_waypoints(self, waypoints, VISUALIZATION):
@@ -102,6 +110,7 @@ cdef class BulletInterface(PhysicsInterface):
             if link_id == -1:
                 (pos, orient) = p.getBasePositionAndOrientation(
                     self.model_id)
+                pos = self._base_pos-pos
             else:
                 (_, _, _, _, pos, orient, *_) = p.getLinkState(
                     self.model_id, link_id)
@@ -165,8 +174,7 @@ cdef class BulletInterface(PhysicsInterface):
             trans = T.inverse_matrix(
                 T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
                                  translate=pos))
-            f_vec = np.dot(trans, np.append(f_vec,[1]))[:3]
-
+            f_vec = np.dot(trans, np.append(f_vec,[1]))[:3])
             #: Apply the force
             p.applyExternalForce(
                 self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],

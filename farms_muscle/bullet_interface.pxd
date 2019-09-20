@@ -14,6 +14,7 @@ cdef class BulletInterface(PhysicsInterface):
         cnp.ndarray waypoints
         cnp.ndarray _points
         cnp.ndarray _vis_ids
+        cnp.ndarray _base_pos
         
     #################### C-FUNCTIONS ####################    
     cdef:
