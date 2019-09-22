@@ -174,7 +174,7 @@ cdef class BulletInterface(PhysicsInterface):
             trans = T.inverse_matrix(
                 T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
                                  translate=pos))
-            f_vec = np.dot(trans, np.append(f_vec,[1]))[:3])
+            f_vec = np.dot(trans, np.append(f_vec,[1]))[:3]
             #: Apply the force
             p.applyExternalForce(
                 self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],
