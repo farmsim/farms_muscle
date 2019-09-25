@@ -1,6 +1,6 @@
 """Factory class for generating the muscle model."""
 
-from farms_muscle.muscle_model import GeyerMuscle
+from farms_muscle.geyer_muscle import GeyerMuscle
 
 
 class MuscleFactory(object):
