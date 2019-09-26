@@ -1,6 +1,6 @@
 """Implementation of Geyer muscle model."""
-from farms_dae_generator.param cimport Param
-from farms_dae_generator.parameters cimport Parameters
+from farms_dae.param cimport Param
+from farms_dae.parameters cimport Parameters
 from farms_muscle.muscle cimport Muscle
 from libc.math cimport exp as cexp
 from libc.math cimport acosh as cacosh

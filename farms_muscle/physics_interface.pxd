@@ -1,6 +1,6 @@
 """ Template for interface between physics engine and muscle system. """
 
-from farms_dae_generator.param cimport Param as cparam
+from farms_dae.param cimport Param as cparam
 
 cdef class PhysicsInterface(object):
     """Interface between physics engine and muscle model
