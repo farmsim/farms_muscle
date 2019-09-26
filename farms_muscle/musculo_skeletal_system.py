@@ -7,7 +7,7 @@ import numpy as np
 
 from farms_muscle.muscle_system import MuscleSystemGenerator
 
-from farms_dae_generator.dae_generator import DaeGenerator
+from farms_dae.dae_generator import DaeGenerator
 
 from scipy.integrate import ode
 

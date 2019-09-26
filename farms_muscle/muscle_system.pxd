@@ -1,4 +1,4 @@
-from farms_dae_generator.parameters cimport Parameters
+from farms_dae.parameters cimport Parameters
 from farms_muscle.muscle cimport Muscle as CMuscle
 
 cdef class MuscleSystemGenerator(object):

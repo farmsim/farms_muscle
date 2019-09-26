@@ -1,7 +1,7 @@
 """Muscle abstract class"""
 
-from farms_dae_generator.param cimport Param
-from farms_dae_generator.parameters cimport Parameters
+from farms_dae.param cimport Param
+from farms_dae.parameters cimport Parameters
 from farms_muscle.physics_interface cimport PhysicsInterface
 from farms_muscle.bullet_interface cimport BulletInterface
 

@@ -9,8 +9,8 @@
 # cython: overflowcheck=False
 
 """ Generate muscle system. """
-from farms_dae_generator.dae_generator import DaeGenerator
-from farms_dae_generator.parameters cimport Parameters
+from farms_dae.dae_generator import DaeGenerator
+from farms_dae.parameters cimport Parameters
 from cython.parallel import prange
 import itertools
 import farms_pylog as pylog
