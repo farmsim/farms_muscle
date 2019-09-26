@@ -17,6 +17,12 @@ extensions = [
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3']
               ),
+    Extension("farms_muscle.millard_rigid_tendon_muscle",
+              ["farms_muscle/millard_rigid_tendon_muscle.pyx"],
+              include_dirs=[numpy.get_include()],
+              extra_compile_args=['-ffast-math', '-O3'],
+              extra_link_args=['-O3']
+              ),
     Extension("farms_muscle.muscle_system",
               ["farms_muscle/muscle_system.pyx"],
               include_dirs=[numpy.get_include()],
