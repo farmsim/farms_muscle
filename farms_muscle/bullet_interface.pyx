@@ -51,8 +51,8 @@ cdef class BulletInterface(PhysicsInterface):
         self.add_waypoints(waypoints, VISUALIZATION)
 
         #: Get base default position
-        pos, _ = p.getBasePositionAndOrientation(
-            self.model_id)
+        pos = (p.getDynamicsInfo(
+            self.model_id, -1))[3]
         self._base_pos = np.array(pos, dtype=np.double)
 
     #################### PY-FUNCTIONS ####################
@@ -108,9 +108,12 @@ cdef class BulletInterface(PhysicsInterface):
         
         for link_id, point in self.waypoints:
             if link_id == -1:
+                (pos, orient) = p.getDynamicsInfo(self.model_id, -1)[3:5]
+                trans = T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
+                                         translate=pos)
+                point = np.dot(np.linalg.inv(trans), point)
                 (pos, orient) = p.getBasePositionAndOrientation(
                     self.model_id)
-                pos = self._base_pos-pos
             else:
                 (_, _, _, _, pos, orient, *_) = p.getLinkState(
                     self.model_id, link_id)
