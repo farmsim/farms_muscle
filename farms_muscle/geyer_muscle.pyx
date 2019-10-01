@@ -12,7 +12,7 @@
 import cython
 import farms_pylog as pylog
 from farms_muscle.muscle cimport Muscle
-from farms_dae_generator.dae_generator import DaeGenerator
+from farms_dae.dae_generator import DaeGenerator
 from farms_muscle.physics_interface cimport PhysicsInterface
 from farms_muscle.bullet_interface cimport BulletInterface
 from libc.stdio cimport printf

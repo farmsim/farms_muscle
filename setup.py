@@ -60,5 +60,8 @@ setuptools.setup(
                       'scipy',
                       'farms_pylog'],
     zip_safe=False,
-    ext_modules=cythonize(extensions, annotate=True)
+    ext_modules=cythonize(extensions, annotate=True),
+    package_data = {
+        'farms_muscle': ['*.pxd'],
+    },
 )
