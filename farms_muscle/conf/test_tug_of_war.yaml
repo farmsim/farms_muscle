@@ -1,0 +1,37 @@
+animal : 'tug_of_war'
+
+##############################
+#                            #
+#          MUSCLES           #
+#                            #
+##############################
+
+muscles:
+  m1:
+    model: geyer
+    l_opt: 0.1
+    f_max: 1000.0
+    v_max: 10
+    l_slack: 0.2
+    pennation: 1.0
+    name: m1
+    l_ce0 : 0.1
+    a0 : 0.05
+    waypoints:
+      [[{'link' : 'link0'}, {'point': [0.0, -0.35, 0.0]}],
+      [{'link' : 'link1'}, {'point': [0.0, 0.0, 0.0]}]]
+    visualize : True
+  m2:
+    model: geyer
+    l_opt: 0.1
+    f_max: 1000.0
+    v_max: 10
+    l_slack: 0.2
+    pennation: 1.0
+    name: m2
+    l_ce0 : 0.1
+    a0 : 0.05
+    waypoints:
+      [[{'link' : 'link0'}, {'point': [0.0, 0.35, 0.0]}],
+      [{'link' : 'link1'}, {'point': [0.0, 0.0, 0.0]}]]
+    visualize : True
