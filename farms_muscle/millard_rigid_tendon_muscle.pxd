@@ -1,6 +1,6 @@
 """Implementation of MillardRigidTendonMuscle model."""
-from farms_dae_generator.param cimport Param
-from farms_dae_generator.parameters cimport Parameters
+from farms_dae.param cimport Param
+from farms_dae.parameters cimport Parameters
 from farms_muscle.muscle cimport Muscle
 from libc.math cimport exp as cexp
 from libc.math cimport acosh as cacosh
@@ -71,12 +71,16 @@ cdef class MillardRigidTendonMuscle(Muscle):
         inline double c_belly_force(self, double l_ce) nogil
         inline double c_activation_rate(self, double act, double stim) nogil
         inline double c_force_length(self, double l_ce) nogil
-        inline double c_force_velocity(self, double v_ce) nogil
-        inline double c_force_velocity_from_force(
-            self, double f_se, double f_be, double act, double f_l, double f_pe_star) nogil
-        inline double c_contractile_velocity(self, double f_v) nogil
+        inline double c_force_velocity(self, double v_ce) nogil        
         inline double c_contractile_force(
             self, double activation, double l_ce, double v_ce) nogil
+        inline double c_muscle_velocity(
+            self, double l_mtu_curr, double l_mtu_prev, double dt) nogil        
+        inline double c_fiber_length(
+            self, double l_mtu, double l_slack, double pennation) nogil
+        inline double c_fiber_velocity(
+            self, double v_mtu, double pennation) nogil
+
         #: Sensory afferents
         void c_compute_Ia(self) nogil
         void c_compute_II(self) nogil

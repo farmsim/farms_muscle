@@ -31,7 +31,7 @@ cdef class GeyerMuscle(Muscle):
     The muscle model is based on the hill-type muscle model by Geyer et.al
     """
 
-    def __init__(self, dae, parameters, physics_engine='BULLET', model_id=1):
+    def __init__(self, dae, parameters, dt=0.001, physics_engine='BULLET', model_id=1):
         """This function initializes the muscle model.
         A default muscle name is given as muscle
 
@@ -50,7 +50,7 @@ cdef class GeyerMuscle(Muscle):
             Returns an instance of class Muscle
 
         """
-        super(GeyerMuscle, self).__init__(parameters.name, physics_engine)
+        super(GeyerMuscle, self).__init__(parameters.name, dt, physics_engine)
 
         self.c = float(np.log(0.05))  # pylint: disable=no-member
         self.N = 1.5

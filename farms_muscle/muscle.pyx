@@ -6,16 +6,18 @@ cdef class Muscle(object):
     """Muscle base class.
     """
 
-    def __init__(self, name, physics_engine):
+    def __init__(self, name, dt, physics_engine):
         """Initialize"""
         super(Muscle, self).__init__()
-        self._physics_engine = physics_engine
+        self._physics_engine = physics_engine        
         self._name = name
         self._l_slack = 0.0
         self._l_opt = 0.0
         self._f_max = 0.0
         self._v_max = 0.0
         self._pennation = 0.0
+
+        self.dt = dt
 
     ########## Generic Properties ##########
     @property
