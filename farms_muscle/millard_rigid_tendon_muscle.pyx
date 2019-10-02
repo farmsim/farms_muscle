@@ -95,7 +95,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
         # #: MUSCLE STATES
         #: Muscle Activation
-        self._activation = dae.add_p('activation_' + self._name,
+        self._activation = dae.add_x('activation_' + self._name,
                                      parameters.a0)
 
         #: Derivatives
@@ -307,17 +307,17 @@ cdef class MillardRigidTendonMuscle(Muscle):
     cdef inline double c_muscle_velocity(
         self, double l_mtu_curr, double l_mtu_prev, double dt) nogil:
         """ Compute the fiber length. """
-        return (l_mtu_curr - l_mtu_prev)/dt
+        return (l_mtu_prev - l_mtu_curr)/(dt*self._l_opt)
 
     cdef inline double c_fiber_length(
             self, double l_mtu, double l_slack, double pennation) nogil:
         """ Compute the fiber length. """
-        return (l_mtu - l_slack)/ccos(pennation)
+        return (l_mtu - l_slack)/pennation
 
     cdef inline double c_fiber_velocity(self, double v_mtu,
                                         double pennation) nogil:
         """ Compute the fiber velocity. """        
-        return v_mtu*ccos(pennation)
+        return v_mtu*pennation
 
     cdef void c_ode_rhs(self) nogil:
         """Muscle Model ODE rhs.
@@ -369,7 +369,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         #: Contractile force
         self._f_ce.c_set_value(self.c_contractile_force(act, l_ce, v_ce))
         #: Tendon force
-        self._f_se.c_set_value(self._f_ce.c_get_value())
+        self._f_se.c_set_value(
+            self._f_ce.c_get_value() + self._f_be.c_get_value() + self._f_pe.c_get_value())
 
     #: Sensory afferents
     cdef void c_compute_Ia(self) nogil:
