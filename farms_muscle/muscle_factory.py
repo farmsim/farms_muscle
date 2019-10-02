@@ -1,7 +1,7 @@
 """Factory class for generating the muscle model."""
 
 from farms_muscle.geyer_muscle import GeyerMuscle
-from farms_muscle.millard_rigid_tendon_muscle import MillarRigidTendonMuscle
+from farms_muscle.millard_rigid_tendon_muscle import MillardRigidTendonMuscle
 
 class MuscleFactory(object):
     """Implementation of Factory Muscle class.
@@ -11,7 +11,7 @@ class MuscleFactory(object):
         """Factory initialization."""
         super(MuscleFactory, self).__init__()
         self._muscles = {'geyer': GeyerMuscle,
-                         'millard_rt': MillarRigidTendonMuscle}
+                         'millard_rt': MillardRigidTendonMuscle}
 
     def register_muscle(self, muscle_type, muscle_instance):
         """
