@@ -5,7 +5,7 @@ import pybullet_data
 import pandas as pd
 import numpy as np
 import time
-from farms_dae_generator.dae_generator import DaeGenerator
+from farms_dae.dae_generator import DaeGenerator
 from farms_muscle.musculo_skeletal_parameters import MuscleParameters
 from farms_muscle.musculo_skeletal_system import MusculoSkeletalSystem
 import farms_pylog as pylog
@@ -107,6 +107,7 @@ position = p.addUserDebugParameter("Block Position", -0.3, 0.3, 0.0)
 
 #: RUN
 RUN = True
+TIME = 0.0
 while RUN:
     keys = p.getKeyboardEvents()
     if keys.get(113):
@@ -118,3 +119,28 @@ while RUN:
     stim2.value = _act2
     muscles.step()
     p.stepSimulation()
+    TIME += 0.001
+
+print(TIME)
+
+musculo_dae = muscles.dae
+#: Muscle Logging
+musculo_x = pd.DataFrame(musculo_dae.x.log)
+musculo_x.columns = musculo_dae.x.names
+musculo_x.to_hdf('./Results/musculo_x.h5', 'musculo_x', mode='w')
+musculo_xdot = pd.DataFrame(musculo_dae.xdot.log)
+musculo_xdot.columns = musculo_dae.xdot.names
+musculo_xdot.to_hdf('./Results/musculo_xdot.h5', 'musculo_xdot', mode='w')
+musculo_y = pd.DataFrame(musculo_dae.y.log)
+musculo_y.columns = musculo_dae.y.names
+musculo_y.to_hdf('./Results/musculo_y.h5', 'musculo_y', mode='w')
+musculo_p = pd.DataFrame(musculo_dae.p.log)
+musculo_p.columns = musculo_dae.p.names
+musculo_p.to_hdf('./Results/musculo_p.h5', 'musculo_p', mode='w')
+musculo_u = pd.DataFrame(musculo_dae.u.log)
+musculo_u.columns = musculo_dae.u.names
+musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
+
+#: Plot results
+import plot_results
+plot_results.main('./Results')
