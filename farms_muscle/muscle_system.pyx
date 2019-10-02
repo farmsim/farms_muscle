@@ -72,6 +72,7 @@ cdef class MuscleSystemGenerator(object):
             pylog.debug('Generating muscle model : {} of type {}'.format(
                 name, muscle['model']))
             new_muscle = factory.gen_muscle(muscle['model'])
+            #: ADD DT
             self.muscles[muscle['name']] = new_muscle(dae,
                                                       MuscleParameters(**muscle))
             self.c_muscles[j] = < CMuscle > self.muscles[muscle['name']]

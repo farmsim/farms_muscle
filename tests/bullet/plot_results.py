@@ -21,6 +21,14 @@ def main(FILE_PATH):
     plt.plot(musculo_x[_names])
     plt.legend(tuple(_names))
     plt.grid(True)
+    print(musculo_x)
+    
+    plt.figure()
+    plt.title('musculo_v_ce')
+    _names = [key for key in musculo_xdot.keys() if 'v_ce' in key]
+    plt.plot(musculo_xdot[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
 
     plt.figure()
     plt.title('musculo_act')

@@ -14,8 +14,10 @@ cdef class Muscle(object):
         double _l_opt
         double _f_max
         double _v_max
-        double _pennation
+        double _pennation        
         PhysicsInterface p_interface
+        #: Time Step
+        double dt
 
     #: States
     cdef:

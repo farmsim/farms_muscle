@@ -129,7 +129,7 @@ class MuscleParameters(SystemParameters):
         self.parameters['f_max'] = kwargs.get('f_max', 1500)
         self.parameters['v_max'] = kwargs.get('v_max', 1.2)
         self.parameters['pennation'] = kwargs.get('pennation', 1)
-        self.parameters['name'] = kwargs.get('name', uuid.uuid4())
+        self.parameters['name'] = kwargs.get('name', str(uuid.uuid4()))
         self.parameters['muscle_type'] = kwargs.get('muscle_type', 'None')
         self.parameters['l_ce0'] = kwargs.get(
             'l_ce0', self.parameters['l_opt'])

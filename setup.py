@@ -11,8 +11,14 @@ extensions = [
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3']
               ),
-    Extension("farms_muscle.muscle_model",
-              ["farms_muscle/muscle_model.pyx"],
+    Extension("farms_muscle.geyer_muscle",
+              ["farms_muscle/geyer_muscle.pyx"],
+              include_dirs=[numpy.get_include()],
+              extra_compile_args=['-ffast-math', '-O3'],
+              extra_link_args=['-O3']
+              ),
+    Extension("farms_muscle.millard_rigid_tendon_muscle",
+              ["farms_muscle/millard_rigid_tendon_muscle.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3']
