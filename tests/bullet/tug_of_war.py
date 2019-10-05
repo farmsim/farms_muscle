@@ -102,8 +102,12 @@ stim1 = u.get_param('stim_m1')
 stim2 = u.get_param('stim_m2')
 activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.05)
 activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.05)
-position = p.addUserDebugParameter("Block Position", -0.3, 0.3, 0.0)
 
+num_joints = p.getNumJoints(system)
+p.setJointMotorControlArray(system,
+                            np.arange(num_joints),
+                            p.VELOCITY_CONTROL,
+                            forces=np.zeros((num_joints, 1)))
 
 #: RUN
 RUN = True

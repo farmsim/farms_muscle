@@ -21,7 +21,6 @@ def main(FILE_PATH):
     plt.plot(musculo_x[_names])
     plt.legend(tuple(_names))
     plt.grid(True)
-    print(musculo_x)
     
     plt.figure()
     plt.title('musculo_v_ce')
