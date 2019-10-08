@@ -5,7 +5,7 @@ import pybullet_data
 import pandas as pd
 import numpy as np
 import time
-from farms_dae.dae_generator import DaeGenerator
+from farms_container import Container
 from farms_muscle.musculo_skeletal_parameters import MuscleParameters
 from farms_muscle.musculo_skeletal_system import MusculoSkeletalSystem
 import farms_pylog as pylog
@@ -88,18 +88,18 @@ p.changeDynamics(system, 0, lateralFriction=0.0,
 rendering(1)
 
 ########## MUSCLE ##########
-#: DAE
+container = Container()
 muscles = MusculoSkeletalSystem('../../farms_muscle/conf/test_tug_of_war.yaml')
 
 #: Initialize DAE
-muscles.dae.initialize_dae()
+container.initialize()
 
 #: integrator
 muscles.setup_integrator()
 
-u = muscles.dae.u
-stim1 = u.get_param('stim_m1')
-stim2 = u.get_param('stim_m2')
+u = container.muscles.activations
+stim1 = u.get_parameter('stim_m1')
+stim2 = u.get_parameter('stim_m2')
 activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.05)
 activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.05)
 
@@ -127,22 +127,22 @@ while RUN:
 
 print(TIME)
 
-musculo_dae = muscles.dae
+musculo = container.muscles
 #: Muscle Logging
-musculo_x = pd.DataFrame(musculo_dae.x.log)
-musculo_x.columns = musculo_dae.x.names
+musculo_x = pd.DataFrame(musculo.states.log)
+musculo_x.columns = musculo.states.names
 musculo_x.to_hdf('./Results/musculo_x.h5', 'musculo_x', mode='w')
-musculo_xdot = pd.DataFrame(musculo_dae.xdot.log)
-musculo_xdot.columns = musculo_dae.xdot.names
+musculo_xdot = pd.DataFrame(musculo.dstates.log)
+musculo_xdot.columns = musculo.dstates.names
 musculo_xdot.to_hdf('./Results/musculo_xdot.h5', 'musculo_xdot', mode='w')
-musculo_y = pd.DataFrame(musculo_dae.y.log)
-musculo_y.columns = musculo_dae.y.names
+musculo_y = pd.DataFrame(musculo.outputs.log)
+musculo_y.columns = musculo.outputs.names
 musculo_y.to_hdf('./Results/musculo_y.h5', 'musculo_y', mode='w')
-musculo_p = pd.DataFrame(musculo_dae.p.log)
-musculo_p.columns = musculo_dae.p.names
+musculo_p = pd.DataFrame(musculo.parameters.log)
+musculo_p.columns = musculo.parameters.names
 musculo_p.to_hdf('./Results/musculo_p.h5', 'musculo_p', mode='w')
-musculo_u = pd.DataFrame(musculo_dae.u.log)
-musculo_u.columns = musculo_dae.u.names
+musculo_u = pd.DataFrame(musculo.activations.log)
+musculo_u.columns = musculo.activations.names
 musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
 #: Plot results

@@ -4,16 +4,11 @@ import yaml
 import os
 import sys
 import numpy as np
-
 from farms_muscle.muscle_system import MuscleSystemGenerator
-
-from farms_dae.dae_generator import DaeGenerator
-
+from farms_container import Container
 from scipy.integrate import ode
-
 import farms_pylog as pylog
 pylog.set_level('debug')
-
 
 class MusculoSkeletalSystem(object):
     """ Class to generate musculo-skeletal module.
@@ -32,7 +27,9 @@ class MusculoSkeletalSystem(object):
             raise RuntimeError()
 
         #: Attributes
-        self.dae = DaeGenerator()
+        self.container = Container.get_instance()
+        #: Create muscles namespace in the container
+        self.container.add_namespace('muscles')
         self.muscles = {}
         self.muscles_sys = None
         self.integrator = None
@@ -46,7 +43,7 @@ class MusculoSkeletalSystem(object):
         self.is_joints = True
 
         #: Generate the muscles in the system
-        self.muscles = self.generate_muscles(self.dae, config_data)
+        self.muscles = self.generate_muscles(config_data)
 
     @staticmethod
     def load_config_file(config_path):
@@ -64,12 +61,12 @@ class MusculoSkeletalSystem(object):
                 config_path))
             raise ValueError()
 
-    def generate_muscles(self, dae, config_data):
+    def generate_muscles(self, config_data):
         """This function creates muscle objects based on the config file.
         The function stores the created muscle objects in a dict."""
         num_muscles = len(config_data['muscles'])
-        self.muscle_sys = MuscleSystemGenerator(dae, num_muscles)
-        self.muscles = self.muscle_sys.generate_muscles(dae, config_data)
+        self.muscle_sys = MuscleSystemGenerator(num_muscles)
+        self.muscles = self.muscle_sys.generate_muscles(config_data)
         return self.muscles
 
     def setup_integrator(self, x0=None, integrator='dopri5', atol=1e-6,
@@ -83,9 +80,9 @@ class MusculoSkeletalSystem(object):
             verbosity=1)
 
         #: Initialize DAE
-        self.dae.initialize_dae()
         if x0 is None:
-            self.integrator.set_initial_value(self.dae.x.values, 0.0)
+            self.integrator.set_initial_value(
+                self.container.muscles.states.values, 0.0)
         else:
             self.integrator.set_initial_value(x0, 0.0)
 
@@ -105,7 +102,7 @@ class MusculoSkeletalSystem(object):
                                           self.integrator.t + dt)
         self.integrator.integrate(self.integrator.t + 0.001)
         self.muscle_sys.py_update_outputs()
-        self.dae.update_log()        
+        self.container.update_log()
 
     def print_system(self):
         """
@@ -119,10 +116,10 @@ class MusculoSkeletalSystem(object):
 
 
 def main():
-    from farms_dae_generator.dae_generator import DaeGenerator
-    dae = DaeGenerator()
+    from farms_container import Container
+    container = Container()
     m = MusculoSkeletalSystem(
-        dae, config_path='../../mouse/webots/controllers/simple_mouse_world/conf/simple_mouse_world.yaml')
+        config_path='../../mouse/webots/controllers/simple_mouse_world/conf/simple_mouse_world.yaml')
 
 
 if __name__ == '__main__':
