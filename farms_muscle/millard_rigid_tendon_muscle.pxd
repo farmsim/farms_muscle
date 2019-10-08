@@ -1,6 +1,5 @@
 """Implementation of MillardRigidTendonMuscle model."""
-from farms_dae.param cimport Param
-from farms_dae.parameters cimport Parameters
+from farms_container.parameter cimport Parameter
 from farms_muscle.muscle cimport Muscle
 from libc.math cimport exp as cexp
 from libc.math cimport acosh as cacosh
@@ -30,22 +29,22 @@ cdef class MillardRigidTendonMuscle(Muscle):
         unsigned short int num_joints
 
         #: Inputs
-        Param _stim
-        Param _l_mtu
+        Parameter _stim
+        Parameter _l_mtu
 
         #: Derivatives
-        Param _v_ce
-        Param _adot
+        Parameter _v_ce
+        Parameter _adot
 
         #: Outputs
-        Param _l_se
-        Param _l_mtc
-        Param _f_be
-        Param _f_pe
-        Param _f_lce
-        Param _f_vce
-        Param _f_ce
-        Param _f_se
+        Parameter _l_se
+        Parameter _l_mtc
+        Parameter _f_be
+        Parameter _f_pe
+        Parameter _f_lce
+        Parameter _f_vce
+        Parameter _f_ce
+        Parameter _f_se
 
         #: Afferents
         double _kv

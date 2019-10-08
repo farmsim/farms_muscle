@@ -1,7 +1,6 @@
 """Muscle abstract class"""
 
-from farms_dae.param cimport Param
-from farms_dae.parameters cimport Parameters
+from farms_container.parameter cimport Parameter
 from farms_muscle.physics_interface cimport PhysicsInterface
 from farms_muscle.bullet_interface cimport BulletInterface
 
@@ -21,18 +20,14 @@ cdef class Muscle(object):
 
     #: States
     cdef:
-        Param _activation
-        Param _l_ce
-
-    #: Access to inputs of the system
-    cdef:
-        Parameters u
+        Parameter _activation
+        Parameter _l_ce
 
     #: Sensory afferents
     cdef:
-        Param _Ia_aff
-        Param _II_aff
-        Param _Ib_aff
+        Parameter _Ia_aff
+        Parameter _II_aff
+        Parameter _Ib_aff
 
     #: Methods
     cdef:

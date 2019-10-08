@@ -9,8 +9,8 @@
 # cython: overflowcheck=False
 
 """ Generate muscle system. """
-from farms_dae.dae_generator import DaeGenerator
-from farms_dae.parameters cimport Parameters
+from farms_container import Container
+from farms_container.table cimport Table
 from cython.parallel import prange
 import itertools
 import farms_pylog as pylog
@@ -19,7 +19,7 @@ from farms_muscle.muscle_factory import MuscleFactory
 from farms_muscle.muscle cimport Muscle as CMuscle
 import os
 import yaml
-import numpy as np
+import numpy as npcpf
 cimport numpy as cnp
 cimport cython
 pylog.set_level('debug')
@@ -28,21 +28,32 @@ cdef class MuscleSystemGenerator(object):
     """ Generate Muscle System.
     """
 
-    def __init__(self, dae, num_muscles):
+    def __init__(self, num_muscles):
         """Initialize.
 
         Parameters
         ----------
         """
         super(MuscleSystemGenerator, self).__init__()
-
+        container = Container.get_instance()
         #: Attributes
-        self.x = <Parameters > dae.x
-        self.xdot = <Parameters > dae.xdot
-        self.c = <Parameters > dae.c
-        self.u = <Parameters > dae.u
-        self.p = <Parameters > dae.p
-        self.y = <Parameters > dae.y
+        #: ODE States
+        self.states = <Table>container.muscles.add_table('states')
+        self.dstates = <Table>container.muscles.add_table('dstates')
+        #: Muscle parameters
+        self.constants = <Table>container.muscles.add_table(
+            'constants', TABLE_TYPE='CONSTANT')
+        self.parameters = <Table>container.muscles.add_table('parameters')
+        #: Input to each muscle
+        self.activations = <Table>container.muscles.add_table('activations')
+        #: Output of each muscle
+        self.forces= <Table>container.muscles.add_table('forces')
+        #: Secondary outputs 
+        self.outputs = <Table>container.muscles.add_table('outputs')
+        #: Sensors
+        self.Ia = <Table>container.muscles.add_table('Ia')
+        self.II = <Table>container.muscles.add_table('II')
+        self.Ib = <Table>container.muscles.add_table('Ib')
 
         #: _muscles dictionary
         self.muscles = {}
@@ -52,7 +63,7 @@ cdef class MuscleSystemGenerator(object):
 
         self.c_muscles = cnp.ndarray((self.num_muscles,), dtype=CMuscle)
 
-    def generate_muscles(self, dae, config_data):
+    def generate_muscles(self, config_data):
         """Generate all the muscles in the system .
         Instatiate a muscle model for each muscle in the config.
         Returns
@@ -60,7 +71,7 @@ cdef class MuscleSystemGenerator(object):
         out : <bool>
             Return true if successfully created the muscles
         """
-
+        container = Container.get_instance()
         #: Get all the muscles data in the system
         muscles_data = config_data['muscles']
 
@@ -73,21 +84,22 @@ cdef class MuscleSystemGenerator(object):
                 name, muscle['model']))
             new_muscle = factory.gen_muscle(muscle['model'])
             #: ADD DT
-            self.muscles[muscle['name']] = new_muscle(dae,
-                                                      MuscleParameters(**muscle))
+            self.muscles[muscle['name']] = new_muscle(
+                                                      MuscleParameters(
+                                                          **muscle))
             self.c_muscles[j] = < CMuscle > self.muscles[muscle['name']]
         return self.muscles
 
     #################### C-FUNCTIONS ####################
     cdef double[:] c_ode(self, double t, double[:] state):
-        self.x.c_set_values(state)
+        self.states.c_set_values(state)
         cdef unsigned int j
         cdef CMuscle m
         #: Loop over all the muscles
         for j in range(self.num_muscles):
             m = self.c_muscles[j]
             m.c_ode_rhs()
-        return self.xdot.c_get_values()
+        return self.dstates.c_get_values()
 
     cdef void c_update_outputs(self):
         cdef unsigned int j

@@ -9,10 +9,8 @@
 # cython: overflowcheck=False
 
 """Implementation of Geyer muscle model."""
-import cython
 import farms_pylog as pylog
 from farms_muscle.muscle cimport Muscle
-from farms_dae.dae_generator import DaeGenerator
 from farms_muscle.physics_interface cimport PhysicsInterface
 from farms_muscle.bullet_interface cimport BulletInterface
 from libc.stdio cimport printf
@@ -22,7 +20,7 @@ from libc.math cimport pow as cpow
 from libc.math cimport cos as ccos
 from libc.math cimport fmax as cfmax
 from libc.math cimport fabs as cfabs
-
+from farms_container import Container
 import numpy as np
 cimport numpy as cnp
 
@@ -31,14 +29,12 @@ cdef class GeyerMuscle(Muscle):
     The muscle model is based on the hill-type muscle model by Geyer et.al
     """
 
-    def __init__(self, dae, parameters, dt=0.001, physics_engine='BULLET', model_id=1):
+    def __init__(self, parameters, dt=0.001, physics_engine='BULLET', model_id=1):
         """This function initializes the muscle model.
         A default muscle name is given as muscle
 
         Parameters
         ----------
-        dae : <CasadiDaeGenerator>
-            Instance of CasadiDaeGenerator class
         parameters : <MuscleParameters>
             Instance of MuscleParameters class
         model_id : <int>
@@ -63,49 +59,61 @@ cdef class GeyerMuscle(Muscle):
         self.density = 1060
         self.tol = 1e-6  #: Tolerance
 
-        #: Internal access to parameters inputs
-        self.u = dae.u
+        container = Container.get_instance()
 
         #: Internal properties
-        (self._l_slack, _) = dae.add_c('l_slack_' + self._name,
-                                       parameters.l_slack)
-        (self._l_opt, _) = dae.add_c('l_opt_' + self._name,
-                                     parameters.l_opt)
-        (self._v_max, _) = dae.add_c('v_max_' + self._name,
-                                     parameters.v_max)
-        (self._f_max, _) = dae.add_c('f_max_' + self._name,
-                                     parameters.f_max)
-        (self._pennation, _) = dae.add_c('pennation_' + self._name,
-                                         parameters.pennation)
+        (_, self._l_slack) = container.muscles.constants.add_parameter(
+            'l_slack_' + self._name, parameters.l_slack)
+        (_, self._l_opt) = container.muscles.constants.add_parameter(
+            'l_opt_' + self._name, parameters.l_opt)
+        (_, self._v_max) = container.muscles.constants.add_parameter(
+            'v_max_' + self._name, parameters.v_max)
+        (_, self._f_max) = container.muscles.constants.add_parameter(
+            'f_max_' + self._name, parameters.f_max)
+        (_, self._pennation) = container.muscles.constants.add_parameter(
+            'pennation_' + self._name, parameters.pennation)
 
         self._type = parameters.muscle_type
 
         # #: MUSCLE STATES
         # #: Muscle Contractile Length
-        self._l_ce = dae.add_x('l_ce_' + self._name,
-                               parameters.l_ce0)
+        self._l_ce = container.muscles.states.add_parameter(
+            'l_ce_' + self._name, parameters.l_ce0)[0]
         #: Muscle Activation
-        self._activation = dae.add_x('activation_' + self._name,
-                                     parameters.a0)
+        self._activation = container.muscles.states.add_parameter(
+            'activation_' + self._name, parameters.a0)[0]
 
         #: INPUTS TO THE MODEL
         #: Muscle length change
-        self._l_mtu = dae.add_u('lmtu_'+self._name)
+        self._l_mtu = container.muscles.parameters.add_parameter(
+            'lmtu_'+self._name)[0]
         #: External Muscle stimulation
-        self._stim = dae.add_u('stim_' + self._name)
+        self._stim = container.muscles.activations.add_parameter(
+            'stim_' + self._name)[0]
 
         #: Derivatives
-        self._v_ce = dae.add_xdot("v_ce_" + self._name, 0.0)
-        self._adot = dae.add_xdot("dA_" + self._name, 0.0)
+        self._v_ce = container.muscles.dstates.add_parameter(
+            "v_ce_" + self._name, 0.0)[0]
+        self._adot = container.muscles.dstates.add_parameter(
+            "dA_" + self._name, 0.0)[0]
 
         #: Outputs
-        self._l_se = dae.add_y("tendon_length_"+self._name, self._l_slack)
-        self._f_be = dae.add_y("belly_force_"+self._name, 0.0)
-        self._f_pe = dae.add_y("parallel_force_"+self._name, 0.0)
-        self._f_lce = dae.add_y("force_length_"+self._name, 0.0)
-        self._f_vce = dae.add_y("force_velocity_"+self._name, 0.0)
-        self._f_ce = dae.add_y("active_force_"+self._name, 0.0)
-        self._f_se = dae.add_y("tendon_force_"+self._name, 0.0)
+        self._l_se = container.muscles.outputs.add_parameter(
+            "tendon_length_"+self._name, self._l_slack)[0]
+        self._f_be = container.muscles.outputs.add_parameter(
+            "belly_force_"+self._name, 0.0)[0]
+        self._f_pe = container.muscles.outputs.add_parameter(
+            "parallel_force_"+self._name, 0.0)[0]
+        self._f_lce = container.muscles.outputs.add_parameter(
+            "force_length_"+self._name, 0.0)[0]
+        self._f_vce = container.muscles.outputs.add_parameter(
+            "force_velocity_"+self._name, 0.0)[0]
+        self._f_ce = container.muscles.outputs.add_parameter(
+            "active_force_"+self._name, 0.0)[0]
+
+        #: Main output of the muslce
+        self._f_se = container.muscles.forces.add_parameter(
+            "tendon_force_"+self._name, 0.0)[0]
 
         #: Sensory afferents
         #: Ia afferent constants
@@ -125,9 +133,12 @@ cdef class GeyerMuscle(Muscle):
         self._k_nII = parameters.k_nII
         self._const_II = parameters.const_II
         
-        self._Ia_aff = dae.add_y("Ia_" + self._name, 0.0)
-        self._II_aff = dae.add_y("II_" + self._name, 0.0)
-        self._Ib_aff = dae.add_y("Ib_" + self._name, 0.0)
+        self._Ia_aff = container.muscles.Ia.add_parameter(
+            "Ia_" + self._name, 0.0)[0]
+        self._II_aff = container.muscles.II.add_parameter(
+            "II_" + self._name, 0.0)[0]
+        self._Ib_aff = container.muscles.Ib.add_parameter(
+            "Ib_" + self._name, 0.0)[0]
         
         #: PhysicsInterface
         if physics_engine == 'NONE':
@@ -160,7 +171,8 @@ cdef class GeyerMuscle(Muscle):
     def _py_force_velocity(self, v_ce):
         return self.c_force_velocity(v_ce)
 
-    def _py_force_velocity_from_force(self, f_se,  f_be,  act,  f_l,  f_pe_star):
+    def _py_force_velocity_from_force(self, f_se,  f_be,  act,  f_l,
+                                      f_pe_star):
         return self.c_force_velocity_from_force(
             f_se,  f_be,  act,  f_l,  f_pe_star)
 

@@ -8,7 +8,7 @@ animal : 'tug_of_war'
 
 muscles:
   m1:
-    model: geyer
+    model: millard_rt
     l_opt: 0.1
     f_max: 1000.0
     v_max: 10
@@ -22,7 +22,7 @@ muscles:
       [{'link' : 'link1'}, {'point': [0.0, 0.0, 0.0]}]]
     visualize : True
   m2:
-    model: geyer
+    model: millard_rt
     l_opt: 0.1
     f_max: 1000.0
     v_max: 10
