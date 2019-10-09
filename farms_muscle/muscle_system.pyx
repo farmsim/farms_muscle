@@ -87,18 +87,16 @@ cdef class MuscleSystemGenerator(object):
             self.muscles[muscle['name']] = new_muscle(
                                                       MuscleParameters(
                                                           **muscle))
-            self.c_muscles[j] = < CMuscle > self.muscles[muscle['name']]
+            self.c_muscles[j] = <CMuscle> self.muscles[muscle['name']]
         return self.muscles
 
     #################### C-FUNCTIONS ####################
     cdef double[:] c_ode(self, double t, double[:] state):
         self.states.c_set_values(state)
         cdef unsigned int j
-        cdef CMuscle m
         #: Loop over all the muscles
         for j in range(self.num_muscles):
-            m = self.c_muscles[j]
-            m.c_ode_rhs()
+            (<CMuscle>self.c_muscles[j]).c_ode_rhs()
         return self.dstates.c_get_values()
 
     cdef void c_update_outputs(self):
