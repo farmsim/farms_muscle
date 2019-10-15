@@ -8,7 +8,7 @@ animal : 'tug_of_war'
 
 muscles:
   m1:
-    model: millard_rt
+    model: geyer
     l_opt: 0.1
     f_max: 1000.0
     v_max: 10
@@ -18,11 +18,11 @@ muscles:
     l_ce0 : 0.1
     a0 : 0.05
     waypoints:
-      [[{'link' : 'link0'}, {'point': [0.0, -0.35, 0.0]}],
+      [[{'link' : 'link0'}, {'point': [0.0, -0.35, -0.1]}],
       [{'link' : 'link1'}, {'point': [0.0, 0.0, 0.0]}]]
-    visualize : True
+    visualize : False
   m2:
-    model: millard_rt
+    model: geyer
     l_opt: 0.1
     f_max: 1000.0
     v_max: 10
@@ -32,6 +32,6 @@ muscles:
     l_ce0 : 0.1
     a0 : 0.05
     waypoints:
-      [[{'link' : 'link0'}, {'point': [0.0, 0.35, 0.0]}],
+      [[{'link' : 'link0'}, {'point': [0.0, 0.35, -0.1]}],
       [{'link' : 'link1'}, {'point': [0.0, 0.0, 0.0]}]]
-    visualize : True
+    visualize : False

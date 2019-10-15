@@ -100,7 +100,7 @@ class MusculoSkeletalSystem(object):
         #: Step the musculo_skeletal_system.        
         self.integrator.set_initial_value(self.integrator.y,
                                           self.integrator.t + dt)
-        self.integrator.integrate(self.integrator.t + 0.001)
+        self.integrator.integrate(self.integrator.t + dt)
         self.muscle_sys.py_update_outputs()
         self.container.update_log()
 

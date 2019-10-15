@@ -19,7 +19,7 @@ def rendering(render=1):
     p.configureDebugVisualizer(p.COV_ENABLE_GUI, render)
     # p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, render)
 
-p.connect(p.GUI)
+p.connect(p.DIRECT)
 p.resetSimulation()
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
@@ -84,8 +84,8 @@ system = p.createMultiBody(
 
 p.changeDynamics(system, 0, lateralFriction=0.0,
                  localInertiaDiagonal=[[0.1333, 0.1333, 0.1333]])
-
-rendering(1)
+p.resetJointState(system, 0, 0.05)
+# rendering(1)
 
 ########## MUSCLE ##########
 container = Container()
@@ -112,20 +112,21 @@ p.setJointMotorControlArray(system,
 #: RUN
 RUN = True
 TIME = 0.0
+START = time.time()
 while RUN:
     keys = p.getKeyboardEvents()
-    if keys.get(113):
+    if TIME > 10.:
         RUN=False
         break
-    _act1 = p.readUserDebugParameter(activation1)
-    _act2 = p.readUserDebugParameter(activation2)
-    stim1.value = _act1
-    stim2.value = _act2
+    # _act1 = p.readUserDebugParameter(activation1)
+    # _act2 = p.readUserDebugParameter(activation2)
+    # stim1.value = _act1
+    # stim2.value = _act2
     muscles.step()
     p.stepSimulation()
     TIME += 0.001
-
-print(TIME)
+END = time.time()
+print(END-START)
 
 musculo = container.muscles
 #: Muscle Logging
