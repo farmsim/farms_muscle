@@ -16,10 +16,23 @@ cdef class BulletInterface(PhysicsInterface):
         cnp.ndarray _vis_ids
         cnp.ndarray _base_pos
         
-    #################### C-FUNCTIONS ####################    
+    #################### C-FUNCTIONS ####################
+    @staticmethod
     cdef:
-        inline double c_dist_between_points(self, double[:] p1, double[:] p2) nogil
-        inline void c_force_vector(self, double[:] p1, double[:] p2, double force, double[:] f_vec) nogil
+        inline cnp.ndarray[double, ndim=2] c_compose_matrix(
+            double[:] position, 
+            double[:] orientation)
+    cdef:
+        inline double c_dist_between_points(
+            self, double[:] p1, double[:] p2) nogil
+        inline void c_force_vector(
+            self, double[:] p1, double[:] p2, double force,
+            double[:] f_vec) nogil
+        cnp.ndarray[double, ndim=2] c_get_link_transform(
+            self, int link_id)
+        cnp.ndarray[double, ndim=2] c_get_base_transform(self)
+        cnp.ndarray[double, ndim=1] c_transform_point(
+            self, int link_id, cnp.ndarray[double, ndim=1] point)
         void c_compute_muscle_length(self)
         void c_apply_muscle_forces(self)
         void c_show_muscle(self)
