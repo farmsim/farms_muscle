@@ -130,13 +130,13 @@ cdef class BulletInterface(PhysicsInterface):
         cdef tuple orient_1
         cdef tuple pos_2
         cdef tuple orient_2
-        (pos_1, orient_1) =  p.getDynamicsInfo(self.model_id, -1)[3:5]
-        cdef cnp.ndarray[double, ndim=2] identity = np.identity(4)
+        (pos_1, orient_1) =  p.getDynamicsInfo(self.model_id, -1)[3:5]        
         (pos_2, orient_2) =  p.getBasePositionAndOrientation(self.model_id)
-        return np.linalg.inv(BulletInterface.c_compose_matrix(
-            np.asarray(pos_1),
-            np.asarray(orient_1)))*BulletInterface.c_compose_matrix(
-                np.asarray(pos_2), np.asarray(orient_2))
+        cdef cnp.ndarray[double, ndim=2] m1 = BulletInterface.c_compose_matrix(
+            np.asarray(pos_2), np.asarray(orient_2))
+        cdef cnp.ndarray[double, ndim=2] m2 = BulletInterface.c_compose_matrix(
+            np.asarray(pos_1),np.asarray(orient_1))
+        return np.dot(m1, m2.transpose())
     
     cdef cnp.ndarray[double, ndim=1] c_transform_point(
             self,
@@ -250,6 +250,6 @@ cdef class BulletInterface(PhysicsInterface):
                     lineFromXYZ=list(self._points[j]),
                     lineToXYZ=list(self._points[j+1]),
                     lineColorRGB=[self.force.value/1000., 0, 0],
-                    lineWidth=4,
+                    lineWidth=400,
                     # lifeTime=0,
                     replaceItemUniqueId=self._vis_ids[j])
