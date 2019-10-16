@@ -19,7 +19,7 @@ def rendering(render=1):
     p.configureDebugVisualizer(p.COV_ENABLE_GUI, render)
     # p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, render)
 
-p.connect(p.DIRECT)
+p.connect(p.GUI)
 p.resetSimulation()
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
@@ -84,8 +84,8 @@ system = p.createMultiBody(
 
 p.changeDynamics(system, 0, lateralFriction=0.0,
                  localInertiaDiagonal=[[0.1333, 0.1333, 0.1333]])
-p.resetJointState(system, 0, 0.05)
-# rendering(1)
+# p.resetJointState(system, 0, 0.05)
+rendering(1)
 
 ########## MUSCLE ##########
 container = Container()
@@ -115,13 +115,13 @@ TIME = 0.0
 START = time.time()
 while RUN:
     keys = p.getKeyboardEvents()
-    if TIME > 10.:
+    if keys.get(113):
         RUN=False
         break
-    # _act1 = p.readUserDebugParameter(activation1)
-    # _act2 = p.readUserDebugParameter(activation2)
-    # stim1.value = _act1
-    # stim2.value = _act2
+    _act1 = p.readUserDebugParameter(activation1)
+    _act2 = p.readUserDebugParameter(activation2)
+    stim1.value = _act1
+    stim2.value = _act2
     muscles.step()
     p.stepSimulation()
     TIME += 0.001
@@ -145,6 +145,9 @@ musculo_p.to_hdf('./Results/musculo_p.h5', 'musculo_p', mode='w')
 musculo_u = pd.DataFrame(musculo.activations.log)
 musculo_u.columns = musculo.activations.names
 musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
+musculo_f = pd.DataFrame(musculo.forces.log)
+musculo_f.columns = musculo.forces.names
+musculo_f.to_hdf('./Results/musculo_f.h5', 'musculo_f', mode='w')
 
 #: Plot results
 import plot_results
