@@ -84,7 +84,7 @@ system = p.createMultiBody(
 
 p.changeDynamics(system, 0, lateralFriction=0.0,
                  localInertiaDiagonal=[[0.1333, 0.1333, 0.1333]])
-
+# p.resetJointState(system, 0, 0.05)
 rendering(1)
 
 ########## MUSCLE ##########
@@ -112,6 +112,7 @@ p.setJointMotorControlArray(system,
 #: RUN
 RUN = True
 TIME = 0.0
+START = time.time()
 while RUN:
     keys = p.getKeyboardEvents()
     if keys.get(113):
@@ -124,8 +125,8 @@ while RUN:
     muscles.step()
     p.stepSimulation()
     TIME += 0.001
-
-print(TIME)
+END = time.time()
+print(END-START)
 
 musculo = container.muscles
 #: Muscle Logging
@@ -144,6 +145,9 @@ musculo_p.to_hdf('./Results/musculo_p.h5', 'musculo_p', mode='w')
 musculo_u = pd.DataFrame(musculo.activations.log)
 musculo_u.columns = musculo.activations.names
 musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
+musculo_f = pd.DataFrame(musculo.forces.log)
+musculo_f.columns = musculo.forces.names
+musculo_f.to_hdf('./Results/musculo_f.h5', 'musculo_f', mode='w')
 
 #: Plot results
 import plot_results

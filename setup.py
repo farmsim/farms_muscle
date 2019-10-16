@@ -1,8 +1,14 @@
 import setuptools
 from Cython.Build import cythonize
 from distutils.extension import Extension
+from Cython.Compiler import Options
 import numpy
 import Cython
+
+Options.docstrings=True
+Options.fast_fail=True
+Options.annotate=True
+Options.warning_errors=False
 
 extensions = [
     Extension("farms_muscle.muscle",

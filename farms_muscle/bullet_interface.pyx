@@ -1,6 +1,6 @@
 # cython: cdivision=True
 # cython: infer_types=True
-# cython: profile=False
+# cython: profile=True
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: nonecheck=False
@@ -14,9 +14,12 @@ from physics_interface cimport PhysicsInterface
 cimport numpy as cnp
 from numpy cimport NPY_FLOAT
 from libc.math cimport sqrt as csqrt
+from libc.math cimport pow as cpow
 import numpy as np
 import transformations as T
-import farms_pylog as pylog 
+import farms_pylog as pylog
+cimport cython
+from cython.view cimport array as cvarray
 
 cdef class BulletInterface(PhysicsInterface):
     """Interface between bullet physics engine and muscle model.
@@ -101,46 +104,98 @@ cdef class BulletInterface(PhysicsInterface):
         return self.c_force_vector(p1, p2, force, f_vec)
     
     #################### C-FUNCTIONS ####################
+    @staticmethod
+    cdef inline double[:, :] c_get_matrix_from_quaternion(
+        double[:] quat) nogil:
+        """ Compute transformation matrix from quaternion"""
+        cdef double[3][3] matrix
+        matrix[0][0] = 1 - 2*quat[1]*quat[1] - 2*quat[2]*quat[2]
+        matrix[0][1] = 2*quat[0]*quat[1] - 2*quat[2]*quat[3]
+        matrix[0][2] = 2*quat[0]*quat[2] + 2*quat[1]*quat[3]
+        matrix[1][0] = 2*quat[0]*quat[1] + 2*quat[2]*quat[3]
+        matrix[1][1] = 1 - 2*quat[0]*quat[0] - 2*quat[2]*quat[2]
+        matrix[1][2] = 2*quat[1]*quat[2] - 2*quat[0]*quat[3]
+        matrix[2][0] = 2*quat[0]*quat[2] - 2*quat[1]*quat[3]
+        matrix[2][1] = 2*quat[1]*quat[2] + 2*quat[0]*quat[3]
+        matrix[2][2] = 1 - 2*quat[0]*quat[0] - 2*quat[1]*quat[1]
+        with gil:
+            return matrix
+    
+    @staticmethod
+    cdef inline cnp.ndarray[double, ndim=2] c_compose_matrix(
+            double[:] position, 
+            double[:] orientation):
+        """ Compose the transormation matrix from position and orientation. """
+        cdef cnp.ndarray[double, ndim=2] transform = np.identity(4)
+        #: Add position
+        transform[:3, 3] = position[:]
+        #: Add orientation
+        transform[:3, :3] = np.reshape(p.getMatrixFromQuaternion(
+            orientation), (3, 3))
+        # BulletInterface.c_get_matrix_from_quaternion(orientation)
+        return transform
+    
+    cdef cnp.ndarray[double, ndim=2] c_get_link_transform(self, int link_id):
+        """ Return the transformation matrix of link to convert local 
+        to world coordinates. """
+        cdef tuple pos
+        cdef tuple orient
+        (pos, orient) =  p.getLinkState(self.model_id, link_id)[4:6]
+        return BulletInterface.c_compose_matrix(
+            np.asarray(pos), np.asarray(orient))
+    
+    cdef cnp.ndarray[double, ndim=2] c_get_base_transform(self):
+        """ Return the transformation matrix of base link to convert 
+        local to world coordinates. """
+        cdef tuple pos_1
+        cdef tuple orient_1
+        cdef tuple pos_2
+        cdef tuple orient_2
+        (pos_1, orient_1) =  p.getDynamicsInfo(self.model_id, -1)[3:5]        
+        (pos_2, orient_2) =  p.getBasePositionAndOrientation(self.model_id)
+        cdef cnp.ndarray[double, ndim=2] m1 = BulletInterface.c_compose_matrix(
+            np.asarray(pos_2), np.asarray(orient_2))
+        cdef cnp.ndarray[double, ndim=2] m2 = BulletInterface.c_compose_matrix(
+            np.asarray(pos_1),np.asarray(orient_1))
+        return np.dot(m1, m2.transpose())
+    
+    cdef cnp.ndarray[double, ndim=1] c_transform_point(
+            self,
+            int link_id,
+            cnp.ndarray[double, ndim=1] point):
+        """ Transform the point from one coordinate system to another. """
+        if link_id == -1:
+            return np.dot(self.c_get_base_transform(), point)
+        else:
+            return np.dot(self.c_get_link_transform(link_id), point)
+        
     cdef void c_compute_muscle_length(self):
         """ Compute the muscle length based on the physics simulator. """
-
-        cdef unsigned int _index = 0
-        
-        for link_id, point in self.waypoints:
-            if link_id == -1:
-                (pos, orient) = p.getDynamicsInfo(self.model_id, -1)[3:5]
-                trans = T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
-                                         translate=pos)
-                point = np.dot(np.linalg.inv(trans), point)
-                (pos, orient) = p.getBasePositionAndOrientation(
-                    self.model_id)
-            else:
-                (_, _, _, _, pos, orient, *_) = p.getLinkState(
-                    self.model_id, link_id)
-            trans = T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
-                             translate=pos)
-            self._points[_index][:] = np.dot(trans, point)[:3]
-            _index += 1
+        cdef unsigned int p        
+        for p in range(self.num_attachments):
+            self._points[p][:] = self.c_transform_point(
+                self.waypoints[p][0], self.waypoints[p][1])[:3]
             
         #: Compute the length
         cdef double _length = 0.0
+        cdef unsigned int j
         for j in range(self.num_attachments-1):
             _length +=self.c_dist_between_points(self._points[j],
                                                  self._points[j+1])
-
         #: Update the muscle length
         self.lmtu.c_set_value(_length)
 
     cdef inline double c_dist_between_points(self, double[:] p1, double[:] p2) nogil:
         """ Compute distance between two points. """
         cdef double dist = 0.
-        
+        cdef unsigned int j
         for j in range(3):
             dist += (p1[j]-p2[j])*(p1[j]-p2[j])
         return csqrt(dist)
 
     cdef inline void c_force_vector(self, double[:] p1, double[:] p2, double force, double[:] f_vec) nogil:
         """ Compute the force vector between two given points. """
+        cdef unsigned int j
         for j in range(3):
             f_vec[j] = p1[j] - p2[j]
 
@@ -154,10 +209,10 @@ cdef class BulletInterface(PhysicsInterface):
             
     cdef void c_apply_muscle_forces(self):
         """ Apply the forces generated by the muscle onto the physical links. """
-        cdef double _force = self.force.value
+        cdef double _force = self.force.value 
         cdef double[:] f_vec = np.zeros((3,),dtype='d')
         cdef int _link_id
-
+        cdef unsigned int j
         #: Apply forces
         for j in range(self.num_attachments - 1):
             #: link id
@@ -165,48 +220,49 @@ cdef class BulletInterface(PhysicsInterface):
             
             self.c_force_vector(
                 self._points[j+1], self._points[j], _force, f_vec)
-            
-            #: To be checked
-            if _link_id == -1:
-                (pos, orient) = p.getBasePositionAndOrientation(
-                    self.model_id)
-            else:
-                (_, _, _, _, pos, orient, *_) = p.getLinkState(
-                    self.model_id, _link_id)
+            # print("\n {} -> {}".format(self._points[j], np.asarray(f_vec)))
+            # #: To be checked
+            # if _link_id == -1:
+            #     (pos, orient) = p.getBasePositionAndOrientation(
+            #         self.model_id)
+            # else:
+            #     (_, _, _, _, pos, orient, *_) = p.getLinkState(
+            #         self.model_id, _link_id)
                 
-            trans = T.inverse_matrix(
-                T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
-                                 translate=pos))
-            f_vec = (np.dot(trans, np.append(f_vec,[1]))[:3])
+            # trans = T.inverse_matrix(
+            #     T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
+            #                      translate=pos))
+            # f_vec = (np.dot(trans, np.append(f_vec,[1]))[:3])
+            
             #: Apply the force
             p.applyExternalForce(
-                self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],
-                flags=p.LINK_FRAME)
+                self.model_id, _link_id, f_vec, self._points[j],
+                flags=p.WORLD_FRAME)
 
         for j in range(1, self.num_attachments):
             #: link id
             _link_id = self.waypoints[j][0]
-            
             self.c_force_vector(
                 self._points[j-1], self._points[j], _force, f_vec)
+            # print("\n {} -> {}".format(self._points[j], np.asarray(f_vec)))
             
-            #: To be checked
-            if _link_id == -1:
-                (pos, orient) = p.getBasePositionAndOrientation(
-                    self.model_id)
-            else:
-                (_, _, _, _, pos, orient, *_) = p.getLinkState(
-                    self.model_id, _link_id)
+            # #: To be checked
+            # if _link_id == -1:
+            #     (pos, orient) = p.getBasePositionAndOrientation(
+            #         self.model_id)
+            # else:
+            #     (_, _, _, _, pos, orient, *_) = p.getLinkState(
+            #         self.model_id, _link_id)
                 
-            trans = T.inverse_matrix(
-                T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
-                                 translate=pos))
-            f_vec = np.dot(trans, np.append(f_vec,[1]))[:3]
+            # trans = T.inverse_matrix(
+            #     T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
+            #                      translate=pos))
+            # f_vec = np.dot(trans, np.append(f_vec,[1]))[:3]
 
             #: Apply the force
             p.applyExternalForce(
-                self.model_id, _link_id, f_vec, self.waypoints[j][1][:3],
-                flags=p.LINK_FRAME)
+                self.model_id, _link_id, f_vec, self._points[j],
+                flags=p.WORLD_FRAME)
 
     cdef void c_show_muscle(self):
         """ Visualize the muscle attachment. """
@@ -215,7 +271,7 @@ cdef class BulletInterface(PhysicsInterface):
                 p.addUserDebugLine(
                     lineFromXYZ=list(self._points[j]),
                     lineToXYZ=list(self._points[j+1]),
-                    lineColorRGB=[self.stim.value, 0, 0],
+                    lineColorRGB=[self.force.value/1000., 0, 0],
                     lineWidth=4,
                     # lifeTime=0,
                     replaceItemUniqueId=self._vis_ids[j])

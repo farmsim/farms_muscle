@@ -13,28 +13,29 @@ def main(FILE_PATH):
     musculo_y = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_y.h5'))
     musculo_p = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_p.h5'))
     musculo_u = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_u.h5'))
+    musculo_f = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_f.h5'))
 
 
-    plt.figure()
-    plt.title('musculo_l_ce')
-    _names = [key for key in musculo_x.keys() if 'l_ce' in key]
-    plt.plot(musculo_x[_names])
-    plt.legend(tuple(_names))
-    plt.grid(True)
+    # plt.figure()
+    # plt.title('musculo_l_ce')
+    # _names = [key for key in musculo_x.keys() if 'l_ce' in key]
+    # plt.plot(musculo_x[_names])
+    # plt.legend(tuple(_names))
+    # plt.grid(True)
     
-    plt.figure()
-    plt.title('musculo_v_ce')
-    _names = [key for key in musculo_xdot.keys() if 'v_ce' in key]
-    plt.plot(musculo_xdot[_names])
-    plt.legend(tuple(_names))
-    plt.grid(True)
+    # plt.figure()
+    # plt.title('musculo_v_ce')
+    # _names = [key for key in musculo_xdot.keys() if 'v_ce' in key]
+    # plt.plot(musculo_xdot[_names])
+    # plt.legend(tuple(_names))
+    # plt.grid(True)
 
-    plt.figure()
-    plt.title('musculo_act')
-    _names = [key for key in musculo_x.keys() if 'activation' in key]
-    plt.plot(musculo_x[_names])
-    plt.legend(tuple(_names))
-    plt.grid(True)
+    # plt.figure()
+    # plt.title('musculo_act')
+    # _names = [key for key in musculo_x.keys() if 'activation' in key]
+    # plt.plot(musculo_x[_names])
+    # plt.legend(tuple(_names))
+    # plt.grid(True)
 
     # plt.figure()
     # plt.title('musculo_xdot')
@@ -42,22 +43,23 @@ def main(FILE_PATH):
     # plt.legend(tuple(musculo_xdot.keys()))
     # plt.grid(True)
 
-    # plt.figure()
-    # plt.title('Force-Profile')
-    # lmtu = musculo_u['lmtu_m1']
-    # active_force = musculo_y['active_force_m1']
-    # plt.plot(lmtu, active_force)
-    # passive_force = musculo_y['belly_force_m1'] + musculo_y['parallel_force_m1']
-    # plt.plot(lmtu, passive_force)
-    # total_force = active_force + passive_force
-    # plt.plot(lmtu, total_force)
-    # plt.grid(True)
+    plt.figure()
+    plt.title('Force-Profile')
+    lmtu = musculo_p['lmtu_m1']
+    lce = musculo_x['l_ce_m1']
+    active_force = musculo_y['active_force_m1']
+    plt.plot(lce/0.2, active_force)
+    passive_force = musculo_y['belly_force_m1'] + musculo_y['parallel_force_m1']
+    plt.plot(lce/0.2, passive_force)
+    total_force = active_force + passive_force
+    plt.plot(lce/0.2, total_force)
+    plt.grid(True)
 
     plt.figure()
     plt.subplot(411)
     plt.title('Tendon Force')
-    _names = [key for key in musculo_y.keys() if 'tendon_force' in key]
-    plt.plot(musculo_y[_names])
+    _names = [key for key in musculo_f.keys() if 'tendon_force' in key]
+    plt.plot(musculo_f[_names])
     plt.legend(tuple(_names))
     plt.grid(True)
     plt.subplot(412)
@@ -88,31 +90,39 @@ def main(FILE_PATH):
 
     plt.figure()
     plt.title('Length')
-    _names = [key for key in musculo_u.keys() if 'lmtu_' in key]
-    plt.plot(musculo_u[_names])
+    _names = [key for key in musculo_p.keys() if 'lmtu_' in key]
+    plt.plot(musculo_p[_names])
     plt.legend(tuple(_names))
     plt.grid(True)
 
     plt.figure()
-    plt.title('Ia Afferents')
-    _names = [key for key in musculo_y.keys() if 'Ia' in key]
-    plt.plot(musculo_y[_names])
+    plt.title('Velocity')
+    _names = [key for key in musculo_p.keys() if 'lmtu_' in key]
+    plt.plot(np.diff(musculo_p[_names[0]]))
+    # plt.plot(np.diff(musculo_p[_names[1]]))
     plt.legend(tuple(_names))
     plt.grid(True)
 
-    plt.figure()
-    plt.title('Ib Afferents')
-    _names = [key for key in musculo_y.keys() if 'Ib' in key]
-    plt.plot(musculo_y[_names])
-    plt.legend(tuple(_names))
-    plt.grid(True)
+    # plt.figure()
+    # plt.title('Ia Afferents')
+    # _names = [key for key in musculo_y.keys() if 'Ia' in key]
+    # plt.plot(musculo_y[_names])
+    # plt.legend(tuple(_names))
+    # plt.grid(True)
 
-    plt.figure()
-    plt.title('II Afferents')
-    _names = [key for key in musculo_y.keys() if 'II' in key]
-    plt.plot(musculo_y[_names])
-    plt.legend(tuple(_names))
-    plt.grid(True)
+    # plt.figure()
+    # plt.title('Ib Afferents')
+    # _names = [key for key in musculo_y.keys() if 'Ib' in key]
+    # plt.plot(musculo_y[_names])
+    # plt.legend(tuple(_names))
+    # plt.grid(True)
+
+    # plt.figure()
+    # plt.title('II Afferents')
+    # _names = [key for key in musculo_y.keys() if 'II' in key]
+    # plt.plot(musculo_y[_names])
+    # plt.legend(tuple(_names))
+    # plt.grid(True)
 
     # plt.figure()
     # plt.title('Parallel Force')
