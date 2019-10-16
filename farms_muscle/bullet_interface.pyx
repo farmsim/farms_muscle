@@ -171,14 +171,14 @@ cdef class BulletInterface(PhysicsInterface):
         
     cdef void c_compute_muscle_length(self):
         """ Compute the muscle length based on the physics simulator. """
-        cdef unsigned int p
-        
+        cdef unsigned int p        
         for p in range(self.num_attachments):
             self._points[p][:] = self.c_transform_point(
                 self.waypoints[p][0], self.waypoints[p][1])[:3]
             
         #: Compute the length
         cdef double _length = 0.0
+        cdef unsigned int j
         for j in range(self.num_attachments-1):
             _length +=self.c_dist_between_points(self._points[j],
                                                  self._points[j+1])
@@ -188,13 +188,14 @@ cdef class BulletInterface(PhysicsInterface):
     cdef inline double c_dist_between_points(self, double[:] p1, double[:] p2) nogil:
         """ Compute distance between two points. """
         cdef double dist = 0.
-        
+        cdef unsigned int j
         for j in range(3):
             dist += (p1[j]-p2[j])*(p1[j]-p2[j])
         return csqrt(dist)
 
     cdef inline void c_force_vector(self, double[:] p1, double[:] p2, double force, double[:] f_vec) nogil:
         """ Compute the force vector between two given points. """
+        cdef unsigned int j
         for j in range(3):
             f_vec[j] = p1[j] - p2[j]
 
@@ -211,7 +212,7 @@ cdef class BulletInterface(PhysicsInterface):
         cdef double _force = self.force.value 
         cdef double[:] f_vec = np.zeros((3,),dtype='d')
         cdef int _link_id
-
+        cdef unsigned int j
         #: Apply forces
         for j in range(self.num_attachments - 1):
             #: link id
@@ -271,6 +272,6 @@ cdef class BulletInterface(PhysicsInterface):
                     lineFromXYZ=list(self._points[j]),
                     lineToXYZ=list(self._points[j+1]),
                     lineColorRGB=[self.force.value/1000., 0, 0],
-                    lineWidth=400,
+                    lineWidth=4,
                     # lifeTime=0,
                     replaceItemUniqueId=self._vis_ids[j])
