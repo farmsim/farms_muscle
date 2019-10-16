@@ -14,9 +14,12 @@ from physics_interface cimport PhysicsInterface
 cimport numpy as cnp
 from numpy cimport NPY_FLOAT
 from libc.math cimport sqrt as csqrt
+from libc.math cimport pow as cpow
 import numpy as np
 import transformations as T
-import farms_pylog as pylog 
+import farms_pylog as pylog
+cimport cython
+from cython.view cimport array as cvarray
 
 cdef class BulletInterface(PhysicsInterface):
     """Interface between bullet physics engine and muscle model.
@@ -102,6 +105,23 @@ cdef class BulletInterface(PhysicsInterface):
     
     #################### C-FUNCTIONS ####################
     @staticmethod
+    cdef inline double[:, :] c_get_matrix_from_quaternion(
+        double[:] quat) nogil:
+        """ Compute transformation matrix from quaternion"""
+        cdef double[3][3] matrix
+        matrix[0][0] = 1 - 2*quat[1]*quat[1] - 2*quat[2]*quat[2]
+        matrix[0][1] = 2*quat[0]*quat[1] - 2*quat[2]*quat[3]
+        matrix[0][2] = 2*quat[0]*quat[2] + 2*quat[1]*quat[3]
+        matrix[1][0] = 2*quat[0]*quat[1] + 2*quat[2]*quat[3]
+        matrix[1][1] = 1 - 2*quat[0]*quat[0] - 2*quat[2]*quat[2]
+        matrix[1][2] = 2*quat[1]*quat[2] - 2*quat[0]*quat[3]
+        matrix[2][0] = 2*quat[0]*quat[2] - 2*quat[1]*quat[3]
+        matrix[2][1] = 2*quat[1]*quat[2] + 2*quat[0]*quat[3]
+        matrix[2][2] = 1 - 2*quat[0]*quat[0] - 2*quat[1]*quat[1]
+        with gil:
+            return matrix
+    
+    @staticmethod
     cdef inline cnp.ndarray[double, ndim=2] c_compose_matrix(
             double[:] position, 
             double[:] orientation):
@@ -110,8 +130,9 @@ cdef class BulletInterface(PhysicsInterface):
         #: Add position
         transform[:3, 3] = position[:]
         #: Add orientation
-        transform[:3, :3] = np.reshape(
-            p.getMatrixFromQuaternion(orientation), (3, 3))
+        transform[:3, :3] = np.reshape(p.getMatrixFromQuaternion(
+            orientation), (3, 3))
+        # BulletInterface.c_get_matrix_from_quaternion(orientation)
         return transform
     
     cdef cnp.ndarray[double, ndim=2] c_get_link_transform(self, int link_id):
@@ -122,7 +143,7 @@ cdef class BulletInterface(PhysicsInterface):
         (pos, orient) =  p.getLinkState(self.model_id, link_id)[4:6]
         return BulletInterface.c_compose_matrix(
             np.asarray(pos), np.asarray(orient))
-
+    
     cdef cnp.ndarray[double, ndim=2] c_get_base_transform(self):
         """ Return the transformation matrix of base link to convert 
         local to world coordinates. """

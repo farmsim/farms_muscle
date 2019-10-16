@@ -22,6 +22,10 @@ cdef class BulletInterface(PhysicsInterface):
         inline cnp.ndarray[double, ndim=2] c_compose_matrix(
             double[:] position, 
             double[:] orientation)
+    @staticmethod
+    cdef:
+        inline double[:, :] c_get_matrix_from_quaternion(
+            double[:] quat) nogil
     cdef:
         inline double c_dist_between_points(
             self, double[:] p1, double[:] p2) nogil
