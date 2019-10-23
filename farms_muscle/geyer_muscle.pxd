@@ -28,6 +28,11 @@ cdef class GeyerMuscle(Muscle):
         str _type
         unsigned short int num_joints
 
+        #: Pennation angle alpha
+        double _alpha
+        double _cos_alpha
+        double _sin_alpha
+
         #: Inputs
         Parameter _stim
         Parameter _l_mtu
