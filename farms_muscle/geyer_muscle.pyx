@@ -18,6 +18,8 @@ from libc.math cimport sqrt as csqrt
 from libc.math cimport sin as csin
 from libc.math cimport pow as cpow
 from libc.math cimport cos as ccos
+from libc.math cimport sin as csin
+from libc.math cimport acos as cacos
 from libc.math cimport fmax as cfmax
 from libc.math cimport fabs as cfabs
 from farms_container import Container
@@ -72,6 +74,10 @@ cdef class GeyerMuscle(Muscle):
             'f_max_' + self._name, parameters.f_max)
         (_, self._pennation) = container.muscles.constants.add_parameter(
             'pennation_' + self._name, parameters.pennation)
+
+        self._alpha = cacos(self._pennation)
+        self._cos_alpha = ccos(self._alpha)
+        self._sin_alpha = csin(self._alpha)
 
         self._type = parameters.muscle_type
 
@@ -300,11 +306,12 @@ cdef class GeyerMuscle(Muscle):
         """ Define the force velocity relationship. """
         cdef:
             double _f_v_ce_eqn_1, _f_v_ce_eqn_2
+        cdef double _v_max = self._v_max*self._l_opt
         _f_v_ce_eqn_1 = (
             self._v_max - v_ce)/(self._v_max + self.K*v_ce)
         _f_v_ce_eqn_2 = self.N + ((self.N - 1)*(
             self._v_max + v_ce)/(7.56*self.K*v_ce - self._v_max))
-        if v_ce >= 0.0:
+        if v_ce < 0.0:
             return _f_v_ce_eqn_1
         return _f_v_ce_eqn_2
 
@@ -327,12 +334,11 @@ cdef class GeyerMuscle(Muscle):
     cdef inline double c_contractile_velocity(self, double f_v) nogil:
         """ Define the contractile velocity."""
         cdef:
-            double _v_ce_1, _v_ce_2
-        _v_ce_1 = self._v_max*self._l_opt * \
-            (1. - f_v)/(1. + f_v*self.K)
-        _v_ce_2 = self._v_max*self._l_opt * \
-            (f_v - 1.0)/(7.56*self.K *
-                         (f_v - self.N) + 1. - self.N)
+            double _v_ce_1, _v_ce_2, _v_max
+        _v_max = self._v_max*self._l_opt
+        _v_ce_1 = _v_max*(1. - f_v)/(1. + f_v*self.K)
+        _v_ce_2 = _v_max*(f_v - 1.0)/(
+            7.56*self.K *(f_v - self.N) + 1. - self.N)
         # printf('f_v = %f \n', f_v)
         # printf('v_ce_1 = %f \t v_ce_2 = %f \n', _v_ce_1, _v_ce_2)
         if f_v <= 1.0:
@@ -397,7 +403,7 @@ cdef class GeyerMuscle(Muscle):
 
         #: Muscle Contractile Velocity
         # printf('self.c_contractile_velocity(_f_v)) ....\n')
-        self._v_ce.c_set_value(-1*self.c_contractile_velocity(_f_v))
+        self._v_ce.c_set_value(self.c_contractile_velocity(_f_v))
 
     cdef void c_output(self) nogil:
         """ Compute the outputs of the system. """        

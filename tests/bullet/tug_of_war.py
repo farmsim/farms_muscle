@@ -15,7 +15,7 @@ import transformations as T
 
 pylog.set_level('error')
 
-RUN_TIME = 20 #: In seconds
+RUN_TIME = 15 #: In seconds
 TIME_STEP = 0.001 #: TIME STEP
 
 def rendering(render=1):

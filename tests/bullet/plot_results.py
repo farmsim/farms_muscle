@@ -19,17 +19,17 @@ def main(FILE_PATH):
 
     plt.figure()
     plt.title('musculo_l_ce')
-    _names = [key for key in musculo_p.keys() if 'l_ce' in key]
-    plt.plot(musculo_p[_names])
+    _names = [key for key in musculo_x.keys() if 'l_ce' in key]
+    plt.plot(musculo_x[_names])
     plt.legend(tuple(_names))
     plt.grid(True)
     
-    # plt.figure()
-    # plt.title('musculo_v_ce')
-    # _names = [key for key in musculo_p.keys() if 'v_ce' in key]
-    # plt.plot(musculo_p[_names])
-    # plt.legend(tuple(_names))
-    # plt.grid(True)
+    plt.figure()
+    plt.title('musculo_v_ce')
+    _names = [key for key in musculo_xdot.keys() if 'v_ce' in key]
+    plt.plot(musculo_xdot[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
 
     # plt.figure()
     # plt.title('musculo_act')
@@ -47,7 +47,7 @@ def main(FILE_PATH):
     plt.figure()
     plt.title('Force-Length-Curve')
     lmtu = musculo_p['lmtu_m1']
-    lce = musculo_p['l_ce_m1']
+    lce = musculo_x['l_ce_m1']
     l_opt = musculo_c['l_opt_m1']
     f_max = musculo_c['f_max_m1']
     force_length = musculo_y['force_length_m1']
@@ -61,7 +61,7 @@ def main(FILE_PATH):
 
     plt.figure()
     plt.title('Force-Velocity-Curve')
-    vce = musculo_p['v_ce_m1']
+    vce = musculo_xdot['v_ce_m1']
     v_max = musculo_c['v_max_m1']
     force_velocity = musculo_y['force_velocity_m1']
     plt.plot(vce, force_velocity, 'b')
@@ -101,12 +101,12 @@ def main(FILE_PATH):
     # plt.legend(tuple(_names))
     # plt.grid(True)
 
-    # plt.figure()
-    # plt.title('Length')
-    # _names = [key for key in musculo_p.keys() if 'lmtu_' in key]
-    # plt.plot(musculo_p[_names])
-    # plt.legend(tuple(_names))
-    # plt.grid(True)
+    plt.figure()
+    plt.title('Length')
+    _names = [key for key in musculo_p.keys() if 'lmtu_' in key]
+    plt.plot(musculo_p[_names])
+    plt.legend(tuple(_names))
+    plt.grid(True)
 
     # plt.figure()
     # plt.title('Velocity')
