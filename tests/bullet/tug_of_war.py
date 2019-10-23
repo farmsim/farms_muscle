@@ -13,6 +13,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import transformations as T
 
+pylog.set_level('error')
+
+RUN_TIME = 20 #: In seconds
+TIME_STEP = 0.001 #: TIME STEP
+
 def rendering(render=1):
     """Enable/disable rendering"""
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, render)
@@ -25,10 +30,10 @@ p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
 p.setGravity(0, 0, -9.81)   # everything should fall down
 # this slows everything down, but let's be accurate...
-p.setTimeStep(0.001)
+p.setTimeStep(TIME_STEP)
 p.setRealTimeSimulation(0)  # we want to be faster than real time :)
 p.setPhysicsEngineParameter(
-    fixedTimeStep=1e-3
+    fixedTimeStep=TIME_STEP
     # numSolverIterations=100
 )
 
@@ -88,7 +93,7 @@ p.changeDynamics(system, 0, lateralFriction=0.0,
 rendering(1)
 
 ########## MUSCLE ##########
-container = Container()
+container = Container(MAX_ITERATIONS=int(RUN_TIME/TIME_STEP))
 muscles = MusculoSkeletalSystem('../../farms_muscle/conf/test_tug_of_war.yaml')
 
 #: Initialize DAE
@@ -100,8 +105,8 @@ muscles.setup_integrator()
 u = container.muscles.activations
 stim1 = u.get_parameter('stim_m1')
 stim2 = u.get_parameter('stim_m2')
-activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.05)
-activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.05)
+activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.5)
+activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.5)
 
 num_joints = p.getNumJoints(system)
 p.setJointMotorControlArray(system,
@@ -113,15 +118,26 @@ p.setJointMotorControlArray(system,
 RUN = True
 TIME = 0.0
 START = time.time()
+POS = 0.0
+POS_DT = 1.
 while RUN:
     keys = p.getKeyboardEvents()
-    if keys.get(113):
+    if keys.get(113) or TIME >= RUN_TIME:
         RUN=False
         break
+    POS += 0.001*POS_DT
+    if POS > 0.3 or POS < -0.3:
+        POS_DT *= -1
+    # p.setJointMotorControl2(system,
+    #                         0,
+    #                         p.POSITION_CONTROL,
+    #                         targetPosition=POS)
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
     stim1.value = _act1
     stim2.value = _act2
+    # print(container.muscles.parameters.get_parameter_value('lmtu_m1'),
+    # container.muscles.parameters.get_parameter_value('lmtu_m2'))
     muscles.step()
     p.stepSimulation()
     TIME += 0.001
@@ -148,6 +164,9 @@ musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 musculo_f = pd.DataFrame(musculo.forces.log)
 musculo_f.columns = musculo.forces.names
 musculo_f.to_hdf('./Results/musculo_f.h5', 'musculo_f', mode='w')
+musculo_c = pd.DataFrame(musculo.constants.log)
+musculo_c.columns = musculo.constants.names
+musculo_c.to_hdf('./Results/musculo_c.h5', 'musculo_c', mode='w')
 
 #: Plot results
 import plot_results
