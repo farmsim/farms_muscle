@@ -96,8 +96,8 @@ cdef class BulletInterface(PhysicsInterface):
     def compute_world_space_point_in_link(
             self, bodyuid, link_index, local_point_coordinate):
         link_state = p.getLinkState(bodyuid,link_index)
-        link_pos=link_state[0]
-        link_orn=link_state[1]
+        link_pos=link_state[4]
+        link_orn=link_state[5]
         fromWS, orn = p.multiplyTransforms(
             link_pos,link_orn,local_point_coordinate,[0,0,0,1])
         return fromWS
@@ -119,6 +119,7 @@ cdef class BulletInterface(PhysicsInterface):
         cdef int link_id
         for p in range(self.num_attachments):
             link_id = self.waypoints[p][0]
+            print(p, link_id)
             if link_id >= 0:
                 self._points[p] =  self.compute_world_space_point_in_link(
                     self.model_id,
