@@ -31,8 +31,8 @@ cdef class BulletInterface(PhysicsInterface):
         self.model_id = model_id
         pylog.debug('Model {} -> num points {}'.format(
             self.model_id, len(waypoints)))
-        
-        self.num_attachments = len(waypoints)        
+
+        self.num_attachments = len(waypoints)
 
         self._points = cnp.ndarray((self.num_attachments,),
                                    dtype=('(3,)d'))
@@ -40,16 +40,16 @@ cdef class BulletInterface(PhysicsInterface):
         self._base_pos = cnp.ndarray((1,3),
                                    dtype=('3d'))
 
-        
+
         self.waypoints = cnp.ndarray((self.num_attachments,),
                                             dtype=[('link_id','i'),
                                                    ('point','(4,)d')])
 
         self._vis_ids = cnp.ndarray((self.num_attachments,),
                                     dtype=('I'))
-        
-        self.VISUALIZATION = VISUALIZATION        
-        
+
+        self.VISUALIZATION = VISUALIZATION
+
         #: Add the waypoints
         self.add_waypoints(waypoints, VISUALIZATION)
 
@@ -60,7 +60,7 @@ cdef class BulletInterface(PhysicsInterface):
 
     #################### PY-FUNCTIONS ####################
     def add_waypoints(self, waypoints, VISUALIZATION):
-        """ Add new attachment point. 
+        """ Add new attachment point.
         Parameters
         ----------
         waypoints: <list>
@@ -71,12 +71,12 @@ cdef class BulletInterface(PhysicsInterface):
 
         for _id in range(p.getNumJoints(self.model_id)):
             _name = p.getJointInfo(self.model_id, _id)[12].decode('UTF-8')
-            _link_name_to_index[_name] = _id                
+            _link_name_to_index[_name] = _id
         pylog.debug('Link-Index -> {}'.format(_link_name_to_index))
 
         for j, attachment in enumerate(waypoints):
             _link_id = _link_name_to_index[attachment[0]['link']]
-                
+
             self.waypoints[j][0] = _link_id
             self.waypoints[j][1][0] = attachment[1]['point'][0]
             self.waypoints[j][1][1] = attachment[1]['point'][1]
@@ -92,91 +92,59 @@ cdef class BulletInterface(PhysicsInterface):
                     lineColorRGB=[1, 0, 0],
                     lineWidth=4,
                     lifeTime=0)
-            
+
+    def compute_world_space_point_in_link(
+            self, bodyuid, link_index, local_point_coordinate):
+        link_state = p.getLinkState(bodyuid,link_index)
+        link_pos=link_state[0]
+        link_orn=link_state[1]
+        fromWS, orn = p.multiplyTransforms(
+            link_pos,link_orn,local_point_coordinate,[0,0,0,1])
+        return fromWS
+
+    def compute_world_space_point_in_base(
+            self, bodyuid, local_point_coordinate):
+        (pos_1, orient_1) =  p.getDynamicsInfo(self.model_id, -1)[3:5]
+        (pos_2, orient_2) =  p.invertTransform(
+            *p.getBasePositionAndOrientation(self.model_id))
+        (pos_3, orient_3) = p.multiplyTransforms(pos_1, orient_1,
+                                                 pos_2, orient_2)
+        fromWS, orn = p.multiplyTransforms(
+            pos_3, orient_3, local_point_coordinate, [0,0,0,1])
+        return fromWS
+
+    def update_local_points_to_world(self):
+        """Update the points in local coordinate to world. """
+        cdef unsigned int p
+        cdef int link_id
+        for p in range(self.num_attachments):
+            link_id = self.waypoints[p][0]
+            if link_id >= 0:
+                self._points[p] =  self.compute_world_space_point_in_link(
+                    self.model_id,
+                    link_id,
+                    self.waypoints[p][1][:3])
+            else:
+                self._points[p] = self.compute_world_space_point_in_base(
+                    self.model_id,
+                    self.waypoints[p][1][:3])
 
     def py_compute_muscle_length(self):
         self.c_compute_muscle_length()
-        
+
     def py_dist_between_points(self, p1, p2):
         return self.c_dist_between_points(p1, p2)
 
-    def py_force_vector(self, p1, p2, force, f_vec):        
+    def py_force_vector(self, p1, p2, force, f_vec):
         return self.c_force_vector(p1, p2, force, f_vec)
-    
-    #################### C-FUNCTIONS ####################
-    @staticmethod
-    cdef inline double[:, :] c_get_matrix_from_quaternion(
-        double[:] quat) nogil:
-        """ Compute transformation matrix from quaternion"""
-        cdef double[3][3] matrix
-        matrix[0][0] = 1 - 2*quat[1]*quat[1] - 2*quat[2]*quat[2]
-        matrix[0][1] = 2*quat[0]*quat[1] - 2*quat[2]*quat[3]
-        matrix[0][2] = 2*quat[0]*quat[2] + 2*quat[1]*quat[3]
-        matrix[1][0] = 2*quat[0]*quat[1] + 2*quat[2]*quat[3]
-        matrix[1][1] = 1 - 2*quat[0]*quat[0] - 2*quat[2]*quat[2]
-        matrix[1][2] = 2*quat[1]*quat[2] - 2*quat[0]*quat[3]
-        matrix[2][0] = 2*quat[0]*quat[2] - 2*quat[1]*quat[3]
-        matrix[2][1] = 2*quat[1]*quat[2] + 2*quat[0]*quat[3]
-        matrix[2][2] = 1 - 2*quat[0]*quat[0] - 2*quat[1]*quat[1]
-        with gil:
-            return matrix
-    
-    @staticmethod
-    cdef inline cnp.ndarray[double, ndim=2] c_compose_matrix(
-            double[:] position, 
-            double[:] orientation):
-        """ Compose the transormation matrix from position and orientation. """
-        cdef cnp.ndarray[double, ndim=2] transform = np.identity(4)
-        #: Add position
-        transform[:3, 3] = position[:]
-        #: Add orientation
-        transform[:3, :3] = np.reshape(p.getMatrixFromQuaternion(
-            orientation), (3, 3))
-        # BulletInterface.c_get_matrix_from_quaternion(orientation)
-        return transform
-    
-    cdef cnp.ndarray[double, ndim=2] c_get_link_transform(self, int link_id):
-        """ Return the transformation matrix of link to convert local 
-        to world coordinates. """
-        cdef tuple pos
-        cdef tuple orient
-        (pos, orient) =  p.getLinkState(self.model_id, link_id)[4:6]
-        return BulletInterface.c_compose_matrix(
-            np.asarray(pos), np.asarray(orient))
-    
-    cdef cnp.ndarray[double, ndim=2] c_get_base_transform(self):
-        """ Return the transformation matrix of base link to convert 
-        local to world coordinates. """
-        cdef tuple pos_1
-        cdef tuple orient_1
-        cdef tuple pos_2
-        cdef tuple orient_2
-        (pos_1, orient_1) =  p.getDynamicsInfo(self.model_id, -1)[3:5]        
-        (pos_2, orient_2) =  p.getBasePositionAndOrientation(self.model_id)
-        cdef cnp.ndarray[double, ndim=2] m1 = BulletInterface.c_compose_matrix(
-            np.asarray(pos_2), np.asarray(orient_2))
-        cdef cnp.ndarray[double, ndim=2] m2 = BulletInterface.c_compose_matrix(
-            np.asarray(pos_1),np.asarray(orient_1))
-        return np.dot(m1, m2.transpose())
-    
-    cdef cnp.ndarray[double, ndim=1] c_transform_point(
-            self,
-            int link_id,
-            cnp.ndarray[double, ndim=1] point):
-        """ Transform the point from one coordinate system to another. """
-        if link_id == -1:
-            return np.dot(self.c_get_base_transform(), point)
-        else:
-            return np.dot(self.c_get_link_transform(link_id), point)
-        
+
+    #################### C-FUNCTIONS ####################    
     cdef void c_compute_muscle_length(self):
         """ Compute the muscle length based on the physics simulator. """
-        cdef unsigned int p        
-        for p in range(self.num_attachments):
-            self._points[p][:] = self.c_transform_point(
-                self.waypoints[p][0], self.waypoints[p][1])[:3]
-            
-        #: Compute the length
+        #: FUCK : This needs to be exposed to outside
+        self.update_local_points_to_world()
+        
+        #: Compute the length        
         cdef double _length = 0.0
         cdef unsigned int j
         for j in range(self.num_attachments-1):
@@ -206,10 +174,10 @@ cdef class BulletInterface(PhysicsInterface):
         mag = csqrt(mag)
         for j in range(3):
             f_vec[j] = f_vec[j]*force/mag
-            
+
     cdef void c_apply_muscle_forces(self):
         """ Apply the forces generated by the muscle onto the physical links. """
-        cdef double _force = self.force.value 
+        cdef double _force = self.force.value
         cdef double[:] f_vec = np.zeros((3,),dtype='d')
         cdef int _link_id
         cdef unsigned int j
@@ -217,22 +185,9 @@ cdef class BulletInterface(PhysicsInterface):
         for j in range(self.num_attachments - 1):
             #: link id
             _link_id = self.waypoints[j][0]
-            
+
             self.c_force_vector(
                 self._points[j+1], self._points[j], _force, f_vec)
-            # print("\n {} -> {}".format(self._points[j], np.asarray(f_vec)))
-            # #: To be checked
-            # if _link_id == -1:
-            #     (pos, orient) = p.getBasePositionAndOrientation(
-            #         self.model_id)
-            # else:
-            #     (_, _, _, _, pos, orient, *_) = p.getLinkState(
-            #         self.model_id, _link_id)
-                
-            # trans = T.inverse_matrix(
-            #     T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
-            #                      translate=pos))
-            # f_vec = (np.dot(trans, np.append(f_vec,[1]))[:3])
             
             #: Apply the force
             p.applyExternalForce(
@@ -244,21 +199,7 @@ cdef class BulletInterface(PhysicsInterface):
             _link_id = self.waypoints[j][0]
             self.c_force_vector(
                 self._points[j-1], self._points[j], _force, f_vec)
-            # print("\n {} -> {}".format(self._points[j], np.asarray(f_vec)))
             
-            # #: To be checked
-            # if _link_id == -1:
-            #     (pos, orient) = p.getBasePositionAndOrientation(
-            #         self.model_id)
-            # else:
-            #     (_, _, _, _, pos, orient, *_) = p.getLinkState(
-            #         self.model_id, _link_id)
-                
-            # trans = T.inverse_matrix(
-            #     T.compose_matrix(angles=p.getEulerFromQuaternion(orient),
-            #                      translate=pos))
-            # f_vec = np.dot(trans, np.append(f_vec,[1]))[:3]
-
             #: Apply the force
             p.applyExternalForce(
                 self.model_id, _link_id, f_vec, self._points[j],
@@ -271,7 +212,7 @@ cdef class BulletInterface(PhysicsInterface):
                 p.addUserDebugLine(
                     lineFromXYZ=list(self._points[j]),
                     lineToXYZ=list(self._points[j+1]),
-                    lineColorRGB=[self.force.value/1000., 0, 0],
+                    lineColorRGB=[self.stim.value, 0, 0],
                     lineWidth=4,
                     # lifeTime=0,
                     replaceItemUniqueId=self._vis_ids[j])
