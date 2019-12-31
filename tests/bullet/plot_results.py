@@ -8,13 +8,13 @@ import pandas as pd
 
 def main(FILE_PATH):
     #: Logging
-    musculo_x = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_x.h5'))
-    musculo_xdot = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_xdot.h5'))
-    musculo_y = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_y.h5'))
-    musculo_p = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_p.h5'))
-    musculo_u = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_u.h5'))
-    musculo_f = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_f.h5'))
-    musculo_c = pd.read_hdf(os.path.join(FILE_PATH, 'musculo_c.h5'))
+    musculo_x = pd.read_hdf(os.path.join(FILE_PATH, 'states.h5'))
+    musculo_xdot = pd.read_hdf(os.path.join(FILE_PATH, 'dstates.h5'))
+    musculo_y = pd.read_hdf(os.path.join(FILE_PATH, 'outputs.h5'))
+    musculo_p = pd.read_hdf(os.path.join(FILE_PATH, 'parameters.h5'))
+    musculo_u = pd.read_hdf(os.path.join(FILE_PATH, 'activations.h5'))
+    musculo_f = pd.read_hdf(os.path.join(FILE_PATH, 'forces.h5'))
+    musculo_c = pd.read_hdf(os.path.join(FILE_PATH, 'constants.h5'))
 
 
     plt.figure()
