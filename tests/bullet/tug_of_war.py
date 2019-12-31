@@ -1,5 +1,6 @@
 """ Re-implementation of opensim tug of war model. """
 
+import plot_results
 import pybullet as p
 import pybullet_data
 import pandas as pd
@@ -15,14 +16,16 @@ import transformations as T
 
 pylog.set_level('error')
 
-RUN_TIME = 15 #: In seconds
-TIME_STEP = 0.001 #: TIME STEP
+RUN_TIME = 15  # : In seconds
+TIME_STEP = 0.001  # : TIME STEP
+
 
 def rendering(render=1):
     """Enable/disable rendering"""
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, render)
     p.configureDebugVisualizer(p.COV_ENABLE_GUI, render)
     # p.configureDebugVisualizer(p.COV_ENABLE_TINY_RENDERER, render)
+
 
 p.connect(p.GUI)
 p.resetSimulation()
@@ -51,24 +54,24 @@ vis_static_block = p.createVisualShapeArray(shapeTypes=[p.GEOM_BOX, p.GEOM_BOX],
                                                 [0., -0.35, 0.], [0., 0.35, 0.]])
 
 col_static_block = p.createCollisionShapeArray(shapeTypes=[p.GEOM_BOX, p.GEOM_BOX],
-                                            halfExtents=[
-                                                [0.25, 0.05, 0.05], [0.25, 0.05, 0.05]],
-                                            collisionFramePositions=[
-                                                [0., -0.35, 0.], [0., 0.35, 0.]])
+                                               halfExtents=[
+    [0.25, 0.05, 0.05], [0.25, 0.05, 0.05]],
+    collisionFramePositions=[
+    [0., -0.35, 0.], [0., 0.35, 0.]])
 
 vis_moving_block = p.createVisualShape(
     p.GEOM_BOX,
-    visualFramePosition=[0,0,0.],
-    visualFrameOrientation=[0,0,0,1],
+    visualFramePosition=[0, 0, 0.],
+    visualFrameOrientation=[0, 0, 0, 1],
     halfExtents=[0.05, 0.05, 0.05])
 
 col_moving_block = p.createCollisionShape(
     p.GEOM_BOX,
-    collisionFramePosition=[0,0,0.],
-    collisionFrameOrientation=[0,0,0,1],
+    collisionFramePosition=[0, 0, 0.],
+    collisionFrameOrientation=[0, 0, 0, 1],
     halfExtents=[0.05, 0.05, 0.05])
 
-base_mass = 0. #: Static
+base_mass = 0.  # : Static
 base_position = [0., 0., 0.1]
 base_orientation = [1., 0., 0., 0.]
 
@@ -79,10 +82,10 @@ orientation = p.getQuaternionFromEuler([0., 0., 0.])
 
 system = p.createMultiBody(
     base_mass, col_static_block, vis_static_block, base_position, base_orientation,
-    linkMasses=[mass], linkCollisionShapeIndices=[col_moving_block,],
-    linkVisualShapeIndices=[vis_moving_block,],
-    linkPositions=[position,], linkOrientations=[orientation],
-    linkInertialFramePositions=[position,],
+    linkMasses=[mass], linkCollisionShapeIndices=[col_moving_block, ],
+    linkVisualShapeIndices=[vis_moving_block, ],
+    linkPositions=[position, ], linkOrientations=[orientation],
+    linkInertialFramePositions=[position, ],
     linkInertialFrameOrientations=[orientation],
     linkParentIndices=[0], linkJointTypes=[p.JOINT_PRISMATIC],
     linkJointAxis=[[0., 1., 0.]])
@@ -123,7 +126,7 @@ POS_DT = 1.
 while RUN:
     keys = p.getKeyboardEvents()
     if keys.get(113) or TIME >= RUN_TIME:
-        RUN=False
+        RUN = False
         break
     POS += 0.001*POS_DT
     if POS > 0.3 or POS < -0.3:
@@ -144,30 +147,7 @@ while RUN:
 END = time.time()
 print(END-START)
 
-musculo = container.muscles
-#: Muscle Logging
-musculo_x = pd.DataFrame(musculo.states.log)
-musculo_x.columns = musculo.states.names
-musculo_x.to_hdf('./Results/musculo_x.h5', 'musculo_x', mode='w')
-musculo_xdot = pd.DataFrame(musculo.dstates.log)
-musculo_xdot.columns = musculo.dstates.names
-musculo_xdot.to_hdf('./Results/musculo_xdot.h5', 'musculo_xdot', mode='w')
-musculo_y = pd.DataFrame(musculo.outputs.log)
-musculo_y.columns = musculo.outputs.names
-musculo_y.to_hdf('./Results/musculo_y.h5', 'musculo_y', mode='w')
-musculo_p = pd.DataFrame(musculo.parameters.log)
-musculo_p.columns = musculo.parameters.names
-musculo_p.to_hdf('./Results/musculo_p.h5', 'musculo_p', mode='w')
-musculo_u = pd.DataFrame(musculo.activations.log)
-musculo_u.columns = musculo.activations.names
-musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
-musculo_f = pd.DataFrame(musculo.forces.log)
-musculo_f.columns = musculo.forces.names
-musculo_f.to_hdf('./Results/musculo_f.h5', 'musculo_f', mode='w')
-musculo_c = pd.DataFrame(musculo.constants.log)
-musculo_c.columns = musculo.constants.names
-musculo_c.to_hdf('./Results/musculo_c.h5', 'musculo_c', mode='w')
+container.dump()
 
 #: Plot results
-import plot_results
-plot_results.main('./Results')
+plot_results.main('./Results/muscles')
