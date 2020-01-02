@@ -119,7 +119,6 @@ cdef class BulletInterface(PhysicsInterface):
         cdef int link_id
         for p in range(self.num_attachments):
             link_id = self.waypoints[p][0]
-            print(p, link_id)
             if link_id >= 0:
                 self._points[p] =  self.compute_world_space_point_in_link(
                     self.model_id,
