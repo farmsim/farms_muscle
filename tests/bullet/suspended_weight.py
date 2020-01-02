@@ -62,12 +62,12 @@ def main():
         radius=0.05)
 
     base_mass = 0. #: Static
-    base_position = [0., 0.5, 1.]
+    base_position = [0., 0.0, 1.]
     base_orientation = [1., 0., 0., 0.]
 
     #: Moving block
     mass = 20.
-    position = [0., 0.0, 0.2]
+    position = [0., 0.0, 0.5]
     orientation = p.getQuaternionFromEuler([0., 0., 0.])
 
     system = p.createMultiBody(
@@ -150,6 +150,6 @@ if __name__ == '__main__':
     s = pstats.Stats("Profile.prof")
     s.strip_dirs().sort_stats("time").print_stats(10)
     #: Plot results
-    import plot_results
-    plot_results.main('./Results')
+    # import plot_results
+    # plot_results.main('./Results')
 
