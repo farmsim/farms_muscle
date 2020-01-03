@@ -182,7 +182,8 @@ cdef class DeGrooteMuscle(Muscle):
         
         #: PhysicsInterface
         if physics_engine == 'NONE':
-            self.p_interface = PhysicsInterface(self._l_mtu, self._f_se)
+            self.p_interface = PhysicsInterface(
+                self._l_mtu, self._f_se, self._stim)
             pylog.warning(
                 "Muscle {} connected to any physics engine".format(self._name))
         elif physics_engine == 'BULLET':
@@ -293,7 +294,7 @@ cdef class DeGrooteMuscle(Muscle):
         cdef double _tendon_force
         cdef double _l_se_norm = l_se/self._l_slack
         _tendon_force = self.c1*cexp(self.kT*(_l_se_norm-self.c2)) - self.c3
-        return self._f_max*_tendon_force
+        return _tendon_force
 
     cdef inline double c_parallel_star_force(self, double l_ce) nogil:
         """ Setup the equations for parallell star pe* """
@@ -302,7 +303,7 @@ cdef class DeGrooteMuscle(Muscle):
         cdef double _l_ce_norm = l_ce/self._l_opt
         _num = cexp((self.kpe*_l_ce_norm - self.kpe)/self.e0) - 1.0
         _den = cexp(self.kpe) - 1.0
-        return self._f_max*(_num/_den)
+        return _num/_den
 
     cdef inline double c_belly_force(self, double l_ce) nogil:
         """ Setup the equations for belly force  """
@@ -335,7 +336,8 @@ cdef class DeGrooteMuscle(Muscle):
             _num = -0.5*(_l_ce_norm - self.b2[j])**2
             _den = self.b3[j] + self.b4[j]*_l_ce_norm
             _force_length += self.b1[j]*cexp(_num/_den)
-        printf('l_ce = %f %f %f\n', l_ce, self._l_opt, _l_ce_norm)
+        printf(
+            'l_ce = %f %f %f %f\n', l_ce, self._l_opt, _l_ce_norm, _force_length)
         return _force_length
 
     cdef inline double c_force_velocity(self, double v_ce) nogil:

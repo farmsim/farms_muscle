@@ -28,8 +28,7 @@ class MusculoSkeletalSystem(object):
 
         #: Attributes
         self.container = Container.get_instance()
-        #: Create muscles namespace in the container
-        self.container.add_namespace('muscles')
+        
         self.muscles = {}
         self.muscles_sys = None
         self.integrator = None
