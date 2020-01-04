@@ -44,7 +44,7 @@ class MuscleFactory(object):
         muscle: <cls>
             Appropriate muscle class.
         """
-        muscle = self._muscles.get(muscle_type)
+        muscle = self._muscles.get(muscle_type.lower())
         if not muscle:
             raise ValueError(muscle_type)
         return muscle

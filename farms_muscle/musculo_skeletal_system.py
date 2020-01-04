@@ -102,7 +102,6 @@ class MusculoSkeletalSystem(object):
                                           self.integrator.t + dt)
         self.integrator.integrate(self.integrator.t + dt)
         self.muscle_sys.py_update_outputs()
-        self.container.update_log()
 
     def print_system(self):
         """

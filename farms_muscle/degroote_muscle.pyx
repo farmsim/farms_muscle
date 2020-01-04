@@ -182,7 +182,8 @@ cdef class DeGrooteMuscle(Muscle):
         
         #: PhysicsInterface
         if physics_engine == 'NONE':
-            self.p_interface = PhysicsInterface(self._l_mtu, self._f_se)
+            self.p_interface = PhysicsInterface(
+                self._l_mtu, self._f_se, self._stim)
             pylog.warning(
                 "Muscle {} connected to any physics engine".format(self._name))
         elif physics_engine == 'BULLET':
@@ -293,7 +294,7 @@ cdef class DeGrooteMuscle(Muscle):
         cdef double _tendon_force
         cdef double _l_se_norm = l_se/self._l_slack
         _tendon_force = self.c1*cexp(self.kT*(_l_se_norm-self.c2)) - self.c3
-        return self._f_max*_tendon_force
+        return _tendon_force
 
     cdef inline double c_parallel_star_force(self, double l_ce) nogil:
         """ Setup the equations for parallell star pe* """
@@ -302,7 +303,7 @@ cdef class DeGrooteMuscle(Muscle):
         cdef double _l_ce_norm = l_ce/self._l_opt
         _num = cexp((self.kpe*_l_ce_norm - self.kpe)/self.e0) - 1.0
         _den = cexp(self.kpe) - 1.0
-        return self._f_max*(_num/_den)
+        return _num/_den
 
     cdef inline double c_belly_force(self, double l_ce) nogil:
         """ Setup the equations for belly force  """
@@ -335,7 +336,6 @@ cdef class DeGrooteMuscle(Muscle):
             _num = -0.5*(_l_ce_norm - self.b2[j])**2
             _den = self.b3[j] + self.b4[j]*_l_ce_norm
             _force_length += self.b1[j]*cexp(_num/_den)
-        printf('l_ce = %f %f %f\n', l_ce, self._l_opt, _l_ce_norm)
         return _force_length
 
     cdef inline double c_force_velocity(self, double v_ce) nogil:
@@ -351,16 +351,13 @@ cdef class DeGrooteMuscle(Muscle):
         cdef:
             double _f_v_ce_eqn_den, _f_v_ce_eqn_num
         _f_v_ce_eqn_num = f_se + f_be
-        _f_v_ce_eqn_den = (self._f_max*act*f_l) + f_pe_star
-        # printf('num = %f %f\n', f_se, f_be)
-        # printf('den = %f %f %f %f\n', self._f_max, act, f_l, f_pe_star)
+        _f_v_ce_eqn_den = (act*f_l) + f_pe_star
         return _f_v_ce_eqn_num/_f_v_ce_eqn_den
 
     cdef inline double c_contractile_velocity(self, double f_v) nogil:
         """ Define the contractile velocity."""
         cdef:
             double exp1, exp2, num, den
-        printf('f_v : %f', f_v)
         exp1 = cexp((f_v - self.d4)/self.d1)/2.
         exp2 = cexp((self.d4 - f_v)/self.d1)/2.
         num = exp1 - self.d3 - exp2        
@@ -424,8 +421,6 @@ cdef class DeGrooteMuscle(Muscle):
         #: Muscle Contractile Velocity
         # printf('self.c_contractile_velocity(_f_v)) ....\n')
         self._v_ce.c_set_value(self.c_contractile_velocity(_f_v))
-        printf('Hey %f %f \n', self._stim.c_get_value(),
-               self.c_contractile_velocity(_f_v))
 
     cdef void c_output(self) nogil:
         """ Compute the outputs of the system. """        
@@ -449,7 +444,7 @@ cdef class DeGrooteMuscle(Muscle):
         #: Contractile force
         self._f_ce.c_set_value(self.c_contractile_force(act, l_ce, v_ce))
         #: Tendon force
-        self._f_se.c_set_value(self.c_tendon_force(l_se))
+        self._f_se.c_set_value(self._f_max*self.c_tendon_force(l_se))
 
     #: Sensory afferents
     cdef void c_compute_Ia(self) nogil:
