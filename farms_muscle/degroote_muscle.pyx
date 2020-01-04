@@ -336,8 +336,6 @@ cdef class DeGrooteMuscle(Muscle):
             _num = -0.5*(_l_ce_norm - self.b2[j])**2
             _den = self.b3[j] + self.b4[j]*_l_ce_norm
             _force_length += self.b1[j]*cexp(_num/_den)
-        printf(
-            'l_ce = %f %f %f %f\n', l_ce, self._l_opt, _l_ce_norm, _force_length)
         return _force_length
 
     cdef inline double c_force_velocity(self, double v_ce) nogil:
@@ -353,16 +351,13 @@ cdef class DeGrooteMuscle(Muscle):
         cdef:
             double _f_v_ce_eqn_den, _f_v_ce_eqn_num
         _f_v_ce_eqn_num = f_se + f_be
-        _f_v_ce_eqn_den = (self._f_max*act*f_l) + f_pe_star
-        # printf('num = %f %f\n', f_se, f_be)
-        # printf('den = %f %f %f %f\n', self._f_max, act, f_l, f_pe_star)
+        _f_v_ce_eqn_den = (act*f_l) + f_pe_star
         return _f_v_ce_eqn_num/_f_v_ce_eqn_den
 
     cdef inline double c_contractile_velocity(self, double f_v) nogil:
         """ Define the contractile velocity."""
         cdef:
             double exp1, exp2, num, den
-        printf('f_v : %f', f_v)
         exp1 = cexp((f_v - self.d4)/self.d1)/2.
         exp2 = cexp((self.d4 - f_v)/self.d1)/2.
         num = exp1 - self.d3 - exp2        
@@ -426,8 +421,6 @@ cdef class DeGrooteMuscle(Muscle):
         #: Muscle Contractile Velocity
         # printf('self.c_contractile_velocity(_f_v)) ....\n')
         self._v_ce.c_set_value(self.c_contractile_velocity(_f_v))
-        printf('Hey %f %f \n', self._stim.c_get_value(),
-               self.c_contractile_velocity(_f_v))
 
     cdef void c_output(self) nogil:
         """ Compute the outputs of the system. """        
@@ -451,7 +444,7 @@ cdef class DeGrooteMuscle(Muscle):
         #: Contractile force
         self._f_ce.c_set_value(self.c_contractile_force(act, l_ce, v_ce))
         #: Tendon force
-        self._f_se.c_set_value(self.c_tendon_force(l_se))
+        self._f_se.c_set_value(self._f_max*self.c_tendon_force(l_se))
 
     #: Sensory afferents
     cdef void c_compute_Ia(self) nogil:
