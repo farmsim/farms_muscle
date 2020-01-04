@@ -86,8 +86,9 @@ def main():
     rendering(1)
 
     ########## MUSCLE ##########
-    container = Container()
-    muscles = MusculoSkeletalSystem('../../farms_muscle/conf/test_suspended_weight.yaml')
+    container = Container(MAX_ITERATIONS=50000)
+    muscles = MusculoSkeletalSystem(
+        '../../farms_muscle/conf/test_suspended_weight.yaml')
 
     #: Initialize DAE
     container.initialize()
@@ -97,7 +98,7 @@ def main():
 
     u = container.muscles.activations
     stim1 = u.get_parameter('stim_m1')
-    activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.05)
+    activation1 = p.addUserDebugParameter("Activation-1", 0, 1, 0.5)
     num_joints = p.getNumJoints(system)
     p.setJointMotorControlArray(system,
                                 np.arange(num_joints),
@@ -117,31 +118,28 @@ def main():
         stim1.value = _act1
         muscles.step()
         p.stepSimulation()
+        container.update_log()
         TIME += 0.001
         # time.sleep(2.)
     END = time.time()
     print(END-START)
 
-    musculo = container.muscles
-    #: Muscle Logging
-    musculo_x = pd.DataFrame(musculo.states.log)
-    musculo_x.columns = musculo.states.names
-    musculo_x.to_hdf('./Results/musculo_x.h5', 'musculo_x', mode='w')
-    musculo_xdot = pd.DataFrame(musculo.dstates.log)
-    musculo_xdot.columns = musculo.dstates.names
-    musculo_xdot.to_hdf('./Results/musculo_xdot.h5', 'musculo_xdot', mode='w')
-    musculo_y = pd.DataFrame(musculo.outputs.log)
-    musculo_y.columns = musculo.outputs.names
-    musculo_y.to_hdf('./Results/musculo_y.h5', 'musculo_y', mode='w')
-    musculo_p = pd.DataFrame(musculo.parameters.log)
-    musculo_p.columns = musculo.parameters.names
-    musculo_p.to_hdf('./Results/musculo_p.h5', 'musculo_p', mode='w')
-    musculo_u = pd.DataFrame(musculo.activations.log)
-    musculo_u.columns = musculo.activations.names
-    musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
-    musculo_f = pd.DataFrame(musculo.forces.log)
-    musculo_f.columns = musculo.forces.names
-    musculo_f.to_hdf('./Results/musculo_f.h5', 'musculo_f', mode='w')
+    #: Dump results
+    container.dump(OVERWRITE=True)
+
+    #: Read results
+    forces = pd.read_hdf("./Results/muscles/forces.h5")
+    states = pd.read_hdf("./Results/muscles/states.h5")
+    #:
+    plt.figure()
+    plt.title("Forces")
+    plt.plot(forces)
+    plt.grid(True)
+    plt.figure()
+    plt.title("states")
+    plt.plot(states)
+    plt.grid(True)
+    plt.show()
 
 if __name__ == '__main__':
     # profile.py
