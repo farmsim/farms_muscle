@@ -5,10 +5,10 @@ import os
 import sys
 import numpy as np
 from farms_muscle.muscle_system import MuscleSystemGenerator
-from farms_container import Container
 from scipy.integrate import ode
 import farms_pylog as pylog
 pylog.set_level('debug')
+
 
 class MusculoSkeletalSystem(object):
     """ Class to generate musculo-skeletal module.
@@ -16,7 +16,7 @@ class MusculoSkeletalSystem(object):
     2. Joint Generation
     3. Muscle-Joint Generation : Binding muscles and joints"""
 
-    def __init__(self, config_path=None, opts=None):
+    def __init__(self, container, config_path=None, opts=None):
         """ Initialize the joints and muscles.
         Need to initialize the class with a valid json file"""
         if config_path is None:
@@ -26,9 +26,8 @@ class MusculoSkeletalSystem(object):
             pylog.error('Wrong config path .....')
             raise RuntimeError()
 
-        #: Attributes
-        self.container = Container.get_instance()
         #: Create muscles namespace in the container
+        self.container = container
         self.container.add_namespace('muscles')
         self.muscles = {}
         self.muscles_sys = None
@@ -65,8 +64,9 @@ class MusculoSkeletalSystem(object):
         """This function creates muscle objects based on the config file.
         The function stores the created muscle objects in a dict."""
         num_muscles = len(config_data['muscles'])
-        self.muscle_sys = MuscleSystemGenerator(num_muscles)
-        self.muscles = self.muscle_sys.generate_muscles(config_data)
+        self.muscle_sys = MuscleSystemGenerator(self.container, num_muscles)
+        self.muscles = self.muscle_sys.generate_muscles(
+            self.container, config_data)
         return self.muscles
 
     def setup_integrator(self, x0=None, integrator='dopri5', atol=1e-6,
@@ -97,7 +97,7 @@ class MusculoSkeletalSystem(object):
         muscle_stim: dict
             Dictionary of muscle activations
         """
-        #: Step the musculo_skeletal_system.        
+        #: Step the musculo_skeletal_system.
         self.integrator.set_initial_value(self.integrator.y,
                                           self.integrator.t + dt)
         self.integrator.integrate(self.integrator.t + dt)

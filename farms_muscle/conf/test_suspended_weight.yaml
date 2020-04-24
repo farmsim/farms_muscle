@@ -8,7 +8,7 @@ animal : 'tug_of_war'
 
 muscles:
   m1:
-    model: degroote
+    model: geyer
     l_opt: 0.2
     f_max: 1000.0
     v_max: -10.0
