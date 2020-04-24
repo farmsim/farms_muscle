@@ -22,7 +22,6 @@ from libc.math cimport sin as csin
 from libc.math cimport acos as cacos
 from libc.math cimport fmax as cfmax
 from libc.math cimport fabs as cfabs
-from farms_container import Container
 import numpy as np
 cimport numpy as cnp
 
@@ -31,7 +30,7 @@ cdef class GeyerMuscle(Muscle):
     The muscle model is based on the hill-type muscle model by Geyer et.al
     """
 
-    def __init__(self, parameters, dt=0.001, physics_engine='BULLET', model_id=1):
+    def __init__(self, container, parameters, dt=0.001, physics_engine='BULLET', model_id=1):
         """This function initializes the muscle model.
         A default muscle name is given as muscle
 
@@ -60,8 +59,6 @@ cdef class GeyerMuscle(Muscle):
 
         self.density = 1060
         self.tol = 1e-6  #: Tolerance
-
-        container = Container.get_instance()
 
         #: Internal properties
         (_, self._l_slack) = container.muscles.constants.add_parameter(
@@ -138,14 +135,14 @@ cdef class GeyerMuscle(Muscle):
         self._k_dII = parameters.k_dII
         self._k_nII = parameters.k_nII
         self._const_II = parameters.const_II
-        
+
         self._Ia_aff = container.muscles.Ia.add_parameter(
             "Ia_" + self._name, 0.0)[0]
         self._II_aff = container.muscles.II.add_parameter(
             "II_" + self._name, 0.0)[0]
         self._Ib_aff = container.muscles.Ib.add_parameter(
             "Ib_" + self._name, 0.0)[0]
-        
+
         #: PhysicsInterface
         if physics_engine == 'NONE':
             self.p_interface = PhysicsInterface(self._l_mtu, self._f_se)
@@ -156,7 +153,7 @@ cdef class GeyerMuscle(Muscle):
                 model_id, self._l_mtu, self._f_se, self._stim,
                 parameters.waypoints, parameters.visualize)
             pylog.debug(
-                "Muscle {} connected to any Bullet engine".format(self._name))        
+                "Muscle {} connected to any Bullet engine".format(self._name))
 
     ########## C Wrappers ##########
     def _py_tendon_force(self, l_se):
@@ -338,7 +335,7 @@ cdef class GeyerMuscle(Muscle):
         _v_max = self._v_max*self._l_opt
         _v_ce_1 = _v_max*(1. - f_v)/(1. + f_v*self.K)
         _v_ce_2 = _v_max*(f_v - 1.0)/(
-            7.56*self.K *(f_v - self.N) + 1. - self.N)
+            7.56*self.K * (f_v - self.N) + 1. - self.N)
         # printf('f_v = %f \n', f_v)
         # printf('v_ce_1 = %f \t v_ce_2 = %f \n', _v_ce_1, _v_ce_2)
         if f_v <= 1.0:
@@ -406,7 +403,7 @@ cdef class GeyerMuscle(Muscle):
         self._v_ce.c_set_value(self.c_contractile_velocity(_f_v))
 
     cdef void c_output(self) nogil:
-        """ Compute the outputs of the system. """        
+        """ Compute the outputs of the system. """
         #: Attributes needed for output computation
         cdef double l_ce = self._l_ce.c_get_value()
         cdef double v_ce = self._v_ce.c_get_value()
@@ -433,18 +430,18 @@ cdef class GeyerMuscle(Muscle):
     cdef void c_compute_Ia(self) nogil:
         """ Compute Ia afferent from muscle fiber. """
         cdef double _v_norm = self._v_ce.c_get_value()/self._lth
-        
+
         cdef double _d_norm = (
             self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
-        
+
         self._Ia_aff.c_set_value(self._kv*cpow(
             cfabs(_v_norm), self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
 
     cdef void c_compute_II(self) nogil:
-        """ Compute II afferent from muscle fiber. """    
+        """ Compute II afferent from muscle fiber. """
         cdef double _d_norm = (
             self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
-        
+
         self._II_aff.c_set_value(
             self._k_dII*_d_norm + self._k_nII*self._stim.c_get_value() + self._const_II)
 
@@ -452,7 +449,7 @@ cdef class GeyerMuscle(Muscle):
         """ Compute Ib afferent from muscle fiber. """
         cdef double _f_norm = (
             self._f_se.c_get_value() - self._fth)/self._f_max if self._f_se.c_get_value() >= self._fth else 0.0
-        
+
         self._Ib_aff.c_set_value(self._kF*_f_norm)
 
     cdef void c_update_sensory_afferents(self) nogil:
@@ -460,5 +457,3 @@ cdef class GeyerMuscle(Muscle):
         self.c_compute_Ia()
         self.c_compute_II()
         self.c_compute_Ib()
-
-    

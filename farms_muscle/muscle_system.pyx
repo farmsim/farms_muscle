@@ -28,32 +28,31 @@ cdef class MuscleSystemGenerator(object):
     """ Generate Muscle System.
     """
 
-    def __init__(self, num_muscles):
+    def __init__(self, container, num_muscles):
         """Initialize.
 
         Parameters
         ----------
         """
         super(MuscleSystemGenerator, self).__init__()
-        container = Container.get_instance()
         #: Attributes
         #: ODE States
-        self.states = <Table>container.muscles.add_table('states')
-        self.dstates = <Table>container.muscles.add_table('dstates')
+        self.states = <Table > container.muscles.add_table('states')
+        self.dstates = <Table > container.muscles.add_table('dstates')
         #: Muscle parameters
-        self.constants = <Table>container.muscles.add_table(
-            'constants', TABLE_TYPE='CONSTANT')
-        self.parameters = <Table>container.muscles.add_table('parameters')
+        self.constants = <Table > container.muscles.add_table(
+            'constants', table_type='CONSTANT')
+        self.parameters = <Table > container.muscles.add_table('parameters')
         #: Input to each muscle
-        self.activations = <Table>container.muscles.add_table('activations')
+        self.activations = <Table > container.muscles.add_table('activations')
         #: Output of each muscle
-        self.forces= <Table>container.muscles.add_table('forces')
-        #: Secondary outputs 
-        self.outputs = <Table>container.muscles.add_table('outputs')
+        self.forces = <Table > container.muscles.add_table('forces')
+        #: Secondary outputs
+        self.outputs = <Table > container.muscles.add_table('outputs')
         #: Sensors
-        self.Ia = <Table>container.muscles.add_table('Ia')
-        self.II = <Table>container.muscles.add_table('II')
-        self.Ib = <Table>container.muscles.add_table('Ib')
+        self.Ia = <Table > container.muscles.add_table('Ia')
+        self.II = <Table > container.muscles.add_table('II')
+        self.Ib = <Table > container.muscles.add_table('Ib')
 
         #: _muscles dictionary
         self.muscles = {}
@@ -63,7 +62,7 @@ cdef class MuscleSystemGenerator(object):
 
         self.c_muscles = cnp.ndarray((self.num_muscles,), dtype=CMuscle)
 
-    def generate_muscles(self, config_data):
+    def generate_muscles(self, container, config_data):
         """Generate all the muscles in the system .
         Instatiate a muscle model for each muscle in the config.
         Returns
@@ -71,7 +70,6 @@ cdef class MuscleSystemGenerator(object):
         out : <bool>
             Return true if successfully created the muscles
         """
-        container = Container.get_instance()
         #: Get all the muscles data in the system
         muscles_data = config_data['muscles']
 
@@ -85,9 +83,9 @@ cdef class MuscleSystemGenerator(object):
             new_muscle = factory.gen_muscle(muscle['model'])
             #: ADD DT
             self.muscles[muscle['name']] = new_muscle(
-                                                      MuscleParameters(
-                                                          **muscle))
-            self.c_muscles[j] = <CMuscle> self.muscles[muscle['name']]
+                container, MuscleParameters(
+                    **muscle))
+            self.c_muscles[j] = <CMuscle > self.muscles[muscle['name']]
         return self.muscles
 
     #################### C-FUNCTIONS ####################
@@ -96,7 +94,7 @@ cdef class MuscleSystemGenerator(object):
         cdef unsigned int j
         #: Loop over all the muscles
         for j in range(self.num_muscles):
-            (<CMuscle>self.c_muscles[j]).c_ode_rhs()
+            ( < CMuscle > self.c_muscles[j]).c_ode_rhs()
         return self.dstates.c_get_values()
 
     cdef void c_update_outputs(self):

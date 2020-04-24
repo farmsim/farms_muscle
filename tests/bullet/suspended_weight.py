@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import transformations as T
 
+
 def rendering(render=1):
     """Enable/disable rendering"""
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, render)
@@ -42,26 +43,26 @@ def main():
     ########## LINKS ##########
 
     vis_static_block = p.createVisualShape(
-        shapeType=p.GEOM_BOX, halfExtents= [0.05, 0.05, 0.05],
+        shapeType=p.GEOM_BOX, halfExtents=[0.05, 0.05, 0.05],
         visualFramePosition=[0., 0.0, 0.0])
 
     col_static_block = p.createCollisionShape(
-        shapeType=p.GEOM_BOX, halfExtents= [0.05, 0.05, 0.05],
+        shapeType=p.GEOM_BOX, halfExtents=[0.05, 0.05, 0.05],
         collisionFramePosition=[0., 0.0, 0.0])
 
     vis_moving_block = p.createVisualShape(
         p.GEOM_SPHERE,
-        visualFramePosition=[0,0,0.],
-        visualFrameOrientation=[0,0,0,1],
+        visualFramePosition=[0, 0, 0.],
+        visualFrameOrientation=[0, 0, 0, 1],
         radius=0.05)
 
     col_moving_block = p.createCollisionShape(
         p.GEOM_SPHERE,
-        collisionFramePosition=[0,0,0.],
-        collisionFrameOrientation=[0,0,0,1],
+        collisionFramePosition=[0, 0, 0.],
+        collisionFrameOrientation=[0, 0, 0, 1],
         radius=0.05)
 
-    base_mass = 0. #: Static
+    base_mass = 0.  # : Static
     base_position = [0., 0.0, 1.]
     base_orientation = [1., 0., 0., 0.]
 
@@ -72,10 +73,10 @@ def main():
 
     system = p.createMultiBody(
         base_mass, col_static_block, vis_static_block, base_position, base_orientation,
-        linkMasses=[mass], linkCollisionShapeIndices=[col_moving_block,],
-        linkVisualShapeIndices=[vis_moving_block,],
-        linkPositions=[position,], linkOrientations=[orientation],
-        linkInertialFramePositions=[position,],
+        linkMasses=[mass], linkCollisionShapeIndices=[col_moving_block, ],
+        linkVisualShapeIndices=[vis_moving_block, ],
+        linkPositions=[position, ], linkOrientations=[orientation],
+        linkInertialFramePositions=[position, ],
         linkInertialFrameOrientations=[orientation],
         linkParentIndices=[0], linkJointTypes=[p.JOINT_PRISMATIC],
         linkJointAxis=[[0., 0., 1.]])
@@ -86,9 +87,11 @@ def main():
     rendering(1)
 
     ########## MUSCLE ##########
-    container = Container(MAX_ITERATIONS=50000)
+    container = Container()
     muscles = MusculoSkeletalSystem(
-        '../../farms_muscle/conf/test_suspended_weight.yaml')
+        container,
+        '../../farms_muscle/conf/test_suspended_weight.yaml'
+    )
 
     #: Initialize DAE
     container.initialize()
@@ -112,7 +115,7 @@ def main():
     while RUN:
         keys = p.getKeyboardEvents()
         if keys.get(113):
-            RUN=False
+            RUN = False
             break
         _act1 = p.readUserDebugParameter(activation1)
         stim1.value = _act1
@@ -141,13 +144,14 @@ def main():
     plt.grid(True)
     plt.show()
 
+
 if __name__ == '__main__':
     # profile.py
-    import pstats, cProfile
-    cProfile.runctx("main()", globals(), locals(), "Profile.prof")    
+    import pstats
+    import cProfile
+    cProfile.runctx("main()", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
     s.strip_dirs().sort_stats("time").print_stats(10)
     #: Plot results
     # import plot_results
     # plot_results.main('./Results')
-
