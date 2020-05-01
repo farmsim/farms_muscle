@@ -100,7 +100,7 @@ class MuscleParameters(SystemParameters):
         self.units['l_slack'] = 'm'
         self.units['l_opt'] = 'm'
         self.units['f_max'] = 'N'
-        self.units['v_max'] = 'm/s'
+        self.units['v_max'] = 'lopt/s'
         self.units['pennation'] = ''
         self.units['name'] = '<str>'
         self.units['muscle_type'] = '<str>'
@@ -108,6 +108,7 @@ class MuscleParameters(SystemParameters):
         self.units['a0'] = '[0-1]'
         self.units['waypoints'] = '<list>'
         self.units['visualize'] = 'bool'
+        self.units['debug'] = 'bool'
         #: Afferents
         self.units['kv'] = '-'
         self.units['pv'] = '-'
@@ -136,6 +137,7 @@ class MuscleParameters(SystemParameters):
         self.parameters['a0'] = kwargs.get('a0', 0.05)
         self.parameters['waypoints'] = kwargs.get('waypoints', [])
         self.parameters['visualize'] = kwargs.get('visualize', True)
+        self.parameters['debug'] = kwargs.get('debug', False)
         #: Afferents
         self.parameters['kv'] = kwargs.get('kv', 6.2)
         self.parameters['pv'] = kwargs.get('pv', 0.6)
@@ -281,6 +283,21 @@ class MuscleParameters(SystemParameters):
             List of visualize describing the muscle attachment in local link frame
         """
         self.parameters['visualize'] = value
+
+    @property
+    def debug(self):
+        """ Visualize muscle forces  """
+        return self.parameters['debug']
+        
+    @debug.setter
+    def debug(self, value):
+        """
+        Parameters
+        ----------
+        value : <bool>
+            Enable/Disable debug force visualization
+        """
+        self.parameters['debug'] = value
 
     @property
     def waypoints(self):

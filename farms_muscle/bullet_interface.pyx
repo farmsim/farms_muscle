@@ -202,7 +202,7 @@ cdef class BulletInterface(PhysicsInterface):
             )
 
     def update_muscle_length(self):
-        self.c_update_muscle_length()
+        self.c_compute_muscle_length()
 
     #################### C-FUNCTIONS ####################
     cdef void c_compute_muscle_length(self):
@@ -245,15 +245,16 @@ cdef class BulletInterface(PhysicsInterface):
                 self.model_id, link_id, np.asarray(f_vec)
             )
 
-            # p.addUserDebugLine(
-            #     lineFromXYZ=np.asarray(self.global_waypoints[j]),
-            #     lineToXYZ=np.asarray(f_vec) + np.asarray(
-            #         self.global_waypoints[j]
-            #     ),
-            #     lineWidth=4,
-            #     lineColorRGB=[0, 0, 1],
-            #     replaceItemUniqueId=self.debug_force_ids[j]
-            # )
+            if self.debug_visualization:
+                p.addUserDebugLine(
+                    lineFromXYZ=np.asarray(self.global_waypoints[j]),
+                    lineToXYZ=np.asarray(f_vec) + np.asarray(
+                        self.global_waypoints[j]
+                    ),
+                    lineWidth=4,
+                    lineColorRGB=[0, 0, 1],
+                    replaceItemUniqueId=self.debug_force_ids[j]
+                )
 
             #: Apply the force
             p.applyExternalForce(
@@ -279,17 +280,18 @@ cdef class BulletInterface(PhysicsInterface):
                 self.model_id, link_id, np.asarray(f_vec)
             )
 
-            # p.addUserDebugLine(
-            #     lineFromXYZ=np.asarray(self.global_waypoints[j]),
-            #     lineToXYZ=np.asarray(f_vec) + np.asarray(
-            #         self.global_waypoints[j]
-            #     ),
-            #     lineWidth=4,
-            #     lineColorRGB=[0, 1, 0],
-            #     replaceItemUniqueId=self.debug_force_ids[
-            #         self.n_attachments + j - 2
-            #     ]
-            # )
+            if self.debug_visualization:
+                p.addUserDebugLine(
+                    lineFromXYZ=np.asarray(self.global_waypoints[j]),
+                    lineToXYZ=np.asarray(f_vec) + np.asarray(
+                        self.global_waypoints[j]
+                    ),
+                    lineWidth=4,
+                    lineColorRGB=[0, 1, 0],
+                    replaceItemUniqueId=self.debug_force_ids[
+                        self.n_attachments + j - 2
+                    ]
+                )
 
             #: Apply the force
             p.applyExternalForce(

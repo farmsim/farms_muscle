@@ -151,7 +151,7 @@ cdef class GeyerMuscle(Muscle):
         elif physics_engine == 'BULLET':
             self.p_interface = BulletInterface(
                 model_id, self._l_mtu, self._f_se, self._stim,
-                parameters.waypoints, parameters.visualize)
+                parameters.waypoints, parameters.visualize, parameters.debug)
             pylog.debug(
                 "Muscle {} connected to any Bullet engine".format(self._name))
 
