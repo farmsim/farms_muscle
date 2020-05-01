@@ -81,8 +81,12 @@ class MusculoSkeletalSystem(object):
 
         #: Initialize DAE
         if x0 is None:
+            x0 = np.ones((2*len(self.muscles),))*0.05
+            for j, muscle in enumerate(self.muscles.values()):
+                x0[2*j] = muscle.compute_initial_l_ce()
             self.integrator.set_initial_value(
-                self.container.muscles.states.values, 0.0)
+                self.container.muscles.states.values, 0.0
+            )
         else:
             self.integrator.set_initial_value(x0, 0.0)
 
