@@ -9,210 +9,305 @@
 
 """ Interface between bullet physics engine and muscle model. """
 
+from libc.stdio cimport printf
+from cython.view cimport array as cvarray
+import farms_pylog as pylog
+import transformations as T
+import numpy as np
+from libc.math cimport pow as cpow
+from numpy cimport NPY_FLOAT
 import pybullet as p
 from physics_interface cimport PhysicsInterface
-cimport numpy as cnp
-from numpy cimport NPY_FLOAT
-from libc.math cimport sqrt as csqrt
-from libc.math cimport pow as cpow
-import numpy as np
-import transformations as T
-import farms_pylog as pylog
+cimport numpy as np
 cimport cython
-from cython.view cimport array as cvarray
+
+#: Utils for coordinate convertion
+
+
+def convert_local_to_global(body_id, link_id, local_coordinate):
+    """Convert local coordinate to global coordinates
+
+    Parameters
+    ----------
+    body_id : <int>
+        Index of the body in pybullet
+    link_id : <int>
+        Index of the link element in pybullet body
+    local_coordinate : <list/tuple>
+        Coordinate in the link frame
+
+    Returns
+    -------
+    global_coordinate : <list/tuple>
+        Coordinate in global frame
+    """
+    if link_id != -1:
+        global_coordinate, _ = p.multiplyTransforms(
+            *p.getLinkState(body_id, link_id)[4:6],
+            local_coordinate, [0, 0, 0, 1]
+        )
+    else:
+        global_coordinate, _ = p.multiplyTransforms(
+            *p.getBasePositionAndOrientation(body_id),
+            local_coordinate, [0, 0, 0, 1]
+        )
+    return global_coordinate
+
+
+def convert_global_to_local(body_id, link_id, global_coordinate):
+    """Convert global coordinate to global coordinates
+
+    Parameters
+    ----------
+    body_id : <int>
+        Index of the body in pybullet
+    link_id : <int>
+        Index of the link element in pybullet body
+    global_coordinate : <list/tuple>
+        Coordinate in the link frame
+
+    Returns
+    -------
+    local_coordinate : <list/tuple>
+        Coordinate in local link frame
+    """
+    if link_id != -1:
+        local_coordinate, _ = p.multiplyTransforms(
+            *p.invertTransform(*p.getLinkState(body_id, link_id)[4:6]),
+            global_coordinate, [0, 0, 0, 1]
+        )
+    else:
+        local_coordinate, _ = p.multiplyTransforms(
+            *p.invertTransform(*p.getBasePositionAndOrientation(body_id)),
+            global_coordinate, [0, 0, 0, 1]
+        )
+    return local_coordinate
+
 
 cdef class BulletInterface(PhysicsInterface):
-    """Interface between bullet physics engine and muscle model.
-    """
-    def __init__(self, model_id, lmtu, force, stim, waypoints, VISUALIZATION=True):
+    """Interface between bullet physics engine and muscle model."""
+
+    def __init__(
+            self, model_id, lmtu, force, stim, waypoints,
+            visualization=True, debug_visualization=True
+    ):
         super(BulletInterface, self).__init__(lmtu, force, stim, 'BULLET')
-        #: [TO-DO] ADD KWARGS FOR VISUALIZATION
-        #: Number of waypoints
+
+        #: Initialization
         self.model_id = model_id
-        pylog.debug('Model {} -> num points {}'.format(
-            self.model_id, len(waypoints)))
 
-        self.num_attachments = len(waypoints)
+        self.n_attachments = len(waypoints)
 
-        self._points = cnp.ndarray((self.num_attachments,),
-                                   dtype=('(3,)d'))
+        self.global_waypoints = np.ndarray(
+            (self.n_attachments,), dtype=('(3,)d')
+        )
 
-        self._base_pos = cnp.ndarray((1,3),
-                                   dtype=('3d'))
+        self.local_waypoints = np.ndarray(
+            (self.n_attachments,),
+            dtype=[
+                ('link_id', 'i'), ('point', '(3,)d')
+            ]
+        )
 
+        self.visualization = visualization
 
-        self.waypoints = cnp.ndarray((self.num_attachments,),
-                                            dtype=[('link_id','i'),
-                                                   ('point','(4,)d')])
+        self.debug_muscle_line_ids = np.ndarray(
+            (self.n_attachments,), dtype=('I'))
 
-        self._vis_ids = cnp.ndarray((self.num_attachments,),
-                                    dtype=('I'))
+        self.debug_visualization = debug_visualization
 
-        self.VISUALIZATION = VISUALIZATION
+        self.debug_force_ids = np.ndarray(
+            (2*self.n_attachments-2,), dtype=('I')
+        )
 
         #: Add the waypoints
-        self.add_waypoints(waypoints, VISUALIZATION)
+        self.initialize_waypoints(waypoints)
 
-        #: Get base default position
-        pos = (p.getDynamicsInfo(
-            self.model_id, -1))[3]
-        self._base_pos = np.array(pos, dtype=np.double)
+        #: Visualization
+        if self.visualization:
+            self.initialize_debug_muscle_line_visualization()
+        if self.debug_visualization:
+            self.initialize_debug_muscle_force_visualization()
 
     #################### PY-FUNCTIONS ####################
-    def add_waypoints(self, waypoints, VISUALIZATION):
-        """ Add new attachment point.
+    def initialize_waypoints(self, waypoints):
+        """ Initialize waypoints
         Parameters
         ----------
         waypoints: <list>
             List containing link ids and attachment points
         """
-
-        _link_name_to_index = {p.getBodyInfo(self.model_id)[0].decode('UTF-8'):-1,}
-
-        for _id in range(p.getNumJoints(self.model_id)):
-            _name = p.getJointInfo(self.model_id, _id)[12].decode('UTF-8')
-            _link_name_to_index[_name] = _id
-        pylog.debug('Link-Index -> {}'.format(_link_name_to_index))
+        link_name_to_index = {
+            p.getJointInfo(self.model_id, index)[12].decode('UTF-8'): index
+            for index in range(p.getNumJoints(self.model_id))
+        }
+        #: Add base link
+        link_name_to_index[
+            p.getBodyInfo(self.model_id)[0].decode('UTF-8')
+        ] = -1
 
         for j, attachment in enumerate(waypoints):
-            _link_id = _link_name_to_index[attachment[0]['link']]
+            link_index = link_name_to_index[attachment[0]['link']]
+            #: local
+            self.local_waypoints[j][0] = link_index
+            self.local_waypoints[j][1][0] = attachment[1]['point'][0]
+            self.local_waypoints[j][1][1] = attachment[1]['point'][1]
+            self.local_waypoints[j][1][2] = attachment[1]['point'][2]
+            #: global
+            self.global_waypoints[j][:] = attachment[1]['point'][:]
 
-            self.waypoints[j][0] = _link_id
-            self.waypoints[j][1][0] = attachment[1]['point'][0]
-            self.waypoints[j][1][1] = attachment[1]['point'][1]
-            self.waypoints[j][1][2] = attachment[1]['point'][2]
-            self.waypoints[j][1][3] = 1.
+    def initialize_debug_muscle_line_visualization(self):
+        """ Initialization of debug lines in pybullet for muscle line
+        visualization.
 
-            self._points[j][:] = attachment[1]['point'][:3]
+        Parameters
+        ----------
+        None
+        """
+        for count in range(self.n_attachments-1):
+            self.debug_muscle_line_ids[count] = p.addUserDebugLine(
+                lineFromXYZ=[0, 0, 0],
+                lineToXYZ=[0, 0, 0],
+                lineColorRGB=[1, 0, 0],
+                lineWidth=4,
+                lifeTime=0
+            )
 
-            if VISUALIZATION and j <= self.num_attachments-2:
-                self._vis_ids[j] = p.addUserDebugLine(
-                    lineFromXYZ=self._points[j],
-                    lineToXYZ=self._points[j+1],
-                    lineColorRGB=[1, 0, 0],
-                    lineWidth=4,
-                    lifeTime=0)
+    def initialize_debug_muscle_force_visualization(self):
+        """ Initialization of debug lines in pybullet for muscle force
+        visualization.
 
-    def compute_world_space_point_in_link(
-            self, bodyuid, link_index, local_point_coordinate):
-        link_state = p.getLinkState(bodyuid,link_index)
-        link_pos=link_state[4]
-        link_orn=link_state[5]
-        fromWS, orn = p.multiplyTransforms(
-            link_pos,link_orn,local_point_coordinate,[0,0,0,1])
-        return fromWS
+        Parameters
+        ----------
+        None
+        """
+        #: Debug : Show forces
+        for count in range(2*self.n_attachments-2):
+            self.debug_force_ids[count] = p.addUserDebugLine(
+                lineFromXYZ=[0, 0, 0],
+                lineToXYZ=[0, 0, 0],
+                lineColorRGB=[0, 1, 0],
+                lineWidth=4,
+                lifeTime=0
+            )
 
-    def compute_world_space_point_in_base(
-            self, bodyuid, local_point_coordinate):
-        (pos_1, orient_1) =  p.getDynamicsInfo(self.model_id, -1)[3:5]
-        (pos_2, orient_2) =  p.invertTransform(
-            *p.getBasePositionAndOrientation(self.model_id))
-        (pos_3, orient_3) = p.multiplyTransforms(pos_1, orient_1,
-                                                 pos_2, orient_2)
-        fromWS, orn = p.multiplyTransforms(
-            pos_3, orient_3, local_point_coordinate, [0,0,0,1])
-        return fromWS
-
-    def update_local_points_to_world(self):
+    def update_local_points_to_global(self):
         """Update the points in local coordinate to world. """
         cdef unsigned int p
-        cdef int link_id
-        for p in range(self.num_attachments):
-            link_id = self.waypoints[p][0]
-            if link_id >= 0:
-                self._points[p] =  self.compute_world_space_point_in_link(
-                    self.model_id,
-                    link_id,
-                    self.waypoints[p][1][:3])
-            else:
-                self._points[p] = self.compute_world_space_point_in_base(
-                    self.model_id,
-                    self.waypoints[p][1][:3])
+        for p in range(self.n_attachments):
+            self.global_waypoints[p] = convert_local_to_global(
+                self.model_id,
+                self.local_waypoints[p][0],
+                self.local_waypoints[p][1][:]
+            )
 
-    def py_compute_muscle_length(self):
-        self.c_compute_muscle_length()
+    def update_muscle_length(self):
+        self.c_update_muscle_length()
 
-    def py_dist_between_points(self, p1, p2):
-        return self.c_dist_between_points(p1, p2)
-
-    def py_force_vector(self, p1, p2, force, f_vec):
-        return self.c_force_vector(p1, p2, force, f_vec)
-
-    #################### C-FUNCTIONS ####################    
+    #################### C-FUNCTIONS ####################
     cdef void c_compute_muscle_length(self):
         """ Compute the muscle length based on the physics simulator. """
         #: FUCK : This needs to be exposed to outside
-        self.update_local_points_to_world()
-        
-        #: Compute the length        
-        cdef double _length = 0.0
+        self.update_local_points_to_global()
+
+        #: Compute the length
+        cdef double length = 0.0
         cdef unsigned int j
-        for j in range(self.num_attachments-1):
-            _length +=self.c_dist_between_points(self._points[j],
-                                                 self._points[j+1])
+        for j in range(self.n_attachments-1):
+            length += c_distance_between_points(
+                self.global_waypoints[j], self.global_waypoints[j+1]
+            )
         #: Update the muscle length
-        self.lmtu.c_set_value(_length)
-
-    cdef inline double c_dist_between_points(self, double[:] p1, double[:] p2) nogil:
-        """ Compute distance between two points. """
-        cdef double dist = 0.
-        cdef unsigned int j
-        for j in range(3):
-            dist += (p1[j]-p2[j])*(p1[j]-p2[j])
-        return csqrt(dist)
-
-    cdef inline void c_force_vector(self, double[:] p1, double[:] p2, double force, double[:] f_vec) nogil:
-        """ Compute the force vector between two given points. """
-        cdef unsigned int j
-        for j in range(3):
-            f_vec[j] = p1[j] - p2[j]
-
-        #: Normalize
-        cdef double mag = 0.0
-        for j in range(3):
-            mag += f_vec[j]*f_vec[j]
-        mag = csqrt(mag)
-        for j in range(3):
-            f_vec[j] = f_vec[j]*force/mag
+        self.lmtu.c_set_value(length)
 
     cdef void c_apply_muscle_forces(self):
-        """ Apply the forces generated by the muscle onto the physical links. """
-        cdef double _force = self.force.value
-        cdef double[:] f_vec = np.zeros((3,),dtype='d')
-        cdef int _link_id
+        """ Apply the forces generated by the muscle onto the
+        physical links. """
+        cdef double force = self.force.value
+        cdef double[:] f_vec = np.zeros((3,), dtype='d')
+        cdef short int link_id
         cdef unsigned int j
+        cdef tuple local_f_vec
+        cdef int k
+
         #: Apply forces
-        for j in range(self.num_attachments - 1):
+        for j in range(self.n_attachments - 1):
             #: link id
-            _link_id = self.waypoints[j][0]
+            link_id = self.local_waypoints[j][0]
+            #: compute force vector
+            c_scaled_unit_vector_from_points(
+                self.global_waypoints[j],
+                self.global_waypoints[j+1],
+                force,
+                f_vec
+            )
+            local_f_vec = convert_global_to_local(
+                self.model_id, link_id, np.asarray(f_vec)
+            )
 
-            self.c_force_vector(
-                self._points[j+1], self._points[j], _force, f_vec)
-            
+            # p.addUserDebugLine(
+            #     lineFromXYZ=np.asarray(self.global_waypoints[j]),
+            #     lineToXYZ=np.asarray(f_vec) + np.asarray(
+            #         self.global_waypoints[j]
+            #     ),
+            #     lineWidth=4,
+            #     lineColorRGB=[0, 0, 1],
+            #     replaceItemUniqueId=self.debug_force_ids[j]
+            # )
+
             #: Apply the force
             p.applyExternalForce(
-                self.model_id, _link_id, f_vec, self._points[j],
-                flags=p.WORLD_FRAME)
+                self.model_id,
+                link_id,
+                local_f_vec,
+                self.local_waypoints[j][1][:],
+                flags=p.LINK_FRAME
+            )
 
-        for j in range(1, self.num_attachments):
+        for j in range(1, self.n_attachments):
             #: link id
-            _link_id = self.waypoints[j][0]
-            self.c_force_vector(
-                self._points[j-1], self._points[j], _force, f_vec)
-            
+            link_id = self.local_waypoints[j][0]
+            c_scaled_unit_vector_from_points(
+                self.global_waypoints[j],
+                self.global_waypoints[j-1],
+                force,
+                f_vec
+            )
+
+            #: Apply the force
+            local_f_vec = convert_global_to_local(
+                self.model_id, link_id, np.asarray(f_vec)
+            )
+
+            # p.addUserDebugLine(
+            #     lineFromXYZ=np.asarray(self.global_waypoints[j]),
+            #     lineToXYZ=np.asarray(f_vec) + np.asarray(
+            #         self.global_waypoints[j]
+            #     ),
+            #     lineWidth=4,
+            #     lineColorRGB=[0, 1, 0],
+            #     replaceItemUniqueId=self.debug_force_ids[
+            #         self.n_attachments + j - 2
+            #     ]
+            # )
+
             #: Apply the force
             p.applyExternalForce(
-                self.model_id, _link_id, f_vec, self._points[j],
-                flags=p.WORLD_FRAME)
+                self.model_id,
+                link_id,
+                local_f_vec,
+                self.local_waypoints[j][1][:],
+                flags=p.LINK_FRAME
+            )
 
     cdef void c_show_muscle(self):
         """ Visualize the muscle attachment. """
-        if self.VISUALIZATION:
-            for j in range(self.num_attachments-1):
+        if self.visualization:
+            for j in range(self.n_attachments-1):
                 p.addUserDebugLine(
-                    lineFromXYZ=list(self._points[j]),
-                    lineToXYZ=list(self._points[j+1]),
+                    lineFromXYZ=list(self.global_waypoints[j]),
+                    lineToXYZ=list(self.global_waypoints[j+1]),
                     lineColorRGB=[self.stim.value, 0, 0],
                     lineWidth=4,
-                    # lifeTime=0,
-                    replaceItemUniqueId=self._vis_ids[j])
+                    replaceItemUniqueId=self.debug_muscle_line_ids[j]
+                )
