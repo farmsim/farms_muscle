@@ -49,7 +49,12 @@ def convert_local_to_global(body_id, link_id, local_coordinate):
     else:
         global_coordinate, _ = p.multiplyTransforms(
             *p.getBasePositionAndOrientation(body_id),
-            local_coordinate, [0, 0, 0, 1]
+            *(p.multiplyTransforms(
+                *(p.invertTransform(
+                    *p.getDynamicsInfo(body_id, -1)[3:5]
+                )),
+                local_coordinate, [0, 0, 0, 1]
+            ))
         )
     return global_coordinate
 
@@ -82,6 +87,30 @@ def convert_global_to_local(body_id, link_id, global_coordinate):
             global_coordinate, [0, 0, 0, 1]
         )
     return local_coordinate
+
+
+def convert_local_to_inertial(body_id, link_id, local_coordinate):
+    """Convert local coordinate to local inertial coordinates
+
+    Parameters
+    ----------
+    body_id : <int>
+        Index of the body in pybullet
+    link_id : <int>
+        Index of the link element in pybullet body
+    local_coordinate : <list/tuple>
+        Coordinate in the link/urdf frame
+
+    Returns
+    -------
+    inertial_coordinate : <list/tuple>
+        Coordinate in local inertial frame
+    """
+    inertial_coordinate, _ = p.multiplyTransforms(
+        *p.invertTransform(*p.getDynamicsInfo(body_id, link_id)[3:5]),
+        local_coordinate, [0, 0, 0, 1]
+    )
+    return inertial_coordinate
 
 
 cdef class BulletInterface(PhysicsInterface):
@@ -234,6 +263,7 @@ cdef class BulletInterface(PhysicsInterface):
         for j in range(self.n_attachments - 1):
             #: link id
             link_id = self.local_waypoints[j][0]
+            
             #: compute force vector
             c_scaled_unit_vector_from_points(
                 self.global_waypoints[j],
@@ -241,41 +271,7 @@ cdef class BulletInterface(PhysicsInterface):
                 force,
                 f_vec
             )
-            local_f_vec = convert_global_to_local(
-                self.model_id, link_id, np.asarray(f_vec)
-            )
-
-            if self.debug_visualization:
-                p.addUserDebugLine(
-                    lineFromXYZ=np.asarray(self.global_waypoints[j]),
-                    lineToXYZ=np.asarray(f_vec) + np.asarray(
-                        self.global_waypoints[j]
-                    ),
-                    lineWidth=4,
-                    lineColorRGB=[0, 0, 1],
-                    replaceItemUniqueId=self.debug_force_ids[j]
-                )
-
-            #: Apply the force
-            p.applyExternalForce(
-                self.model_id,
-                link_id,
-                local_f_vec,
-                self.local_waypoints[j][1][:],
-                flags=p.LINK_FRAME
-            )
-
-        for j in range(1, self.n_attachments):
-            #: link id
-            link_id = self.local_waypoints[j][0]
-            c_scaled_unit_vector_from_points(
-                self.global_waypoints[j],
-                self.global_waypoints[j-1],
-                force,
-                f_vec
-            )
-
-            #: Apply the force
+            
             local_f_vec = convert_global_to_local(
                 self.model_id, link_id, np.asarray(f_vec)
             )
@@ -288,17 +284,61 @@ cdef class BulletInterface(PhysicsInterface):
                     ),
                     lineWidth=4,
                     lineColorRGB=[0, 1, 0],
-                    replaceItemUniqueId=self.debug_force_ids[
-                        self.n_attachments + j - 2
-                    ]
+                    replaceItemUniqueId=self.debug_force_ids[j]
                 )
 
             #: Apply the force
             p.applyExternalForce(
                 self.model_id,
                 link_id,
-                local_f_vec,
-                self.local_waypoints[j][1][:],
+                convert_local_to_inertial(
+                    self.model_id, link_id, local_f_vec
+                ),
+                convert_local_to_inertial(
+                    self.model_id, link_id, self.local_waypoints[j][1][:]
+                ),
+                flags=p.LINK_FRAME
+            )
+
+        for j in range(1, self.n_attachments):
+            #: link id
+            link_id = self.local_waypoints[j][0]
+            
+            c_scaled_unit_vector_from_points(
+                self.global_waypoints[j],
+                self.global_waypoints[j-1],
+                force,
+                f_vec
+            )
+
+            #: Apply the force
+            local_f_vec = convert_global_to_local(
+                self.model_id, link_id, np.asarray(f_vec)
+            )
+            if self.debug_visualization:
+                p.addUserDebugLine(
+                    lineFromXYZ=np.asarray(self.global_waypoints[j]),
+                    lineToXYZ=np.asarray(f_vec) + np.asarray(
+                        self.global_waypoints[j]
+                    ),
+                    lineWidth=4,
+                    lineColorRGB=[0, 0, 1],                    
+                    replaceItemUniqueId=self.debug_force_ids[
+                        self.n_attachments + j - 2
+                    ]
+                )
+
+            #: apply the force
+            p.applyExternalForce(
+                self.model_id,
+                link_id,
+                convert_local_to_inertial(
+                    self.model_id, link_id, local_f_vec
+                ),
+                convert_local_to_inertial(
+                    self.model_id, link_id,
+                    self.local_waypoints[j][1][:]
+                ),
                 flags=p.LINK_FRAME
             )
 
