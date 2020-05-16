@@ -81,7 +81,7 @@ def main():
                    "sleep_time": 0.001,
                    "base_link": "pelvis"
                    }
-    container = Container(max_iterations=int(10/0.001))
+    container = Container(max_iterations=int(sim_options['run_time']/0.001))
     animal = HumanSimulation(container, sim_options)
     animal.run()
     container.dump(overwrite=True)
