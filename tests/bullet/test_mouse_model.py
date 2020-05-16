@@ -24,11 +24,10 @@ class MouseSimulation(BulletSimulation):
         super(MouseSimulation, self).__init__(
             container, SimulationUnitScaling(), **sim_options
         )
-        self.test_muscles = ('LEFT_RF', 'LEFT_SM', 'LEFT_BFP_caudal')
         u = container.muscles.activations
         self.muscle_params = {}
         self.muscle_excitation = {}
-        for muscle in self.test_muscles:
+        for muscle in self.muscles.muscles.keys():
             self.muscle_params[muscle] = u.get_parameter(
                 'stim_{}'.format(muscle)
             )
@@ -38,7 +37,7 @@ class MouseSimulation(BulletSimulation):
 
     def controller_to_actuator(self):
         """ Implementation of abstractmethod. """
-        for muscle in self.test_muscles:
+        for muscle in self.muscles.muscles.keys():
             self.muscle_params[muscle].value = p.readUserDebugParameter(
                 self.muscle_excitation[muscle]
             )
