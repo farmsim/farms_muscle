@@ -43,7 +43,9 @@ def convert_local_to_global(body_id, link_id, local_coordinate):
     """
     if link_id != -1:
         global_coordinate, _ = p.multiplyTransforms(
-            *p.getLinkState(body_id, link_id)[4:6],
+            *p.getLinkState(
+                body_id, link_id, computeForwardKinematics=True
+            )[4:6],
             local_coordinate, [0, 0, 0, 1]
         )
     else:
@@ -78,7 +80,9 @@ def convert_global_to_local(body_id, link_id, global_coordinate):
     """
     if link_id != -1:
         local_coordinate, _ = p.multiplyTransforms(
-            *p.invertTransform(*p.getLinkState(body_id, link_id)[4:6]),
+            *p.invertTransform(*p.getLinkState(
+                body_id, link_id, computeForwardKinematics=True
+            )[4:6]),
             global_coordinate, [0, 0, 0, 1]
         )
     else:
