@@ -85,7 +85,7 @@ class MusculoSkeletalSystem(object):
             for j, muscle in enumerate(self.muscles.values()):
                 x0[2*j] = muscle.compute_initial_l_ce()
             self.integrator.set_initial_value(
-                self.container.muscles.states.values, 0.0
+                x0, 0.0
             )
         else:
             self.integrator.set_initial_value(x0, 0.0)
