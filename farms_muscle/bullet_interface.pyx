@@ -142,7 +142,8 @@ cdef class BulletInterface(PhysicsInterface):
             ]
         )
 
-        self.visualization = visualization
+        connection_mode = p.getConnectionInfo(0)['connectionMethod']
+        self.visualization = visualization and (connection_mode == 1)
 
         self.debug_muscle_line_ids = np.ndarray(
             (self.n_attachments,), dtype=('I'))
