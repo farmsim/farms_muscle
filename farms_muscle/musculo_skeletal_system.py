@@ -102,9 +102,10 @@ class MusculoSkeletalSystem(object):
             Dictionary of muscle activations
         """
         #: Step the musculo_skeletal_system.
-        self.integrator.set_initial_value(self.integrator.y,
-                                          self.integrator.t + dt)
-        self.integrator.integrate(self.integrator.t + dt)
+        if self.integrator:
+            self.integrator.set_initial_value(self.integrator.y,
+                                              self.integrator.t + dt)
+            self.integrator.integrate(self.integrator.t + dt)
         self.muscle_sys.py_update_outputs()
 
     def print_system(self):
