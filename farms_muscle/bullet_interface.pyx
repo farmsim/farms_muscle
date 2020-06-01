@@ -238,12 +238,21 @@ cdef class BulletInterface(PhysicsInterface):
     def update_muscle_length(self):
         self.c_compute_muscle_length()
 
+    @property
+    def global_path_points(self):
+        """Get global path points  """
+        return self.global_path_points
+
+    @property
+    def local_path_points(self):
+        """Get local path points  """
+        return self.local_waypoints
+
     #################### C-FUNCTIONS ####################
     cdef void c_compute_muscle_length(self):
         """ Compute the muscle length based on the physics simulator. """
         #: FUCK : This needs to be exposed to outside
         self.update_local_points_to_global()
-
         #: Compute the length
         cdef double length = 0.0
         cdef unsigned int j
