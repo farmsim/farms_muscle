@@ -9,7 +9,6 @@ import os
 import time
 import matplotlib.pyplot as plt
 from farms_container import Container
-from farms_modelling.phobos import transformations as T
 import yaml
 try:
     from farms_muscle.musculo_skeletal_system import MusculoSkeletalSystem
