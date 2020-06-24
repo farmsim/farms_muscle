@@ -3,7 +3,7 @@
 from farms_models.utils import (
     get_farms_model_path, get_sdf_path, get_model_path
 )
-from animals.generic.bullet_simulation import BulletSimulation
+from bullet_simulation import BulletSimulation
 from IPython import embed
 import pybullet as p
 import pybullet_data
