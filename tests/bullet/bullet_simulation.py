@@ -102,6 +102,15 @@ class BulletSimulation(metaclass=abc.ABCMeta):
         #: Initialize simulation
         self.initialize_simulation()
 
+        #: Camera
+        if self.GUI == p.GUI:
+            base = np.array(self.base_position)
+            p.resetDebugVisualizerCamera(
+                self.camera_distance,
+                self.camera_yaw,
+                self.camera_pitch,
+                base)
+
     def __del__(self):
         pylog.info("Disconnecting pybullet")
         try:
