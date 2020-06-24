@@ -201,6 +201,16 @@ cdef class GeyerMuscle(Muscle):
 
     #: Properties
     @property
+    def global_waypoints(self):
+        """Get global path points"""
+        return self.p_interface.global_waypoints
+
+    @property
+    def local_waypoints(self):
+        """Get local path points"""
+        return self.p_interface.local_waypoints
+    
+    @property
     def muscle_force_idx(self):
         """Get the index of muscle force in the data table"""
         return self._f_se.idx
@@ -268,6 +278,10 @@ cdef class GeyerMuscle(Muscle):
             self._v_ce.c_get_value())
 
     #################### C-FUNCTIONS ####################
+    cdef double[:] c_global_waypoints(self):
+        """ Return global waypoints """
+        return self.p_interface.global_waypoints
+    
     cdef inline double c_tendon_force(self, double l_se) nogil:
         """ Setup the equations for tendon force. """
         cdef double _tendon_force
@@ -275,6 +289,10 @@ cdef class GeyerMuscle(Muscle):
         _strain = (l_se - self._l_slack) / (self._l_slack)
         _tendon_force = (self._f_max * (_strain / self.E_REF)**2) * (
             l_se > self._l_slack)
+        # printf(
+        #     'strain = %f \t force = %f \t slack = %f \n',
+        #     _strain, _tendon_force, l_se, 
+        # )
         return _tendon_force
 
     cdef inline double c_parallel_star_force(self, double l_ce) nogil:
@@ -374,11 +392,14 @@ cdef class GeyerMuscle(Muscle):
 
         # printf('c_ode_rhs muscle ....\n')
         cdef double _act = self._activation.c_get_value()
+        # printf('_act = %f \n', _act)
         cdef double _l_ce_tol = cfmax(self._l_ce.c_get_value(), 0.0)
-
+        # printf('_l_ce_tol = %f \n', _l_ce_tol)
+        
         #: Algrebaic Equation
         cdef double _l_mtu = self._l_mtu.c_get_value()
-
+        # printf('_l_mtu = %f \n', _l_mtu)
+        
         cdef double _l_se = _l_mtu - _l_ce_tol
         # printf('_l_se = %f \n', _l_se)
 

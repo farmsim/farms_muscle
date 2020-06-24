@@ -37,10 +37,6 @@ class MusculoSkeletalSystem(object):
         config_data = MusculoSkeletalSystem.load_config_file(
             config_path)
 
-        #: Check for if the config file has muscles and joints defined
-        self.is_muscles = True
-        self.is_joints = True
-
         #: Generate the muscles in the system
         self.muscles = self.generate_muscles(config_data)
 
@@ -75,9 +71,8 @@ class MusculoSkeletalSystem(object):
         self.integrator = ode(self.muscle_sys.ode).set_integrator(
             integrator,
             method=method,
-            atol=atol,
-            rtol=rtol,
-            verbosity=1)
+            verbosity=0
+        )
 
         #: Initialize DAE
         if x0 is None:

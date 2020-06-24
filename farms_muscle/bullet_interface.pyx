@@ -239,13 +239,13 @@ cdef class BulletInterface(PhysicsInterface):
         self.c_compute_muscle_length()
 
     @property
-    def global_path_points(self):
-        """Get global path points  """
-        return self.global_path_points
+    def global_waypoints(self):
+        """Get global path points"""
+        return self.global_waypoints
 
     @property
-    def local_path_points(self):
-        """Get local path points  """
+    def local_waypoints(self):
+        """Get local path points"""
         return self.local_waypoints
 
     #################### C-FUNCTIONS ####################
@@ -277,7 +277,7 @@ cdef class BulletInterface(PhysicsInterface):
         for j in range(self.n_attachments - 1):
             #: link id
             link_id = self.local_waypoints[j][0]
-            
+
             #: compute force vector
             c_scaled_unit_vector_from_points(
                 self.global_waypoints[j],
@@ -285,7 +285,7 @@ cdef class BulletInterface(PhysicsInterface):
                 force,
                 f_vec
             )
-            
+
             local_f_vec = convert_global_to_local(
                 self.model_id, link_id, np.asarray(f_vec)
             )
@@ -313,11 +313,23 @@ cdef class BulletInterface(PhysicsInterface):
                 ),
                 flags=p.LINK_FRAME
             )
+            # p.applyExternalForce(
+            #     self.model_id,
+            #     link_id,
+            #     convert_local_to_global(
+            #         self.model_id, link_id, local_f_vec
+            #     ),
+            #     convert_local_to_global(
+            #         self.model_id, link_id,
+            #         self.local_waypoints[j][1][:]
+            #     ),
+            #     flags=p.WORLD_FRAME
+            # )
 
         for j in range(1, self.n_attachments):
             #: link id
             link_id = self.local_waypoints[j][0]
-            
+
             c_scaled_unit_vector_from_points(
                 self.global_waypoints[j],
                 self.global_waypoints[j-1],
@@ -336,7 +348,7 @@ cdef class BulletInterface(PhysicsInterface):
                         self.global_waypoints[j]
                     ),
                     lineWidth=4,
-                    lineColorRGB=[0, 0, 1],                    
+                    lineColorRGB=[0, 0, 1],
                     replaceItemUniqueId=self.debug_force_ids[
                         self.n_attachments + j - 2
                     ]
@@ -355,6 +367,18 @@ cdef class BulletInterface(PhysicsInterface):
                 ),
                 flags=p.LINK_FRAME
             )
+            # p.applyExternalForce(
+            #     self.model_id,
+            #     link_id,
+            #     convert_local_to_global(
+            #         self.model_id, link_id, local_f_vec
+            #     ),
+            #     convert_local_to_global(
+            #         self.model_id, link_id,
+            #         self.local_waypoints[j][1][:]
+            #     ),
+            #     flags=p.WORLD_FRAME
+            # )
 
     cdef void c_show_muscle(self):
         """ Visualize the muscle attachment. """

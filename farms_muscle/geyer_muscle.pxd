@@ -69,6 +69,7 @@ cdef class GeyerMuscle(Muscle):
         double _const_II
 
     cdef:
+        cdef double[:] c_global_waypoints(self)
         #: SUB-MUSCLE FUNCTIONS
         inline double c_tendon_force(self, double l_se) nogil
         inline double c_parallel_star_force(self, double l_ce) nogil

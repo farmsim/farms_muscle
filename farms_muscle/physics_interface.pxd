@@ -11,8 +11,8 @@ cdef class PhysicsInterface(object):
          cparameter lmtu #: Parameter of muscle tendon unit
          cparameter force #: Parameter of Muscle-Tendon force
          cparameter stim #: Parameter of Muscle stimulation
-        
-    #################### C-FUNCTIONS ####################    
+
+    #################### C-FUNCTIONS ####################
     cdef:
         void c_compute_muscle_length(self)
         void c_apply_muscle_forces(self)
