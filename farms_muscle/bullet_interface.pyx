@@ -270,7 +270,6 @@ cdef class BulletInterface(PhysicsInterface):
         cdef double[:] f_vec = np.zeros((3,), dtype='d')
         cdef short int link_id
         cdef unsigned int j
-        cdef tuple local_f_vec
         cdef int k
 
         #: Apply forces
@@ -286,8 +285,13 @@ cdef class BulletInterface(PhysicsInterface):
                 f_vec
             )
 
-            local_f_vec = convert_global_to_local(
-                self.model_id, link_id, np.asarray(f_vec)
+            #: Apply the force
+            p.applyExternalForce(
+                self.model_id,
+                link_id,
+                f_vec,
+                self.global_waypoints[j],
+                flags=p.WORLD_FRAME
             )
 
             if self.debug_visualization:
@@ -301,31 +305,6 @@ cdef class BulletInterface(PhysicsInterface):
                     replaceItemUniqueId=self.debug_force_ids[j]
                 )
 
-            #: Apply the force
-            p.applyExternalForce(
-                self.model_id,
-                link_id,
-                convert_local_to_inertial(
-                    self.model_id, link_id, local_f_vec
-                ),
-                convert_local_to_inertial(
-                    self.model_id, link_id, self.local_waypoints[j][1][:]
-                ),
-                flags=p.LINK_FRAME
-            )
-            # p.applyExternalForce(
-            #     self.model_id,
-            #     link_id,
-            #     convert_local_to_global(
-            #         self.model_id, link_id, local_f_vec
-            #     ),
-            #     convert_local_to_global(
-            #         self.model_id, link_id,
-            #         self.local_waypoints[j][1][:]
-            #     ),
-            #     flags=p.WORLD_FRAME
-            # )
-
         for j in range(1, self.n_attachments):
             #: link id
             link_id = self.local_waypoints[j][0]
@@ -338,9 +317,14 @@ cdef class BulletInterface(PhysicsInterface):
             )
 
             #: Apply the force
-            local_f_vec = convert_global_to_local(
-                self.model_id, link_id, np.asarray(f_vec)
+            p.applyExternalForce(
+                self.model_id,
+                link_id,
+                f_vec,
+                self.global_waypoints[j],
+                flags=p.WORLD_FRAME
             )
+
             if self.debug_visualization:
                 p.addUserDebugLine(
                     lineFromXYZ=np.asarray(self.global_waypoints[j]),
@@ -353,32 +337,6 @@ cdef class BulletInterface(PhysicsInterface):
                         self.n_attachments + j - 2
                     ]
                 )
-
-            #: apply the force
-            p.applyExternalForce(
-                self.model_id,
-                link_id,
-                convert_local_to_inertial(
-                    self.model_id, link_id, local_f_vec
-                ),
-                convert_local_to_inertial(
-                    self.model_id, link_id,
-                    self.local_waypoints[j][1][:]
-                ),
-                flags=p.LINK_FRAME
-            )
-            # p.applyExternalForce(
-            #     self.model_id,
-            #     link_id,
-            #     convert_local_to_global(
-            #         self.model_id, link_id, local_f_vec
-            #     ),
-            #     convert_local_to_global(
-            #         self.model_id, link_id,
-            #         self.local_waypoints[j][1][:]
-            #     ),
-            #     flags=p.WORLD_FRAME
-            # )
 
     cdef void c_show_muscle(self):
         """ Visualize the muscle attachment. """
