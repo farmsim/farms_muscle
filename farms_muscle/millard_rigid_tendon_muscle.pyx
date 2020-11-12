@@ -167,6 +167,24 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
         pylog.debug("Muscle {} initialized".format(self._name))
 
+    def compute_initial_l_ce(self):
+        """This function initializes the muscle lengths."""
+        self.p_interface.update_muscle_length()
+        l_mtu = self._l_mtu.c_get_value()
+        l_ce = self._l_opt
+        if l_mtu < (self._l_slack + self._l_opt):
+            l_ce = self.l_opt
+        else:
+            if (self._l_opt * self.W + self.E_REF * self._l_slack) != 0.0:
+                _num = self._l_opt * self.W + \
+                    self.E_REF * (l_mtu - self._l_opt)
+                _den = self._l_opt * self.W + self.E_REF * self._l_slack
+                l_se = self._l_slack*(_num/_den)
+            else:
+                l_se = self._l_slack
+                l_ce = l_mtu - l_se
+        return l_ce
+
     ########## C Wrappers ##########
     def _py_tendon_force(self, l_se):
         return self.c_tendon_force(l_se)
