@@ -122,7 +122,7 @@ cdef class BulletInterface(PhysicsInterface):
 
     def __init__(
             self, model_id, lmtu, force, stim, waypoints,
-            visualization=True, debug_visualization=True
+            visualization=True, debug_visualization=False
     ):
         super(BulletInterface, self).__init__(lmtu, force, stim, 'BULLET')
 
