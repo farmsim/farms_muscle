@@ -68,22 +68,22 @@ class MusculoSkeletalSystem(object):
     def setup_integrator(self, x0=None, integrator='dopri5', atol=1e-6,
                          rtol=1e-6, method='bdf'):
         """Setup system."""
-        self.integrator = ode(self.muscle_sys.ode).set_integrator(
-            integrator,
-            method=method,
-            verbosity=0
-        )
+        if self.muscle_sys.num_states > 0:
+            self.integrator = ode(self.muscle_sys.ode).set_integrator(
+                integrator,
+                method=method,
+                verbosity=0
+            )
+        else:
+            self.integrator = None
 
         #: Initialize DAE
         if x0 is None:
-            x0 = np.ones((2*len(self.muscles),))*0.05
-            for j, muscle in enumerate(self.muscles.values()):
-                x0[2*j] = muscle.compute_initial_l_ce()
-            self.integrator.set_initial_value(
-                x0, 0.0
-            )
-        else:
-            self.integrator.set_initial_value(x0, 0.0)
+            x0 = np.ones((self.muscle_sys.num_states,))*0.05
+            if self.muscle_sys.num_states == 2*len(self.muscles):
+                for j, muscle in enumerate(self.muscles.values()):
+                    x0[2*j] = muscle.compute_initial_l_ce()
+        self.integrator.set_initial_value(x0, 0.0)
 
     def step(self, dt=0.001):
         """ Step the complete bio-mechanical system.

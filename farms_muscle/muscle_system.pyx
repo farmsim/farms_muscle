@@ -94,7 +94,7 @@ cdef class MuscleSystemGenerator(object):
         cdef unsigned int j
         #: Loop over all the muscles
         for j in range(self.num_muscles):
-            ( < CMuscle > self.c_muscles[j]).c_ode_rhs()
+            (< CMuscle > self.c_muscles[j]).c_ode_rhs()
         return self.dstates.c_get_values()
 
     cdef void c_update_outputs(self):
@@ -110,9 +110,13 @@ cdef class MuscleSystemGenerator(object):
             m.p_interface.c_show_muscle()
 
     #################### C-WRAPPERS ####################
-
     def ode(self, t, cnp.ndarray[double, ndim=1] state):
         return self.c_ode(t, state)
 
     def py_update_outputs(self):
         self.c_update_outputs()
+
+    @property
+    def num_states(self):
+        """Number of states in the muscle system  """
+        return len(self.states)
