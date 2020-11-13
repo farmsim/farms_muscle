@@ -72,9 +72,9 @@ cdef class GeyerMuscle(Muscle):
         (_, self._pennation) = container.muscles.constants.add_parameter(
             'pennation_' + self._name, parameters.pennation)
 
-        self._alpha = cacos(self._pennation)
-        self._cos_alpha = ccos(self._alpha)
-        self._sin_alpha = csin(self._alpha)
+        self._alpha = ccos(self._pennation)
+        # self._cos_alpha = ccos(self._alpha)
+        # self._sin_alpha = csin(self._alpha)
 
         self._type = parameters.muscle_type
 
