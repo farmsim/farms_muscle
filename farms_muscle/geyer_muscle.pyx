@@ -15,11 +15,7 @@ from farms_muscle.physics_interface cimport PhysicsInterface
 from farms_muscle.bullet_interface cimport BulletInterface
 from libc.stdio cimport printf
 from libc.math cimport sqrt as csqrt
-from libc.math cimport sin as csin
 from libc.math cimport pow as cpow
-from libc.math cimport cos as ccos
-from libc.math cimport sin as csin
-from libc.math cimport acos as cacos
 from libc.math cimport fmax as cfmax
 from libc.math cimport fabs as cfabs
 import numpy as np
@@ -72,9 +68,8 @@ cdef class GeyerMuscle(Muscle):
         (_, self._pennation) = container.muscles.constants.add_parameter(
             'pennation_' + self._name, parameters.pennation)
 
-        self._alpha = ccos(self._pennation)
-        # self._cos_alpha = ccos(self._alpha)
-        # self._sin_alpha = csin(self._alpha)
+        self._cos_alpha = np.cos(np.deg2rad(self._pennation))
+        self._sin_alpha = np.sin(np.deg2rad(self._pennation))
 
         self._type = parameters.muscle_type
 
@@ -209,7 +204,7 @@ cdef class GeyerMuscle(Muscle):
     def local_waypoints(self):
         """Get local path points"""
         return self.p_interface.local_waypoints
-    
+
     @property
     def muscle_force_idx(self):
         """Get the index of muscle force in the data table"""
@@ -281,7 +276,7 @@ cdef class GeyerMuscle(Muscle):
     cdef double[:] c_global_waypoints(self):
         """ Return global waypoints """
         return self.p_interface.global_waypoints
-    
+
     cdef inline double c_tendon_force(self, double l_se) nogil:
         """ Setup the equations for tendon force. """
         cdef double _tendon_force
@@ -291,9 +286,9 @@ cdef class GeyerMuscle(Muscle):
             l_se > self._l_slack)
         # printf(
         #     'strain = %f \t force = %f \t slack = %f \n',
-        #     _strain, _tendon_force, l_se, 
+        #     _strain, _tendon_force, l_se,
         # )
-        return _tendon_force
+        return min(self._f_max, _tendon_force)
 
     cdef inline double c_parallel_star_force(self, double l_ce) nogil:
         """ Setup the equations for parallell star pe* """
@@ -395,12 +390,12 @@ cdef class GeyerMuscle(Muscle):
         # printf('_act = %f \n', _act)
         cdef double _l_ce_tol = cfmax(self._l_ce.c_get_value(), 0.0)
         # printf('_l_ce_tol = %f \n', _l_ce_tol)
-        
+
         #: Algrebaic Equation
         cdef double _l_mtu = self._l_mtu.c_get_value()
         # printf('_l_mtu = %f \n', _l_mtu)
-        
-        cdef double _l_se = _l_mtu - _l_ce_tol
+
+        cdef double _l_se = _l_mtu - _l_ce_tol*self._cos_alpha
         # printf('_l_se = %f \n', _l_se)
 
         # #: Muscle Dynamics
@@ -447,7 +442,7 @@ cdef class GeyerMuscle(Muscle):
         cdef double v_ce = self._v_ce.c_get_value()
         cdef double act = self._activation.c_get_value()
         cdef double l_mtu = self._l_mtu.c_get_value()
-        cdef double l_se = l_mtu - l_ce
+        cdef double l_se = l_mtu - l_ce*self._cos_alpha
 
         #: Tendon length
         self._l_se.c_set_value(l_se)

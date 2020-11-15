@@ -75,9 +75,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         (_, self._pennation) = container.muscles.constants.add_parameter(
             'pennation_' + self._name, parameters.pennation)
 
-        self._alpha = cacos(self._pennation)
-        self._cos_alpha = ccos(self._alpha)
-        self._sin_alpha = csin(self._alpha)
+        self._cos_alpha = np.cos(np.deg2rad(self._pennation))
+        self._sin_alpha = np.sin(np.deg2rad(self._pennation))
 
         #: FUCK : Need to update beta in parameters class
         (_, self._beta) = container.muscles.constants.add_parameter(
@@ -312,7 +311,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         cdef:
             double _val, _exposant, _force_length
         _val = cfabs(
-            (l_ce - self._l_opt) / (self._l_opt * self.W))
+            (l_ce - self._l_opt) / (self._l_opt * self.W)
+        )
         _exposant = self.c * _val**3
         _force_length = cexp(_exposant)
         return _force_length
@@ -351,7 +351,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         cdef double _num, _den
         _num = v_mtu*l_ce*self._cos_alpha
         _den = (
-            self._cos_alpha*self._cos_alpha + l_ce*self._sin_alpha*self._sin_alpha)
+            self._cos_alpha*self._cos_alpha + l_ce*self._sin_alpha*self._sin_alpha
+        )
         return _num/_den
 
     cdef void c_ode_rhs(self) nogil:
@@ -384,7 +385,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         cdef double v_ce = self.c_fiber_velocity(
             v_mtu, l_ce)
         cdef double act = self._activation.c_get_value()
-        cdef double l_se = l_mtu - l_ce
+        cdef double l_se = l_mtu - l_ce*self._cos_alpha
 
         #: l_ce
         self._l_ce.c_set_value(l_ce)

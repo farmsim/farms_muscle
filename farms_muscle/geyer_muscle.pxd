@@ -29,7 +29,6 @@ cdef class GeyerMuscle(Muscle):
         unsigned short int num_joints
 
         #: Pennation angle alpha
-        double _alpha
         double _cos_alpha
         double _sin_alpha
 

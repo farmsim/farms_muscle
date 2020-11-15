@@ -51,7 +51,6 @@ cdef class DeGrooteMuscle(Muscle):
         double d4
 
         #: Pennation angle alpha
-        double _alpha
         double _cos_alpha
         double _sin_alpha
 
@@ -93,16 +92,16 @@ cdef class DeGrooteMuscle(Muscle):
     cdef:
         #: SUB-MUSCLE FUNCTIONS
         inline double c_tendon_force(self, double l_se) nogil
-        inline double c_parallel_star_force(self, double l_ce) nogil
-        inline double c_belly_force(self, double l_ce) nogil
+        inline double c_passive_force(self, double l_ce) nogil
         inline double c_activation_rate(self, double act, double stim) nogil
-        inline double c_force_length(self, double l_ce) nogil
-        inline double c_force_velocity(self, double v_ce) nogil
-        inline double c_force_velocity_from_force(
-            self, double f_se, double f_be, double act, double f_l, double f_pe_star) nogil
-        inline double c_contractile_velocity(self, double f_v) nogil
+        inline double c_force_length(self, double l_mtu) nogil
+        inline double c_force_velocity(self, double l_mtu, double v_mtu) nogil
+        inline double c_fiber_length(self, double l_mtu) nogil
+        inline double c_fiber_velocity(self, double l_mtu, double v_mtu) nogil
         inline double c_contractile_force(
-            self, double activation, double l_ce, double v_ce) nogil
+            self, double activation, double f_l, double f_v) nogil
+        inline double c_muscle_velocity(
+            self, double l_mtu_curr, double l_mtu_prev, double dt) nogil
         #: Sensory afferents
         void c_compute_Ia(self) nogil
         void c_compute_II(self) nogil
