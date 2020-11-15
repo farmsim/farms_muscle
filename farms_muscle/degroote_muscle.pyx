@@ -57,7 +57,6 @@ cdef class DeGrooteMuscle(Muscle):
         self.N = 1.5
         self.K = 5.0
         self.E_REF = 0.04  #: Reference strain
-        self.W = 0.56  #: Shape factor pylint: disable=invalid-name
         self.tau_act = 0.01  # Time constant for the activation function
         self.F_per_m2 = 300000  # Force per m2 of muscle PCSA
 
@@ -112,6 +111,9 @@ cdef class DeGrooteMuscle(Muscle):
         self._sin_alpha = np.sin(np.deg2rad(self._pennation))
 
         self._type = parameters.muscle_type
+
+        #: Shape factor pylint: disable=invalid-name
+        self.W = self._l_opt*self._sin_alpha
 
         # #: MUSCLE STATES
         # #: Muscle Contractile Length
@@ -191,32 +193,39 @@ cdef class DeGrooteMuscle(Muscle):
             pylog.debug(
                 "Muscle {} connected to any Bullet engine".format(self._name))
 
+    def compute_initial_l_ce(self):
+        """This function initializes the muscle lengths."""
+        self.p_interface.update_muscle_length()
+        l_mtu = self._l_mtu.c_get_value()
+        l_ce = self._l_opt
+        if l_mtu < (self._l_slack + self._l_opt):
+            l_ce = self.l_opt
+        else:
+            if (self._l_opt * self.W + self.E_REF * self._l_slack) != 0.0:
+                _num = self._l_opt * self.W + \
+                    self.E_REF * (l_mtu - self._l_opt)
+                _den = self._l_opt * self.W + self.E_REF * self._l_slack
+                l_se = self._l_slack*(_num/_den)
+            else:
+                l_se = self._l_slack
+                l_ce = l_mtu - l_se
+        return l_ce
+
     ########## C Wrappers ##########
     def _py_tendon_force(self, l_se):
         return self.c_tendon_force(l_se)
 
-    def _py_parallel_star_force(self, l_ce):
-        return self.c_parallel_star_force(l_ce)
-
-    def _py_belly_force(self, l_ce):
-        return self.c_belly_force(l_ce)
+    def _py_passive_force(self, l_ce):
+        return self.c_passive_force(l_ce)
 
     def _py_activation_rate(self, act, stim):
         return self.c_activation_rate(act, stim)
 
-    def _py_force_length(self, l_ce):
-        return self.c_force_length(l_ce)
+    def _py_force_length(self, l_mtu):
+        return self.c_force_length(l_mtu)
 
-    def _py_force_velocity(self, v_ce):
-        return self.c_force_velocity(v_ce)
-
-    def _py_force_velocity_from_force(self, f_se,  f_be,  act,  f_l,
-                                      f_pe_star):
-        return self.c_force_velocity_from_force(
-            f_se,  f_be,  act,  f_l,  f_pe_star)
-
-    def _py_contractile_velocity(self, f_v):
-        return self.c_contractile_velocity(f_v)
+    def _py_force_velocity(self, l_mtu, v_mtu):
+        return self.c_force_velocity(l_mtu, v_mtu)
 
     #: Properties
     @property
@@ -236,7 +245,7 @@ cdef class DeGrooteMuscle(Muscle):
 
     #: LengthInfo
     @property
-    def fiber_tendon_length(self):
+    def muscle_tendon_length(self):
         """ Get the length of muscle tendon unit.  """
         #### CHECK THIS ####
         return self._l_mtu.c_get_value()
@@ -264,16 +273,6 @@ cdef class DeGrooteMuscle(Muscle):
         return self._activation.c_get_value()
 
     @property
-    def parallel_star_force(self):
-        """ Get the force in parallel element*  """
-        return self.c_parallel_star_force(self.fiber_length)
-
-    @property
-    def belly_force(self):
-        """ Get the force in muscle belly.  """
-        return self.c_belly_force(self.fiber_length)
-
-    @property
     def tendon_force(self):
         """ Get the tendon force. """
         return self.c_tendon_force(self.tendon_length)
@@ -281,10 +280,7 @@ cdef class DeGrooteMuscle(Muscle):
     @property
     def fiber_force(self):
         """ Get the force produced by the muscle fibers.  """
-        return self.c_contractile_force(
-            self._activation.c_get_value(),
-            self._l_ce.c_get_value(),
-            self._v_ce.c_get_value())
+        return self._f_ce.c_get_value()
 
     #################### C-FUNCTIONS ####################
     cdef inline double c_tendon_force(self, double l_se) nogil:
@@ -294,26 +290,14 @@ cdef class DeGrooteMuscle(Muscle):
         _tendon_force = self.c1*cexp(self.kT*(_l_se_norm-self.c2)) - self.c3
         return _tendon_force
 
-    cdef inline double c_parallel_star_force(self, double l_ce) nogil:
-        """ Setup the equations for parallell star pe* """
+    cdef inline double c_passive_force(self, double l_mtu) nogil:
+        """ Setup the equations for passive force """
         cdef double _num
         cdef double _den
-        cdef double _l_ce_norm = l_ce/self._l_opt
+        cdef double _l_ce_norm = self.c_fiber_length(l_mtu)/self._l_opt
         _num = cexp((self.kpe*_l_ce_norm - self.kpe)/self.e0) - 1.0
         _den = cexp(self.kpe) - 1.0
         return _num/_den
-
-    cdef inline double c_belly_force(self, double l_ce) nogil:
-        """ Setup the equations for belly force  """
-        #: No damping in the system
-        # cdef:
-        #     double _f_be_cond, _num, _den, _belly_force
-        # _f_be_cond = self._l_opt * (1.0 - self.W)
-        # _num = l_ce - self._l_opt * (1.0 - self.W)
-        # _den = self._l_opt * self.W * 0.5
-        # _belly_force = self._f_max * \
-        #     ((_num/_den)**2) * (l_ce <= _f_be_cond)
-        return 0.0
 
     cdef inline double c_activation_rate(self, double act, double stim) nogil:
         """ Define the change in activation. dA/dt. """
@@ -323,10 +307,14 @@ cdef class DeGrooteMuscle(Muscle):
         _d_act = (_stim_range - act)/self.tau_act
         return _d_act
 
-    cdef inline double c_force_length(self, double l_ce) nogil:
+    cdef inline double c_fiber_length(self, double l_mtu) nogil:
+        """ Compute the fiber length. """
+        return csqrt((l_mtu-self._l_slack)**2 + self.W**2)
+
+    cdef inline double c_force_length(self, double l_mtu) nogil:
         """ Define the force length relationship. """
         cdef double _force_length = 0.0
-        cdef double _l_ce_norm = l_ce/self._l_opt
+        cdef double _l_ce_norm = csqrt(self.c_fiber_length(l_mtu))/self._l_opt
         cdef unsigned int j = 0
         cdef double _num = 0.0
         cdef double _den = 0.0
@@ -336,35 +324,27 @@ cdef class DeGrooteMuscle(Muscle):
             _force_length += self.b1[j]*cexp(_num/_den)
         return _force_length
 
-    cdef inline double c_force_velocity(self, double v_ce) nogil:
+    cdef inline double c_force_velocity(self, double l_mtu, double v_mtu) nogil:
         """ Define the force velocity relationship. """
-        cdef double _v_ce_norm = v_ce/self._v_max
-        cdef double exp1 = self.d2*_v_ce_norm + self.d3
-        cdef double exp2 = ((self.d2*_v_ce_norm + self.d3)**2) + 1.
+        cdef double _v_ce_norm = self.c_fiber_velocity(l_mtu, v_mtu)/self._l_opt
+        cdef double _v_max = -1*self._v_max*self._l_opt
+        cdef double exp1 = self.d2*_v_ce_norm/_v_max + self.d3
+        cdef double exp2 = ((self.d2*_v_ce_norm/_v_max + self.d3)**2) + 1.
         return self.d1*clog(exp1 + csqrt(exp2)) + self.d4
 
-    cdef inline double c_force_velocity_from_force(
-            self, double f_se, double f_be, double act, double f_l, double f_pe_star) nogil:
-        """ Define the force velocity relationship from forces."""
-        cdef:
-            double _f_v_ce_eqn_den, _f_v_ce_eqn_num
-        _f_v_ce_eqn_num = f_se + f_be
-        _f_v_ce_eqn_den = (act*f_l) + f_pe_star
-        return _f_v_ce_eqn_num/_f_v_ce_eqn_den
+    cdef inline double c_muscle_velocity(
+            self, double l_mtu_curr, double l_mtu_prev, double dt) nogil:
+        """ Compute the fiber length. """
+        return (l_mtu_curr - l_mtu_prev)/(dt)
 
-    cdef inline double c_contractile_velocity(self, double f_v) nogil:
+    cdef inline double c_fiber_velocity(self, double l_mtu, double v_mtu) nogil:
         """ Define the contractile velocity."""
-        cdef:
-            double exp1, exp2, num, den
-        exp1 = cexp((f_v - self.d4)/self.d1)/2.
-        exp2 = cexp((self.d4 - f_v)/self.d1)/2.
-        num = exp1 - self.d3 - exp2
-        return num/self.d2
+        return v_mtu*(l_mtu - self._l_slack)/self.c_fiber_length(l_mtu)
 
     cdef inline double c_contractile_force(
-            self, double activation, double l_ce, double v_ce) nogil:
+            self, double activation, double f_l, double f_v) nogil:
         """ Compute the active force. """
-        return activation*self._f_max*self.c_force_length(l_ce)*self.c_force_velocity(v_ce)
+        return activation*f_l*f_v
 
     cdef void c_ode_rhs(self) nogil:
         """Muscle Model ODE rhs.
@@ -376,73 +356,40 @@ cdef class DeGrooteMuscle(Muscle):
 
         # printf('c_ode_rhs muscle ....\n')
         cdef double _act = self._activation.c_get_value()
-        cdef double _l_ce = self._l_ce.c_get_value()
-
-        #: Algrebaic Equation
-        cdef double _l_mtu = self._l_mtu.c_get_value()
-
-        cdef double _l_se = _l_mtu - _l_ce
-        # printf('_l_se = %f \n', _l_se)
-
-        # #: Muscle Dynamics
-        # #: Series Force
-        cdef double _f_se = self.c_tendon_force(_l_se)
-        # printf('self.c_tendon_force(_l_se) = %f \n', _f_se)
-
-        # #: Muscle Belly Force
-        cdef double _f_be = self.c_belly_force(_l_ce)
-        # printf('self.c_belly_force(_l_ce) = %f \n', _f_be)
-
-        # #: Force-Length Relationship
-        cdef double _f_l = self.c_force_length(_l_ce)
-        # printf('self.c_force_length(_l_ce) = %f \n', _f_l)
-
-        # #: Force Parallel Element
-        cdef double _f_pe_star = self.c_parallel_star_force(_l_ce)
-        # printf('self.c_parallel_star_force(_l_ce) = %f \n', _f_pe_star)
-
-        # #: Force Velocity Inverse Relation
-        cdef double _f_v = self.c_force_velocity_from_force(
-            _f_se,
-            _f_be,
-            _act,
-            _f_l,
-            _f_pe_star)
-        # printf('self.c_force_velocity_from_force = %f \n', _f_v)
 
         #: State Update
         #: Muscle Actvation Dynamics
         # printf('self.c_activation_rate ....\n')
         self._adot.c_set_value(self.c_activation_rate(
-            _act, self._stim.c_get_value()))
-
-        #: Muscle Contractile Velocity
-        # printf('self.c_contractile_velocity(_f_v)) ....\n')
-        self._v_ce.c_set_value(self.c_contractile_velocity(_f_v))
+            _act,
+            self._stim.c_get_value()))
 
     cdef void c_output(self) nogil:
         """ Compute the outputs of the system. """
         #: Attributes needed for output computation
-        cdef double l_ce = self._l_ce.c_get_value()
-        cdef double v_ce = self._v_ce.c_get_value()
-        cdef double act = self._activation.c_get_value()
         cdef double l_mtu = self._l_mtu.c_get_value()
-        cdef double l_se = l_mtu - l_ce
+        cdef double v_mtu = self.c_muscle_velocity(
+            l_mtu, self._l_mtu.c_get_prev_value(), self.dt
+        )
+        cdef double act = self._activation.c_get_value()
 
         #: Tendon length
-        self._l_se.c_set_value(l_se)
-        #: Belly force
-        self._f_be.c_set_value(self.c_belly_force(l_ce))
-        #: Parallel force
-        self._f_pe.c_set_value(self.c_parallel_star_force(l_ce))
+        self._l_se.c_set_value(self._l_slack)
+        #: Passive force
+        self._f_pe.c_set_value(self.c_passive_force(l_mtu))
         #: Force length
-        self._f_lce.c_set_value(self.c_force_length(l_ce))
+        self._f_lce.c_set_value(self.c_force_length(l_mtu))
         #: Force velocity
-        self._f_vce.c_set_value(self.c_force_velocity(v_ce))
+        self._f_vce.c_set_value(self.c_force_velocity(l_mtu, v_mtu))
         #: Contractile force
-        self._f_ce.c_set_value(self.c_contractile_force(act, l_ce, v_ce))
+        self._f_ce.c_set_value(self.c_contractile_force(
+            act, self._f_lce.c_get_value(), self._f_vce.c_get_value())
+        )
         #: Tendon force
-        self._f_se.c_set_value(self._f_max*self.c_tendon_force(l_se))
+        self._f_se.c_set_value(
+            self._f_max*(self._f_ce.c_get_value()+self._f_pe.c_get_value()) *
+            (l_mtu - self._l_slack)/self.c_fiber_length(l_mtu)
+        )
 
     #: Sensory afferents
     cdef void c_compute_Ia(self) nogil:
