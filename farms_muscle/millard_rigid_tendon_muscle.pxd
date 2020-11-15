@@ -29,13 +29,12 @@ cdef class MillardRigidTendonMuscle(Muscle):
         unsigned short int num_joints
 
         #: Pennation angle alpha
-        double _alpha
         double _cos_alpha
         double _sin_alpha
 
         #: Damping constant
         double _beta
-        
+
         #: Inputs
         Parameter _stim
         Parameter _l_mtu
@@ -78,11 +77,11 @@ cdef class MillardRigidTendonMuscle(Muscle):
         inline double c_belly_force(self, double l_ce) nogil
         inline double c_activation_rate(self, double act, double stim) nogil
         inline double c_force_length(self, double l_ce) nogil
-        inline double c_force_velocity(self, double v_ce) nogil        
+        inline double c_force_velocity(self, double v_ce) nogil
         inline double c_contractile_force(
             self, double activation, double l_ce, double v_ce) nogil
         inline double c_muscle_velocity(
-            self, double l_mtu_curr, double l_mtu_prev, double dt) nogil        
+            self, double l_mtu_curr, double l_mtu_prev, double dt) nogil
         inline double c_fiber_length(
             self, double l_mtu, double l_slack) nogil
         inline double c_fiber_velocity(

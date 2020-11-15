@@ -51,7 +51,6 @@ cdef class DeGrooteMuscle(Muscle):
         double d4
 
         #: Pennation angle alpha
-        double _alpha
         double _cos_alpha
         double _sin_alpha
 
