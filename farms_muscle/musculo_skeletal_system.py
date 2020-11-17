@@ -85,7 +85,7 @@ class MusculoSkeletalSystem(object):
                     x0[2*j] = muscle.compute_initial_l_ce()
         self.integrator.set_initial_value(x0, 0.0)
 
-    def step(self, dt=0.001):
+    def step(self, dt=1e-3):
         """ Step the complete bio-mechanical system.
         Parameters
         ----------
