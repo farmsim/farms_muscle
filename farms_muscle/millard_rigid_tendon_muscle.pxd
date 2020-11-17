@@ -28,9 +28,26 @@ cdef class MillardRigidTendonMuscle(Muscle):
         str _type
         unsigned short int num_joints
 
+        #: Force-Length Constants
+        double b1[3]
+        double b2[3]
+        double b3[3]
+        double b4[3]
+
+        #: Force-Velocity constants
+        double d1
+        double d2
+        double d3
+        double d4
+
+        #: Passive element constants
+        double kpe
+        double e0
+
         #: Pennation angle alpha
         double _cos_alpha
         double _sin_alpha
+        double _parallelogram_height
 
         #: Damping constant
         double _beta
@@ -72,9 +89,9 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
     cdef:
         #: SUB-MUSCLE FUNCTIONS
+        cdef inline double c_pennation_angle(self, double l_mtu) nogil
         inline double c_tendon_force(self, double l_se) nogil
-        inline double c_parallel_star_force(self, double l_ce) nogil
-        inline double c_belly_force(self, double l_ce) nogil
+        inline double c_passive_force(self, double l_ce) nogil
         inline double c_activation_rate(self, double act, double stim) nogil
         inline double c_force_length(self, double l_ce) nogil
         inline double c_force_velocity(self, double v_ce) nogil
@@ -82,10 +99,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
             self, double activation, double l_ce, double v_ce) nogil
         inline double c_muscle_velocity(
             self, double l_mtu_curr, double l_mtu_prev, double dt) nogil
-        inline double c_fiber_length(
-            self, double l_mtu, double l_slack) nogil
-        inline double c_fiber_velocity(
-            self, double v_mtu, double l_ce) nogil
+        cdef inline double c_fiber_length(self, double l_mtu, double alpha) nogil
+        cdef inline double c_fiber_velocity(self, double v_mtu, double alpha) nogil
 
         #: Sensory afferents
         void c_compute_Ia(self) nogil
