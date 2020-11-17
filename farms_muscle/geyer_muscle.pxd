@@ -31,6 +31,7 @@ cdef class GeyerMuscle(Muscle):
         #: Pennation angle alpha
         double _cos_alpha
         double _sin_alpha
+        double _parallelogram_height
 
         #: Inputs
         Parameter _stim
@@ -70,6 +71,7 @@ cdef class GeyerMuscle(Muscle):
     cdef:
         cdef double[:] c_global_waypoints(self)
         #: SUB-MUSCLE FUNCTIONS
+        inline double c_pennation_angle(self, double l_ce) nogil
         inline double c_tendon_force(self, double l_se) nogil
         inline double c_parallel_star_force(self, double l_ce) nogil
         inline double c_belly_force(self, double l_ce) nogil
@@ -77,7 +79,8 @@ cdef class GeyerMuscle(Muscle):
         inline double c_force_length(self, double l_ce) nogil
         inline double c_force_velocity(self, double v_ce) nogil
         inline double c_force_velocity_from_force(
-            self, double f_se, double f_be, double act, double f_l, double f_pe_star) nogil
+            self, double f_se, double f_be, double act, double f_l,
+            double f_pe_star, double cos_alpha) nogil
         inline double c_contractile_velocity(self, double f_v) nogil
         inline double c_contractile_force(
             self, double activation, double l_ce, double v_ce) nogil

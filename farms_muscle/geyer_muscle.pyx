@@ -18,6 +18,9 @@ from libc.math cimport sqrt as csqrt
 from libc.math cimport pow as cpow
 from libc.math cimport fmax as cfmax
 from libc.math cimport fabs as cfabs
+from libc.math cimport sin as csin
+from libc.math cimport asin as casin
+from libc.math cimport cos as ccos
 import numpy as np
 cimport numpy as cnp
 
@@ -71,6 +74,8 @@ cdef class GeyerMuscle(Muscle):
 
         self._cos_alpha = np.cos(np.deg2rad(self._pennation))
         self._sin_alpha = np.sin(np.deg2rad(self._pennation))
+
+        self._parallelogram_height = self._l_opt*self._sin_alpha
 
         self._type = parameters.muscle_type
 
@@ -189,9 +194,9 @@ cdef class GeyerMuscle(Muscle):
         return self.c_force_velocity(v_ce)
 
     def _py_force_velocity_from_force(self, f_se,  f_be,  act,  f_l,
-                                      f_pe_star):
+                                      f_pe_star, cos_alpha):
         return self.c_force_velocity_from_force(
-            f_se,  f_be,  act,  f_l,  f_pe_star)
+            f_se,  f_be,  act,  f_l,  f_pe_star, cos_alpha)
 
     def _py_contractile_velocity(self, f_v):
         return self.c_contractile_velocity(f_v)
@@ -279,6 +284,10 @@ cdef class GeyerMuscle(Muscle):
         """ Return global waypoints """
         return self.p_interface.global_waypoints
 
+    cdef inline double c_pennation_angle(self, double l_ce) nogil:
+        """ Compute the pennation angles """
+        return casin(self._l_opt*self._parallelogram_height/l_ce)
+
     cdef inline double c_activation_rate(self, double act, double stim) nogil:
         """ Define the change in activation. dA/dt. """
         cdef double _stim_range, _d_act
@@ -310,9 +319,9 @@ cdef class GeyerMuscle(Muscle):
                 v_ce - 1.0)/(1.0 + 7.56*self.K*v_ce))
 
     cdef inline double c_force_velocity_from_force(
-            self, double f_se, double f_be, double act, double f_l, double f_pe_star) nogil:
+            self, double f_se, double f_be, double act, double f_l, double f_pe_star, double cos_alpha) nogil:
         """ Define the force velocity relationship from forces."""
-        cdef double f_v = (f_se + f_be)/((act*f_l) + f_pe_star)
+        cdef double f_v = (f_se/cos_alpha + f_be)/((act*f_l) + f_pe_star)
         return max(0.0, min(1.5, (f_se + f_be)/((act*f_l) + f_pe_star)))
 
     cdef inline double c_contractile_velocity(self, double f_v) nogil:
@@ -346,7 +355,7 @@ cdef class GeyerMuscle(Muscle):
         cdef double _l_mtu = self._l_mtu.c_get_value()
         # printf('_l_mtu = %f \n', _l_mtu)
 
-        cdef double _l_se = (_l_mtu - _l_ce*self._cos_alpha)
+        cdef double _l_se = (_l_mtu - _l_ce*ccos(self.c_pennation_angle(_l_ce/self._l_opt)))
         # printf('_l_se = %f \n', _l_se)
 
         # #: Force Velocity Inverse Relation
@@ -355,7 +364,8 @@ cdef class GeyerMuscle(Muscle):
             self.c_belly_force(_l_ce/self._l_opt),
             _act,
             self.c_force_length(_l_ce/self._l_opt),
-            self.c_parallel_star_force(_l_ce/self._l_opt)
+            self.c_parallel_star_force(_l_ce/self._l_opt),
+            ccos(self.c_pennation_angle(_l_ce/self._l_opt))
         )
         # printf('self.c_force_velocity_from_force = %f \n', _f_v)
 
@@ -378,7 +388,8 @@ cdef class GeyerMuscle(Muscle):
         cdef double v_ce = self._v_ce.c_get_value()/(self._l_opt*self._v_max)
         cdef double act = self._activation.c_get_value()
         cdef double l_mtu = self._l_mtu.c_get_value()
-        cdef double l_se = (l_mtu - l_ce*self._cos_alpha*self._l_opt)/self._l_slack
+        cdef double cos_alpha = ccos(self.c_pennation_angle(l_ce/self._l_opt))
+        cdef double l_se = (l_mtu - l_ce*cos_alpha*self._l_opt)/self._l_slack
 
         #: Tendon length
         self._l_se.c_set_value(l_se)
@@ -394,7 +405,7 @@ cdef class GeyerMuscle(Muscle):
         self._f_ce.c_set_value(
             self.c_contractile_force(act, l_ce, v_ce))
         #: Tendon force
-        self._f_se.c_set_value(self._f_max*self.c_tendon_force(l_se))
+        self._f_se.c_set_value(self._f_max*self.c_tendon_force(l_se)/cos_alpha)
 
     #: Sensory afferents
     cdef void c_compute_Ia(self) nogil:
