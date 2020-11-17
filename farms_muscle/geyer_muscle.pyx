@@ -48,8 +48,6 @@ cdef class GeyerMuscle(Muscle):
         self.c = float(np.log(0.05))  # pylint: disable=no-member
         self.N = 1.5
         self.K = 5.0
-        self.E_REF = 0.04  #: Reference strain
-        self.W = 0.56  #: Shape factor pylint: disable=invalid-name
         self.tau_act = 0.01  # Time constant for the activation function
         self.F_per_m2 = 300000  # Force per m2 of muscle PCSA
 
@@ -67,6 +65,9 @@ cdef class GeyerMuscle(Muscle):
             'f_max_' + self._name, parameters.f_max)
         (_, self._pennation) = container.muscles.constants.add_parameter(
             'pennation_' + self._name, parameters.pennation)
+
+        self.w = 0.56  #: [l_opt] Shape factor pylint: disable=invalid-name
+        self.e_ref = 0.04  #: [l_slack] Reference strain
 
         self._cos_alpha = np.cos(np.deg2rad(self._pennation))
         self._sin_alpha = np.sin(np.deg2rad(self._pennation))
@@ -158,10 +159,10 @@ cdef class GeyerMuscle(Muscle):
         if l_mtu < (self._l_slack + self._l_opt):
             l_ce = self.l_opt
         else:
-            if (self._l_opt * self.W + self.E_REF * self._l_slack) != 0.0:
-                _num = self._l_opt * self.W + \
-                    self.E_REF * (l_mtu - self._l_opt)
-                _den = self._l_opt * self.W + self.E_REF * self._l_slack
+            if (self._l_opt * self.w + self.e_ref * self._l_slack) != 0.0:
+                _num = self._l_opt * self.w + \
+                    self.e_ref * (l_mtu - self._l_opt)
+                _den = self._l_opt * self.w + self.e_ref * self._l_slack
                 l_se = self._l_slack*(_num/_den)
             else:
                 l_se = self._l_slack
@@ -286,52 +287,41 @@ cdef class GeyerMuscle(Muscle):
 
     cdef inline double c_tendon_force(self, double l_se) nogil:
         """ Setup the equations for tendon force. """
-        return (((l_se/self._l_slack - 1.0) / self.E_REF)**2) * (l_se > self._l_slack)
+        return (((l_se - 1.0) / self.e_ref)**2) * (l_se > 1.0)
 
     cdef inline double c_parallel_star_force(self, double l_ce) nogil:
         """ Setup the equations for parallell star pe* """
-        return (((l_ce - self._l_opt) / (self._l_opt * self.W))**2)*(
-            l_ce > self._l_opt)
+        return (((l_ce - 1.0) / (self.w))**2)*(l_ce > 1.0)
 
     cdef inline double c_belly_force(self, double l_ce) nogil:
         """ Setup the equations for belly force  """
-        cdef double _f_be_cond = self._l_opt * (1.0 - self.W)
-        cdef double _num = l_ce - self._l_opt * (1.0 - self.W)
-        cdef double _den = self._l_opt * self.W * 0.5
-        return ((_num/_den)**2) * (l_ce <= _f_be_cond)
+        return ((((1-self.w)-l_ce)/(0.5*self.w))**2)*(l_ce < 0.2)
 
     cdef inline double c_force_length(self, double l_ce) nogil:
         """ Define the force length relationship. """
-        cdef double _val = cfabs(
-            (l_ce - self._l_opt) / (self._l_opt * self.W))
-        return cexp(self.c * _val**3)
+        return cexp(self.c * (cfabs((l_ce - 1.0) / (self.w)))**3)
 
     cdef inline double c_force_velocity(self, double v_ce) nogil:
         """ Define the force velocity relationship. """
-        cdef double _v_max = self._v_max*self._l_opt
         if v_ce < 0.0:
-            return (_v_max - v_ce)/(_v_max + self.K*v_ce)
+            return (v_ce + 1.0)/(1.0 - self.K*v_ce)
         else:
             return self.N + ((self.N - 1)*(
-                _v_max + v_ce)/(7.56*self.K*v_ce - _v_max))
+                v_ce - 1.0)/(1.0 + 7.56*self.K*v_ce))
 
     cdef inline double c_force_velocity_from_force(
             self, double f_se, double f_be, double act, double f_l, double f_pe_star) nogil:
         """ Define the force velocity relationship from forces."""
         cdef double f_v = (f_se + f_be)/((act*f_l) + f_pe_star)
-        if f_v > 1.5:
-            printf('f %f f_se %f f_be %f act %f f_l %f f_pe_star %f \n',
-                   f_v, f_se, f_be, act, f_l, f_pe_star)
         return max(0.0, min(1.5, (f_se + f_be)/((act*f_l) + f_pe_star)))
 
     cdef inline double c_contractile_velocity(self, double f_v) nogil:
         """ Define the contractile velocity."""
-        cdef double _v_max = self._v_max*self._l_opt
-        if f_v < 1.0:
-            return _v_max*(1. - f_v)/(1. + f_v*self.K)
+        if f_v <= 1.0:
+            return (f_v - 1.0)/(1.0 + f_v*self.K)
         else:
-            return _v_max*(f_v - 1.0)/(
-                7.56*self.K * (f_v - self.N) + 1. - self.N)
+            return ((f_v - 1.0)/(self.N - 1 - 7.56*self.K*(f_v - self.N)))*(f_v <= self.N) \
+                + ((self.N - f_v)*1e-2 + 1)*(f_v > self.N)
 
     cdef inline double c_contractile_force(
             self, double activation, double l_ce, double v_ce) nogil:
@@ -356,16 +346,16 @@ cdef class GeyerMuscle(Muscle):
         cdef double _l_mtu = self._l_mtu.c_get_value()
         # printf('_l_mtu = %f \n', _l_mtu)
 
-        cdef double _l_se = _l_mtu - _l_ce*self._cos_alpha
+        cdef double _l_se = (_l_mtu - _l_ce*self._cos_alpha)
         # printf('_l_se = %f \n', _l_se)
 
         # #: Force Velocity Inverse Relation
         cdef double _f_v = self.c_force_velocity_from_force(
-            self.c_tendon_force(_l_se),
-            self.c_belly_force(_l_ce),
+            self.c_tendon_force(_l_se/self._l_slack),
+            self.c_belly_force(_l_ce/self._l_opt),
             _act,
-            self.c_force_length(_l_ce),
-            self.c_parallel_star_force(_l_ce)
+            self.c_force_length(_l_ce/self._l_opt),
+            self.c_parallel_star_force(_l_ce/self._l_opt)
         )
         # printf('self.c_force_velocity_from_force = %f \n', _f_v)
 
@@ -378,16 +368,17 @@ cdef class GeyerMuscle(Muscle):
 
         #: Muscle Contractile Velocity
         # printf('self.c_contractile_velocity(_f_v)) ....\n')
-        self._v_ce.c_set_value(self.c_contractile_velocity(_f_v))
+        self._v_ce.c_set_value(self._v_max*self._l_opt *
+                               self.c_contractile_velocity(_f_v))
 
     cdef void c_output(self) nogil:
         """ Compute the outputs of the system. """
         #: Attributes needed for output computation
-        cdef double l_ce = self._l_ce.c_get_value()
-        cdef double v_ce = self._v_ce.c_get_value()
+        cdef double l_ce = self._l_ce.c_get_value()/self._l_opt
+        cdef double v_ce = self._v_ce.c_get_value()/(self._l_opt*self._v_max)
         cdef double act = self._activation.c_get_value()
         cdef double l_mtu = self._l_mtu.c_get_value()
-        cdef double l_se = l_mtu - l_ce*self._cos_alpha
+        cdef double l_se = (l_mtu - l_ce*self._cos_alpha*self._l_opt)/self._l_slack
 
         #: Tendon length
         self._l_se.c_set_value(l_se)
