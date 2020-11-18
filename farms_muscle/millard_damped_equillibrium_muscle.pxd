@@ -28,6 +28,33 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         str _type
         unsigned short int num_joints
 
+        #: Tendon constants
+        double c1
+        double c2
+        double c3
+        double kT
+
+        #: Force-Length Constants
+        double b1[3]
+        double b2[3]
+        double b3[3]
+        double b4[3]
+
+        #: Passive element constants
+        double kpe
+        double e0
+
+        #: Force-Velocity constants
+        double d1
+        double d2
+        double d3
+        double d4
+
+        #: Pennation angle alpha
+        double _cos_alpha
+        double _sin_alpha
+        double _parallelogram_height
+
         #: Inputs
         Parameter _stim
         Parameter _l_mtu
@@ -66,16 +93,16 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
     cdef:
         #: SUB-MUSCLE FUNCTIONS
         inline double c_tendon_force(self, double l_se) nogil
-        inline double c_parallel_star_force(self, double l_ce) nogil
-        inline double c_belly_force(self, double l_ce) nogil
+        inline double c_passive_force(self, double l_ce) nogil
         inline double c_activation_rate(self, double act, double stim) nogil
         inline double c_force_length(self, double l_ce) nogil
         inline double c_force_velocity(self, double v_ce) nogil
-        inline double c_force_velocity_from_force(
-            self, double f_se, double f_be, double act, double f_l, double f_pe_star) nogil
-        inline double c_contractile_velocity(self, double f_v) nogil
+        cdef inline double c_inverse_force_velocity(self, double f_v) nogil
+        cdef inline double c_contractile_velocity(
+            self, double act, double f_l, double f_pe, double f_t, double alpha) nogil
         inline double c_contractile_force(
             self, double activation, double l_ce, double v_ce) nogil
+        cdef inline double c_pennation_angle(self, double l_ce) nogil
         #: Sensory afferents
         void c_compute_Ia(self) nogil
         void c_compute_II(self) nogil

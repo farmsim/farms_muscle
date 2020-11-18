@@ -2,7 +2,9 @@
 
 from farms_muscle.geyer_muscle import GeyerMuscle
 from farms_muscle.millard_rigid_tendon_muscle import MillardRigidTendonMuscle
+from farms_muscle.millard_damped_equillibrium_muscle import MillardDampedEquillibriumMuscle
 from farms_muscle.degroote_muscle import DeGrooteMuscle
+
 
 class MuscleFactory(object):
     """Implementation of Factory Muscle class.
@@ -12,6 +14,7 @@ class MuscleFactory(object):
         """Factory initialization."""
         super(MuscleFactory, self).__init__()
         self._muscles = {'geyer': GeyerMuscle,
+                         'millard_de': MillardDampedEquillibriumMuscle,
                          'millard_rt': MillardRigidTendonMuscle,
                          'degroote': DeGrooteMuscle}
 

@@ -5,10 +5,10 @@ from Cython.Compiler import Options
 import numpy
 import Cython
 
-Options.docstrings=True
-Options.fast_fail=True
-Options.annotate=True
-Options.warning_errors=False
+Options.docstrings = True
+Options.fast_fail = True
+Options.annotate = True
+Options.warning_errors = False
 
 extensions = [
     Extension("farms_muscle.muscle",
@@ -25,6 +25,12 @@ extensions = [
               ),
     Extension("farms_muscle.millard_rigid_tendon_muscle",
               ["farms_muscle/millard_rigid_tendon_muscle.pyx"],
+              include_dirs=[numpy.get_include()],
+              extra_compile_args=['-ffast-math', '-O3'],
+              extra_link_args=['-O3']
+              ),
+    Extension("farms_muscle.millard_damped_equillibrium_muscle",
+              ["farms_muscle/millard_damped_equillibrium_muscle.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3']
@@ -73,7 +79,7 @@ setuptools.setup(
                       'farms_pylog'],
     zip_safe=False,
     ext_modules=cythonize(extensions, annotate=True),
-    package_data = {
+    package_data={
         'farms_muscle': ['*.pxd'],
     },
 )
