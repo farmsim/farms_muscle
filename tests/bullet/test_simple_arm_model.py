@@ -45,6 +45,10 @@ class SimpleArmSimulation(BulletSimulation):
             self.muscle_params[muscle].value = p.readUserDebugParameter(
                 self.muscle_excitation[muscle]
             )
+        # self.muscle_params['flexor'].value = max(
+        #     np.sin(2*np.pi*1.0*self.TIME), 0.0)
+        # self.muscle_params['extensor'].value = max(
+        #     np.sin(2*np.pi*1.0*self.TIME+np.pi), 0.0)
 
     def feedback_to_controller(self):
         """ Implementation of abstractmethod. """
@@ -69,7 +73,7 @@ def main():
                    ),
                    "model_offset": [0., 3., 0.],
                    "floor_offset": [0, 0., -3],
-                   "run_time": 10.,
+                   "run_time": 10,
                    "time_step": 0.001,
                    "planar": False,
                    "muscles": os.path.join(
@@ -92,14 +96,25 @@ def main():
     container.dump(overwrite=True)
 
     #: Plot
+    states = pd.read_hdf('./Results/muscles/states.h5')
+    activations = pd.read_hdf('./Results/muscles/activations.h5')
     forces = pd.read_hdf('./Results/muscles/forces.h5')
     lengths = pd.read_hdf('./Results/muscles/parameters.h5')
+    outputs = pd.read_hdf('./Results/muscles/outputs.h5')
     plt.figure()
     plt.plot(forces)
     plt.legend(forces.keys())
     plt.figure()
     plt.plot(lengths)
     plt.legend(lengths.keys())
+    plt.figure()
+    plt.plot(activations)
+    plt.legend(activations.keys())
+    plt.plot(states)
+    plt.legend(states.keys())
+    plt.figure()
+    plt.plot(outputs)
+    plt.legend(outputs.keys())
     plt.show()
 
 
