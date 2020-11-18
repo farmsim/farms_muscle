@@ -320,16 +320,15 @@ cdef class DeGrooteMuscle(Muscle):
         cdef double _den = 0.0
         for j in range(3):
             _num = -0.5*(_l_ce_norm - self.b2[j])**2
-            _den = self.b3[j] + self.b4[j]*_l_ce_norm
+            _den = (self.b3[j] + self.b4[j]*_l_ce_norm)**2
             _force_length += self.b1[j]*cexp(_num/_den)
         return _force_length
 
     cdef inline double c_force_velocity(self, double l_mtu, double v_mtu) nogil:
         """ Define the force velocity relationship. """
-        cdef double _v_ce_norm = self.c_fiber_velocity(l_mtu, v_mtu)/self._l_opt
-        cdef double _v_max = -1*self._v_max*self._l_opt
-        cdef double exp1 = self.d2*_v_ce_norm/_v_max + self.d3
-        cdef double exp2 = ((self.d2*_v_ce_norm/_v_max + self.d3)**2) + 1.
+        cdef double _v_ce_norm = (self.c_fiber_velocity(l_mtu, v_mtu))/(cfabs(self._v_max)*self._l_opt)
+        cdef double exp1 = self.d2*_v_ce_norm + self.d3
+        cdef double exp2 = ((self.d2*_v_ce_norm + self.d3)**2) + 1.
         return self.d1*clog(exp1 + csqrt(exp2)) + self.d4
 
     cdef inline double c_muscle_velocity(
