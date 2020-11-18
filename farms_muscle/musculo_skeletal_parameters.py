@@ -36,9 +36,9 @@ class MuscleParameters(SystemParameters):
             - l_opt : Contracticle element optimal fiber length [m]
             - f_max : Maximum force produced by the muscle [N]
             - v_max : Maximum velocity of the contracticle element [m/s]
-            - pennation : Fiber pennation angle
+            - pennation : Fiber pennation angle [deg]
 
-            - muscle_type : Type of muscle
+            - Muscle_type : Type of muscle
                     ['mono' - Mono articular]
                     ['bi' - Bi articular]
             - r_0 : Muscle maximum moment arm across joint 1 [m]
@@ -61,7 +61,7 @@ class MuscleParameters(SystemParameters):
         - l_opt = 0.11
         - f_max = 1500
         - v_max = 1.2
-        - pennation = 1.
+        - pennation = 0.-
 
     These parameter variables can then be called from within the class using
     for example:
@@ -122,13 +122,13 @@ class MuscleParameters(SystemParameters):
         self.units['k_dII'] = '-'
         self.units['k_nII'] = '-'
         self.units['fth'] = '-'
-        self.units['const_II'] = '-'        
+        self.units['const_II'] = '-'
 
         self.parameters['model'] = kwargs.get('model', 'geyer')
         self.parameters['l_slack'] = kwargs.get('l_slack', 0.13)
-        self.parameters['l_opt'] = kwargs.get('l_opt', 0.11)
+        self.parameters['l_opt'] = kwargs.get('l_opt', 0.1)
         self.parameters['f_max'] = kwargs.get('f_max', 1500)
-        self.parameters['v_max'] = kwargs.get('v_max', 1.2)
+        self.parameters['v_max'] = kwargs.get('v_max', 12)
         self.parameters['pennation'] = kwargs.get('pennation', 1)
         self.parameters['name'] = kwargs.get('name', str(uuid.uuid4()))
         self.parameters['muscle_type'] = kwargs.get('muscle_type', 'None')
@@ -158,44 +158,44 @@ class MuscleParameters(SystemParameters):
     def kv(self):
         """ Get kv """
         return self.parameters['kv']
-        
+
     @property
     def pv(self):
         """ Get pv """
         return self.parameters['pv']
-        
+
     @property
     def k_dI(self):
         """ Get k_dI """
         return self.parameters['k_dI']
-        
+
     @property
     def k_nI(self):
         """ Get k_nI """
         return self.parameters['k_nI']
-        
+
     @property
     def const_I(self):
         """ Get const_I """
         return self.parameters['const_I']
-        
+
     #: II afferent constants
     @property
     def kF(self):
         """ Get kF """
         return self.parameters['kF']
-        
+
     #: Ib afferent constants
     @property
     def k_dII(self):
         """ Get k_dII """
         return self.parameters['k_dII']
-        
+
     @property
     def k_nII(self):
         """ Get k_nII """
         return self.parameters['k_nII']
-        
+
     @property
     def const_II(self):
         """ Get const_II """
@@ -215,44 +215,44 @@ class MuscleParameters(SystemParameters):
     def kv(self, value):
         """ Get kv """
         self.parameters['kv'] = value
-        
+
     @pv.setter
     def pv(self, value):
         """ Get pv """
         self.parameters['pv'] = value
-        
+
     @k_dI.setter
     def k_dI(self, value):
         """ Get k_dI """
         self.parameters['k_dI'] = value
-        
+
     @k_nI.setter
     def k_nI(self, value):
         """ Get k_nI """
         self.parameters['k_nI'] = value
-        
+
     @const_I.setter
     def const_I(self, value):
         """ Get const_I """
         self.parameters['const_I'] = value
-        
+
     #: II afferent constants
     @kF.setter
     def kF(self, value):
         """ Get kF """
         self.parameters['kF'] = value
-        
+
     #: Ib afferent constants
     @k_dII.setter
     def k_dII(self, value):
         """ Get k_dII """
         self.parameters['k_dII'] = value
-        
+
     @k_nII.setter
     def k_nII(self, value):
         """ Get k_nII """
         self.parameters['k_nII'] = value
-        
+
     @const_II.setter
     def const_II(self, value):
         """ Get const_II """
@@ -267,13 +267,12 @@ class MuscleParameters(SystemParameters):
     def fth(self, value):
         """ Set fth """
         self.parameters['fth'] = value
-        
 
     @property
     def visualize(self):
         """ Waypoints describing muscle attachments  """
         return self.parameters['visualize']
-        
+
     @visualize.setter
     def visualize(self, value):
         """
@@ -288,7 +287,7 @@ class MuscleParameters(SystemParameters):
     def debug(self):
         """ Visualize muscle forces  """
         return self.parameters['debug']
-        
+
     @debug.setter
     def debug(self, value):
         """
@@ -303,7 +302,7 @@ class MuscleParameters(SystemParameters):
     def waypoints(self):
         """ Waypoints describing muscle attachments  """
         return self.parameters['waypoints']
-        
+
     @waypoints.setter
     def waypoints(self, value):
         """
@@ -313,7 +312,7 @@ class MuscleParameters(SystemParameters):
             List of waypoints describing the muscle attachment in local link frame
         """
         self.parameters['waypoints'] = value
-        
+
     @property
     def l_ce0(self):
         """ Contractile element initial length  """
