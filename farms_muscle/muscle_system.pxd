@@ -7,7 +7,7 @@ cdef class MuscleSystemGenerator(object):
         readonly dict muscles
 
         #: ODE States
-        Table states
+        readonly Table states
         Table dstates
         #: Muscle parameters
         Table constants
@@ -16,7 +16,7 @@ cdef class MuscleSystemGenerator(object):
         Table activations
         #: Output of each muscle
         Table forces
-        Table outputs #: Secondary outputs
+        Table outputs  # : Secondary outputs
         #: Sensors
         Table Ia
         Table II
