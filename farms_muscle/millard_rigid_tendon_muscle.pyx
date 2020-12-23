@@ -214,27 +214,44 @@ cdef class MillardRigidTendonMuscle(Muscle):
         return l_ce
 
     ########## C Wrappers ##########
-    def _py_tendon_force(self, l_se):
-        return self.c_tendon_force(l_se)
-
-    def _py_passive_force(self, l_ce):
-        return self.c_passive_force(l_ce)
-
-    def _py_activation_rate(self, act, stim):
+    def compute_activation_rate(self, act, stim):
         return self.c_activation_rate(act, stim)
 
-    def _py_force_length(self, l_ce):
-        return self.c_force_length(l_ce)
+    def compute_force_length(self, l_mtu):
+        l_ce = self.compute_fiber_length(
+            l_mtu, self.compute_pennation_angle(l_mtu))
+        return self.c_force_length(l_ce/self._l_opt)
 
-    def _py_force_velocity(self, v_ce):
-        return self.c_force_velocity(v_ce)
+    def compute_force_velocity(self, l_mtu, v_mtu):
+        v_ce = self.compute_fiber_velocity(
+            v_mtu, self.compute_pennation_angle(l_mtu))
+        return self.c_force_velocity(v_ce/self._v_max)
 
-    def _py_force_velocity_from_force(self, f_se,  f_be,  act,  f_l,  f_pe_star):
-        return self.c_force_velocity_from_force(
-            f_se,  f_be,  act,  f_l,  f_pe_star)
+    def compute_pennation_angle(self, l_mtu):
+        return self.c_pennation_angle(l_mtu)
 
-    def _py_contractile_velocity(self, f_v):
-        return self.c_contractile_velocity(f_v)
+    def compute_fiber_length(self, l_mtu, alpha):
+        return self.c_fiber_length(l_mtu, alpha)
+
+    def compute_fiber_velocity(self, v_mtu, alpha):
+        return self.c_fiber_velocity(v_mtu, alpha)
+
+    def compute_active_force(self, activation, l_mtu, v_mtu):
+        alpha = self.compute_pennation_angle(l_mtu)
+        return activation*self.compute_force_length(l_mtu)*self.compute_force_velocity(l_mtu, v_mtu)
+
+    def compute_passive_force(self, l_mtu):
+        l_ce = self.compute_fiber_length(
+            l_mtu, self.compute_pennation_angle(l_mtu))
+        return self.c_passive_force(l_ce/self._l_opt)
+
+    def compute_tendon_force(self, activation, l_mtu, v_mtu):
+        alpha = self.compute_pennation_angle(l_mtu)
+        v_ce = self.compute_fiber_velocity(v_mtu, alpha)
+        return self._f_max*(
+            self.compute_active_force(activation, l_mtu, v_mtu) +
+            self.compute_passive_force(l_mtu) + 0.1*v_ce/self._v_max
+        )*ccos(alpha)
 
     #: Properties
     @property
