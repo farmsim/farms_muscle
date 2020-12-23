@@ -101,15 +101,14 @@ cdef class MillardRigidTendonMuscle(Muscle):
             'f_max_' + self._name, parameters.f_max)
         (_, self._pennation) = container.muscles.constants.add_parameter(
             'pennation_' + self._name, parameters.pennation)
+        #: FUCK : Need to update beta in parameters class
+        (_, self._beta) = container.muscles.constants.add_parameter(
+            'beta_' + self._name, 0.1)
 
         self._cos_alpha = np.cos(np.deg2rad(self._pennation))
         self._sin_alpha = np.sin(np.deg2rad(self._pennation))
 
         self._parallelogram_height = self._l_opt*self._sin_alpha
-
-        #: FUCK : Need to update beta in parameters class
-        (_, self._beta) = container.muscles.constants.add_parameter(
-            'beta_' + self._name, 0.1)
 
         self._type = parameters.muscle_type
 
@@ -429,7 +428,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         )
         #: Tendon force
         cdef double force = self._f_max*(
-            self._f_ce.c_get_value() + self._f_pe.c_get_value() + 0.1*v_ce_norm
+            self._f_ce.c_get_value() + self._f_pe.c_get_value() + self._beta*v_ce_norm
         )*ccos(alpha)
         self._f_se.c_set_value(force)
 
