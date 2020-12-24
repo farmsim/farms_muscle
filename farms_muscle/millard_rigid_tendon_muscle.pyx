@@ -343,7 +343,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         """ Setup the equations for passive force* """
         cdef double _den = cexp(self.kpe) - 1.0
         cdef double _num = cexp((self.kpe*(l_ce) - self.kpe)/self.e0) - 1.0
-        return _num/_den
+        return _num/_den if l_ce > 1.0 else 0.0
 
     cdef inline double c_force_length(self, double l_ce) nogil:
         """ Define the force length relationship. """
