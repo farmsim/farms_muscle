@@ -96,9 +96,9 @@ cdef class DeGrooteMuscle(Muscle):
         self.d4 = 0.886
 
         #: Internal properties
-        (_, self._l_slack) = container.muscles.constants.add_parameter(
+        self._l_slack, _l_slack = container.muscles.parameters.add_parameter(
             'l_slack_' + self._name, parameters.l_slack)
-        (_, self._l_opt) = container.muscles.constants.add_parameter(
+        self._l_opt, _l_opt = container.muscles.parameters.add_parameter(
             'l_opt_' + self._name, parameters.l_opt)
         (_, self._v_max) = container.muscles.constants.add_parameter(
             'v_max_' + self._name, parameters.v_max)
@@ -113,7 +113,7 @@ cdef class DeGrooteMuscle(Muscle):
         self._type = parameters.muscle_type
 
         #: Shape factor pylint: disable=invalid-name
-        self.W = self._l_opt*self._sin_alpha
+        self.W = _l_opt*self._sin_alpha
 
         # #: MUSCLE STATES
         # #: Muscle Contractile Length
@@ -139,7 +139,7 @@ cdef class DeGrooteMuscle(Muscle):
 
         #: Outputs
         self._l_se = container.muscles.outputs.add_parameter(
-            "tendon_length_"+self._name, self._l_slack)[0]
+            "tendon_length_"+self._name, _l_slack)[0]
         self._f_be = container.muscles.outputs.add_parameter(
             "belly_force_"+self._name, 0.0)[0]
         self._f_pe = container.muscles.outputs.add_parameter(
@@ -197,17 +197,17 @@ cdef class DeGrooteMuscle(Muscle):
         """This function initializes the muscle lengths."""
         self.p_interface.update_muscle_length()
         l_mtu = self._l_mtu.c_get_value()
-        l_ce = self._l_opt
-        if l_mtu < (self._l_slack + self._l_opt):
+        l_ce = self._l_opt.c_get_value()
+        if l_mtu < (self._l_slack.c_get_value() + self._l_opt.c_get_value()):
             l_ce = self.l_opt
         else:
-            if (self._l_opt * self.W + self.E_REF * self._l_slack) != 0.0:
-                _num = self._l_opt * self.W + \
-                    self.E_REF * (l_mtu - self._l_opt)
-                _den = self._l_opt * self.W + self.E_REF * self._l_slack
-                l_se = self._l_slack*(_num/_den)
+            if (self._l_opt.c_get_value() * self.W + self.E_REF * self._l_slack.c_get_value()) != 0.0:
+                _num = self._l_opt.c_get_value() * self.W + \
+                    self.E_REF * (l_mtu - self._l_opt.c_get_value())
+                _den = self._l_opt.c_get_value() * self.W + self.E_REF * self._l_slack.c_get_value()
+                l_se = self._l_slack.c_get_value()*(_num/_den)
             else:
-                l_se = self._l_slack
+                l_se = self._l_slack.c_get_value()
                 l_ce = l_mtu - l_se
         return l_ce
 
@@ -286,7 +286,7 @@ cdef class DeGrooteMuscle(Muscle):
     cdef inline double c_tendon_force(self, double l_se) nogil:
         """ Setup the equations for tendon force. """
         cdef double _tendon_force
-        cdef double _l_se_norm = l_se/self._l_slack
+        cdef double _l_se_norm = l_se/self._l_slack.c_get_value()
         _tendon_force = self.c1*cexp(self.kT*(_l_se_norm-self.c2)) - self.c3
         return _tendon_force
 
@@ -294,7 +294,7 @@ cdef class DeGrooteMuscle(Muscle):
         """ Setup the equations for passive force """
         cdef double _num
         cdef double _den
-        cdef double _l_ce_norm = self.c_fiber_length(l_mtu)/self._l_opt
+        cdef double _l_ce_norm = self.c_fiber_length(l_mtu)/self._l_opt.c_get_value()
         _num = cexp((self.kpe*_l_ce_norm - self.kpe)/self.e0) - 1.0
         _den = cexp(self.kpe) - 1.0
         return _num/_den
@@ -309,12 +309,12 @@ cdef class DeGrooteMuscle(Muscle):
 
     cdef inline double c_fiber_length(self, double l_mtu) nogil:
         """ Compute the fiber length. """
-        return csqrt((l_mtu-self._l_slack)**2 + self.W**2)
+        return csqrt((l_mtu-self._l_slack.c_get_value())**2 + self.W**2)
 
     cdef inline double c_force_length(self, double l_mtu) nogil:
         """ Define the force length relationship. """
         cdef double _force_length = 0.0
-        cdef double _l_ce_norm = csqrt(self.c_fiber_length(l_mtu))/self._l_opt
+        cdef double _l_ce_norm = csqrt(self.c_fiber_length(l_mtu))/self._l_opt.c_get_value()
         cdef unsigned int j = 0
         cdef double _num = 0.0
         cdef double _den = 0.0
@@ -326,7 +326,7 @@ cdef class DeGrooteMuscle(Muscle):
 
     cdef inline double c_force_velocity(self, double l_mtu, double v_mtu) nogil:
         """ Define the force velocity relationship. """
-        cdef double _v_ce_norm = (self.c_fiber_velocity(l_mtu, v_mtu))/(cfabs(self._v_max)*self._l_opt)
+        cdef double _v_ce_norm = (self.c_fiber_velocity(l_mtu, v_mtu))/(cfabs(self._v_max)*self._l_opt.c_get_value())
         cdef double exp1 = self.d2*_v_ce_norm + self.d3
         cdef double exp2 = ((self.d2*_v_ce_norm + self.d3)**2) + 1.
         return self.d1*clog(exp1 + csqrt(exp2)) + self.d4
@@ -338,7 +338,7 @@ cdef class DeGrooteMuscle(Muscle):
 
     cdef inline double c_fiber_velocity(self, double l_mtu, double v_mtu) nogil:
         """ Define the contractile velocity."""
-        return v_mtu*(l_mtu - self._l_slack)/self.c_fiber_length(l_mtu)
+        return v_mtu*(l_mtu - self._l_slack.c_get_value())/self.c_fiber_length(l_mtu)
 
     cdef inline double c_contractile_force(
             self, double activation, double f_l, double f_v) nogil:
@@ -373,7 +373,7 @@ cdef class DeGrooteMuscle(Muscle):
         cdef double act = self._activation.c_get_value()
 
         #: Tendon length
-        self._l_se.c_set_value(self._l_slack)
+        self._l_se.c_set_value(self._l_slack.c_get_value())
         #: Passive force
         self._f_pe.c_set_value(self.c_passive_force(l_mtu))
         #: Force length
@@ -387,7 +387,7 @@ cdef class DeGrooteMuscle(Muscle):
         #: Tendon force
         self._f_se.c_set_value(
             self._f_max*(self._f_ce.c_get_value()+self._f_pe.c_get_value()) *
-            (l_mtu - self._l_slack)/self.c_fiber_length(l_mtu)
+            (l_mtu - self._l_slack.c_get_value())/self.c_fiber_length(l_mtu)
         )
 
     #: Sensory afferents

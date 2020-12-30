@@ -95,9 +95,9 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self.d4 = 0.886
 
         #: Internal properties
-        (_, self._l_slack) = container.muscles.constants.add_parameter(
+        self._l_slack, _l_slack = container.muscles.parameters.add_parameter(
             'l_slack_' + self._name, parameters.l_slack)
-        (_, self._l_opt) = container.muscles.constants.add_parameter(
+        self._l_opt, _l_opt = container.muscles.parameters.add_parameter(
             'l_opt_' + self._name, parameters.l_opt)
         (_, self._v_max) = container.muscles.constants.add_parameter(
             'v_max_' + self._name, parameters.v_max)
@@ -109,7 +109,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self._cos_alpha = np.cos(np.deg2rad(self._pennation))
         self._sin_alpha = np.sin(np.deg2rad(self._pennation))
 
-        self._parallelogram_height = self._l_opt*self._sin_alpha
+        self._parallelogram_height = _l_opt*self._sin_alpha
 
         self._type = parameters.muscle_type
 
@@ -137,7 +137,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
 
         #: Outputs
         self._l_se = container.muscles.outputs.add_parameter(
-            "tendon_length_"+self._name, self._l_slack)[0]
+            "tendon_length_"+self._name, _l_slack)[0]
         self._f_be = container.muscles.outputs.add_parameter(
             "belly_force_"+self._name, 0.0)[0]
         self._f_pe = container.muscles.outputs.add_parameter(
@@ -194,17 +194,17 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         """This function initializes the muscle lengths."""
         self.p_interface.update_muscle_length()
         l_mtu = self._l_mtu.c_get_value()
-        l_ce = self._l_opt
-        if l_mtu < (self._l_slack + self._l_opt):
+        l_ce = self._l_opt.c_get_value()
+        if l_mtu < (self._l_slack.c_get_value() + self._l_opt.c_get_value()):
             l_ce = self.l_opt
         else:
-            if (self._l_opt * self.W + self.E_REF * self._l_slack) != 0.0:
-                _num = self._l_opt * self.W + \
-                    self.E_REF * (l_mtu - self._l_opt)
-                _den = self._l_opt * self.W + self.E_REF * self._l_slack
-                l_se = self._l_slack*(_num/_den)
+            if (self._l_opt.c_get_value() * self.W + self.E_REF * self._l_slack.c_get_value()) != 0.0:
+                _num = self._l_opt.c_get_value() * self.W + \
+                    self.E_REF * (l_mtu - self._l_opt.c_get_value())
+                _den = self._l_opt.c_get_value() * self.W + self.E_REF * self._l_slack.c_get_value()
+                l_se = self._l_slack.c_get_value()*(_num/_den)
             else:
-                l_se = self._l_slack
+                l_se = self._l_slack.c_get_value()
                 l_ce = l_mtu - l_se
         return l_ce
 
@@ -316,12 +316,12 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
     cdef inline double c_tendon_force(self, double l_se) nogil:
         """ Setup the equations for tendon force. """
         return self.c1 * \
-            cexp(self.kT*((l_se/self._l_slack)-self.c2)) - self.c3
+            cexp(self.kT*((l_se/self._l_slack.c_get_value())-self.c2)) - self.c3
 
     cdef inline double c_passive_force(self, double l_ce) nogil:
         """ Setup the equations for passive force """
         cdef double _den = cexp(self.kpe) - 1.0
-        cdef double _num = cexp((self.kpe*(l_ce/self._l_opt) - self.kpe)/self.e0) - 1.0
+        cdef double _num = cexp((self.kpe*(l_ce/self._l_opt.c_get_value()) - self.kpe)/self.e0) - 1.0
         return _num/_den
 
     cdef inline double c_force_length(self, double l_ce) nogil:
@@ -329,7 +329,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
 
         cdef double _force_length = 0.0
         cdef double _num, _den
-        cdef double _l_ce_norm = l_ce/self._l_opt
+        cdef double _l_ce_norm = l_ce/self._l_opt.c_get_value()
         cdef unsigned int j = 0
         for j in range(3):
             _num = -0.5*(_l_ce_norm - self.b2[j])**2
@@ -339,7 +339,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
 
     cdef inline double c_force_velocity(self, double v_ce) nogil:
         """ Define the force velocity relationship. """
-        cdef double _v_ce_norm = v_ce/(self._v_max*self._l_opt)
+        cdef double _v_ce_norm = v_ce/(self._v_max*self._l_opt.c_get_value())
         cdef double exp1 = self.d2*_v_ce_norm + self.d3
         cdef double exp2 = ((self.d2*_v_ce_norm + self.d3)**2) + 1.
         return self.d1*clog(exp1 + csqrt(exp2)) + self.d4

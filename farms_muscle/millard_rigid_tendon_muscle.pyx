@@ -91,9 +91,9 @@ cdef class MillardRigidTendonMuscle(Muscle):
         self.e0 = 0.6
 
         #: Internal properties
-        (_, self._l_slack) = container.muscles.constants.add_parameter(
+        self._l_slack, _l_slack = container.muscles.parameters.add_parameter(
             'l_slack_' + self._name, parameters.l_slack)
-        (_, self._l_opt) = container.muscles.constants.add_parameter(
+        self._l_opt, _l_opt = container.muscles.parameters.add_parameter(
             'l_opt_' + self._name, parameters.l_opt)
         (_, self._v_max) = container.muscles.constants.add_parameter(
             'v_max_' + self._name, parameters.v_max)
@@ -108,7 +108,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         self._cos_alpha = np.cos(np.deg2rad(self._pennation))
         self._sin_alpha = np.sin(np.deg2rad(self._pennation))
 
-        self._parallelogram_height = self._l_opt*self._sin_alpha
+        self._parallelogram_height = _l_opt*self._sin_alpha
 
         self._type = parameters.muscle_type
 
@@ -138,7 +138,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         #: Outputs
         #: Outputs
         self._l_se = container.muscles.outputs.add_parameter(
-            "tendon_length_"+self._name, self._l_slack)[0]
+            "tendon_length_"+self._name, _l_slack)[0]
         self._f_be = container.muscles.outputs.add_parameter(
             "belly_force_"+self._name, 0.0)[0]
         self._f_pe = container.muscles.outputs.add_parameter(
@@ -198,17 +198,17 @@ cdef class MillardRigidTendonMuscle(Muscle):
         """This function initializes the muscle lengths."""
         self.p_interface.update_muscle_length()
         l_mtu = self._l_mtu.c_get_value()
-        l_ce = self._l_opt
-        if l_mtu < (self._l_slack + self._l_opt):
+        l_ce = self._l_opt.c_get_value()
+        if l_mtu < (self._l_slack.c_get_value() + self._l_opt.c_get_value()):
             l_ce = self.l_opt
         else:
-            if (self._l_opt * self.W + self.E_REF * self._l_slack) != 0.0:
-                _num = self._l_opt * self.W + \
-                    self.E_REF * (l_mtu - self._l_opt)
-                _den = self._l_opt * self.W + self.E_REF * self._l_slack
-                l_se = self._l_slack*(_num/_den)
+            if (self._l_opt.c_get_value() * self.W + self.E_REF * self._l_slack.c_get_value()) != 0.0:
+                _num = self._l_opt.c_get_value() * self.W + \
+                    self.E_REF * (l_mtu - self._l_opt.c_get_value())
+                _den = self._l_opt.c_get_value() * self.W + self.E_REF * self._l_slack.c_get_value()
+                l_se = self._l_slack.c_get_value()*(_num/_den)
             else:
-                l_se = self._l_slack
+                l_se = self._l_slack.c_get_value()
                 l_ce = l_mtu - l_se
         return l_ce
 
@@ -219,7 +219,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
     def compute_force_length(self, l_mtu):
         l_ce = self.compute_fiber_length(
             l_mtu, self.compute_pennation_angle(l_mtu))
-        return self.c_force_length(l_ce/self._l_opt)
+        return self.c_force_length(l_ce/self._l_opt.c_get_value())
 
     def compute_force_velocity(self, l_mtu, v_mtu):
         v_ce = self.compute_fiber_velocity(
@@ -242,7 +242,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
     def compute_passive_force(self, l_mtu):
         l_ce = self.compute_fiber_length(
             l_mtu, self.compute_pennation_angle(l_mtu))
-        return self.c_passive_force(l_ce/self._l_opt)
+        return self.c_passive_force(l_ce/self._l_opt.c_get_value())
 
     def compute_tendon_force(self, activation, l_mtu, v_mtu):
         alpha = self.compute_pennation_angle(l_mtu)
@@ -333,7 +333,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
     cdef inline double c_pennation_angle(self, double l_mtu) nogil:
         """ Compute the pennation angles """
-        return catan(self._parallelogram_height/(l_mtu-self._l_slack))
+        return catan(self._parallelogram_height/(l_mtu-self._l_slack.c_get_value()))
 
     cdef inline double c_tendon_force(self, double l_se) nogil:
         """ Setup the equations for tendon force. """
@@ -374,7 +374,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
     cdef inline double c_fiber_length(self, double l_mtu, double alpha) nogil:
         """ Compute the fiber length. """
-        return (l_mtu - self._l_slack)/ccos(alpha)
+        return (l_mtu - self._l_slack.c_get_value())/ccos(alpha)
 
     cdef inline double c_fiber_velocity(self, double v_mtu, double alpha) nogil:
         """ Compute the fiber velocity. """
@@ -403,19 +403,19 @@ cdef class MillardRigidTendonMuscle(Muscle):
         #: Attributes needed for output computation
         cdef double l_mtu = self._l_mtu.c_get_value()
         cdef double alpha = self.c_pennation_angle(l_mtu)
-        cdef double l_ce_norm = self.c_fiber_length(l_mtu, alpha)/self._l_opt
+        cdef double l_ce_norm = self.c_fiber_length(l_mtu, alpha)/self._l_opt.c_get_value()
         cdef double v_mtu = self.c_muscle_velocity(
             l_mtu, self._l_mtu.c_get_prev_value(), self.dt)
-        cdef double v_ce_norm = self.c_fiber_velocity(v_mtu, alpha)/(self._l_opt*self._v_max)
+        cdef double v_ce_norm = self.c_fiber_velocity(v_mtu, alpha)/(self._l_opt.c_get_value()*self._v_max)
         cdef double act = self._activation.c_get_value()
-        cdef double l_se = l_mtu - l_ce_norm*ccos(alpha)*self._l_opt
+        cdef double l_se = l_mtu - l_ce_norm*ccos(alpha)*self._l_opt.c_get_value()
 
         #: l_ce
-        self._l_ce.c_set_value(l_ce_norm*self._l_opt)
+        self._l_ce.c_set_value(l_ce_norm*self._l_opt.c_get_value())
         #: v_ce
-        self._v_ce.c_set_value(v_ce_norm*self._l_opt*self._v_max)
+        self._v_ce.c_set_value(v_ce_norm*self._l_opt.c_get_value()*self._v_max)
         #: Tendon length
-        self._l_se.c_set_value(self._l_slack)
+        self._l_se.c_set_value(self._l_slack.c_get_value())
         #: Parallel force
         self._f_pe.c_set_value(self.c_passive_force(l_ce_norm))
         #: Force length
