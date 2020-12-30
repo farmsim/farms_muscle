@@ -9,11 +9,11 @@ cdef class Muscle(object):
     cdef:
         str _name
         str _physics_engine
-        double _l_slack
-        double _l_opt
+        Parameter _l_slack
+        Parameter _l_opt
         double _f_max
         double _v_max
-        double _pennation        
+        double _pennation
         PhysicsInterface p_interface
         #: Time Step
         double dt
@@ -31,7 +31,7 @@ cdef class Muscle(object):
 
     #: Methods
     cdef:
-        void c_ode_rhs(self) nogil        
+        void c_ode_rhs(self) nogil
         #: OUTPUT
         void c_output(self) nogil
         #: Sensory afferents

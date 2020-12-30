@@ -9,10 +9,8 @@ cdef class Muscle(object):
     def __init__(self, name, dt, physics_engine):
         """Initialize"""
         super(Muscle, self).__init__()
-        self._physics_engine = physics_engine        
+        self._physics_engine = physics_engine
         self._name = name
-        self._l_slack = 0.0
-        self._l_opt = 0.0
         self._f_max = 0.0
         self._v_max = 0.0
         self._pennation = 0.0
@@ -28,12 +26,12 @@ cdef class Muscle(object):
     @property
     def l_slack(self):
         """ Get the series elastic element length  """
-        return self._l_slack
+        return self._l_slack.c_get_value()
 
     @property
     def l_opt(self):
         """ Get the series elastic element length  """
-        return self._l_opt
+        return self._l_opt.c_get_value()
 
     @property
     def f_max(self):
@@ -58,7 +56,7 @@ cdef class Muscle(object):
     cdef void c_compute_II(self) nogil:
         """ Function implementing the computation of II muscle afferent. """
         pass
-        
+
     cdef void c_compute_Ib(self) nogil:
         """ Function implementing the computation of Ib muscle afferent. """
         pass
@@ -66,7 +64,7 @@ cdef class Muscle(object):
     cdef void c_update_sensory_afferents(self) nogil:
         """ Function to update all sensory afferents. """
         pass
-    
+
     cdef void c_ode_rhs(self) nogil:
         """ Function containing the ode of muscle model. """
         pass
