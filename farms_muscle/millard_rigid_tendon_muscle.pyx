@@ -1,4 +1,3 @@
-
 # cython: cdivision=True
 # cython: language_level=3
 # cython: infer_types=True
@@ -430,6 +429,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         cdef double force = self._f_max*(
             self._f_ce.c_get_value() + self._f_pe.c_get_value() + self._beta*v_ce_norm
         )*ccos(alpha)
+        if force < 0.0:
+            force = 0.0
         self._f_se.c_set_value(force)
 
     #: Sensory afferents
