@@ -226,7 +226,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         return self.c_force_velocity(v_ce/self._v_max)
 
     def compute_pennation_angle(self, l_mtu):
-        return self.c_pennation_angle(l_mtu)
+        return self.c_calc_pennation_angle(l_mtu)
 
     def compute_fiber_length(self, l_mtu, alpha):
         return self.c_fiber_length(l_mtu, alpha)
@@ -334,6 +334,18 @@ cdef class MillardRigidTendonMuscle(Muscle):
         """ Compute the pennation angles """
         return catan(self._parallelogram_height/(l_mtu-self._l_slack.c_get_value()))
 
+    cdef inline double c_calc_pennation_angle(self, double l_mtu) nogil:
+        """ Calculate pennation angle"""
+        cdef double zero_pennate_fiber_length = (
+            l_mtu - self._l_slack.c_get_value()
+        )
+        zero_pennate_fiber_length *= (zero_pennate_fiber_length > 0.0)
+        #: compute angle
+        cdef double fiber_length = (
+            csqrt(zero_pennate_fiber_length**2 + self._parallelogram_height**2)
+        )
+        return cacos(zero_pennate_fiber_length/fiber_length)
+
     cdef inline double c_tendon_force(self, double l_se) nogil:
         """ Setup the equations for tendon force. """
         return 0.0
@@ -401,7 +413,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         """ Compute the outputs of the system. """
         #: Attributes needed for output computation
         cdef double l_mtu = self._l_mtu.c_get_value()
-        cdef double alpha = self.c_pennation_angle(l_mtu)
+        cdef double alpha = self.c_calc_pennation_angle(l_mtu)
         cdef double l_ce_norm = self.c_fiber_length(l_mtu, alpha)/self._l_opt.c_get_value()
         cdef double v_mtu = self.c_muscle_velocity(
             l_mtu, self._l_mtu.c_get_prev_value(), self.dt)

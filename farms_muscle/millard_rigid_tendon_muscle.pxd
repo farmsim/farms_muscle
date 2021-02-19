@@ -89,7 +89,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
     cdef:
         #: SUB-MUSCLE FUNCTIONS
-        cdef inline double c_pennation_angle(self, double l_mtu) nogil
+        inline double c_pennation_angle(self, double l_mtu) nogil
+        inline double c_calc_pennation_angle(self, double l_mtu) nogil
         inline double c_tendon_force(self, double l_se) nogil
         inline double c_passive_force(self, double l_ce) nogil
         inline double c_activation_rate(self, double act, double stim) nogil
@@ -99,8 +100,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
             self, double activation, double l_ce, double v_ce) nogil
         inline double c_muscle_velocity(
             self, double l_mtu_curr, double l_mtu_prev, double dt) nogil
-        cdef inline double c_fiber_length(self, double l_mtu, double alpha) nogil
-        cdef inline double c_fiber_velocity(self, double v_mtu, double alpha) nogil
+        inline double c_fiber_length(self, double l_mtu, double alpha) nogil
+        inline double c_fiber_velocity(self, double v_mtu, double alpha) nogil
 
         #: Sensory afferents
         void c_compute_Ia(self) nogil
