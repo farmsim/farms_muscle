@@ -15,49 +15,49 @@ extensions = [
               ["farms_muscle/muscle.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.geyer_muscle",
               ["farms_muscle/geyer_muscle.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.millard_rigid_tendon_muscle",
               ["farms_muscle/millard_rigid_tendon_muscle.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.millard_damped_equillibrium_muscle",
               ["farms_muscle/millard_damped_equillibrium_muscle.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.muscle_system",
               ["farms_muscle/muscle_system.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.degroote_muscle",
               ["farms_muscle/degroote_muscle.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.physics_interface",
               ["farms_muscle/physics_interface.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.bullet_interface",
               ["farms_muscle/bullet_interface.pyx"],
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
-              extra_link_args=['-O3']
+              extra_link_args=['-O3', '-lm']
               )
 ]
 
@@ -78,7 +78,7 @@ setuptools.setup(
                       'scipy',
                       'farms_pylog'],
     zip_safe=False,
-    ext_modules=cythonize(extensions, annotate=True),
+    ext_modules=cythonize(extensions, annotate=False),
     package_data={
         'farms_muscle': ['*.pxd'],
     },
