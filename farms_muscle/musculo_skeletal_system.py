@@ -83,6 +83,12 @@ class MusculoSkeletalSystem(object):
             if self.muscle_sys.num_states == 2*len(self.muscles):
                 for j, muscle in enumerate(self.muscles.values()):
                     x0[2*j] = muscle.compute_initial_l_ce()
+            else:
+                # TODO: Refactor the code
+                # This is needed to initialize lmtu for rigid tendon
+                # model.
+                for j, muscle in enumerate(self.muscles.values()):
+                    muscle.compute_initial_l_ce()
         self.integrator.set_initial_value(x0, 0.0)
 
     def step(self, dt=1e-3):
