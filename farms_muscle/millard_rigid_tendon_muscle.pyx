@@ -52,15 +52,10 @@ cdef class MillardRigidTendonMuscle(Muscle):
                                                        dt,
                                                        physics_engine)
 
-        self.c = float(np.log(0.05))  # pylint: disable=no-member
-        self.N = 1.5
-        self.K = 5.0
         self.E_REF = 0.04  #: Reference strain
         self.W = 0.56  #: Shape factor pylint: disable=invalid-name
-        self.tau_act = 0.01  # Time constant for the activation function
-        self.F_per_m2 = 300000  # Force per m2 of muscle PCSA
+        self.tau_act = 1e-3  # Time constant for the activation function???
 
-        self.density = 1060
         self.tol = 1e-6  #: Tolerance
 
         #: Force-Length Constants

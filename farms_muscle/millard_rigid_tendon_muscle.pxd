@@ -8,14 +8,9 @@ cimport numpy as cnp
 cdef class MillardRigidTendonMuscle(Muscle):
     # Default Muscle Parameters
     cdef:
-        readonly float  c
-        readonly float  N
-        readonly float  K
         readonly float  E_REF  # : Reference strain
         readonly float  W  # : Shape factor pylint: disable=invalid-name
         readonly float  tau_act   #: Time constant for the activation function
-        readonly unsigned int  F_per_m2   #: Force per m2 of muscle PCSA
-        readonly unsigned int  density
 
     #: Muscle Parameters
     cdef:
