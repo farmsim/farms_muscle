@@ -29,6 +29,8 @@ cimport numpy as cnp
 cdef class MillardRigidTendonMuscle(Muscle):
     """Implementation of MillarRigidTendonMuscle.
     The muscle model is based on the hill-type muscle model by millard 2013
+    The force-length and velocity curves are modeled based on
+    https://doi.org/10.1007/s10439-016-1591-9
     """
 
     def __init__(self, container, parameters, dt=0.001, physics_engine='BULLET', model_id=1):
