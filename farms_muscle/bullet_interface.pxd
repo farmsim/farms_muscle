@@ -67,7 +67,7 @@ cdef class BulletInterface(PhysicsInterface):
     #: Properties
     cdef:
         int model_id
-        int n_attachments
+        unsigned int n_attachments
         bint visualization
         bint debug_visualization
         np.ndarray local_waypoints

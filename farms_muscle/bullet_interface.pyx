@@ -129,7 +129,7 @@ cdef class BulletInterface(PhysicsInterface):
         #: Initialization
         self.model_id = model_id
 
-        self.n_attachments = len(waypoints)
+        self.n_attachments = <unsigned int>len(waypoints)
 
         self.global_waypoints = np.ndarray(
             (self.n_attachments,), dtype=('(3,)d')
@@ -146,12 +146,12 @@ cdef class BulletInterface(PhysicsInterface):
         self.visualization = visualization and (connection_mode == 1)
 
         self.debug_muscle_line_ids = np.ndarray(
-            (self.n_attachments,), dtype=('I'))
+            (self.n_attachments,), dtype=(np.int_))
 
         self.debug_visualization = debug_visualization
 
         self.debug_force_ids = np.ndarray(
-            (2*self.n_attachments-2,), dtype=('I')
+            (2*self.n_attachments-2,), dtype=(np.int_)
         )
 
         #: Add the waypoints
@@ -200,12 +200,11 @@ cdef class BulletInterface(PhysicsInterface):
         """
         for count in range(self.n_attachments-1):
             self.debug_muscle_line_ids[count] = p.addUserDebugLine(
-                lineFromXYZ=[0, 0, 0],
-                lineToXYZ=[0, 0, 0],
-                lineColorRGB=[1, 0, 0],
-                lineWidth=4,
-                lifeTime=0
-            )
+                    lineFromXYZ=[0, 0, 0],
+                    lineToXYZ=[0, 0, 0],
+                    lineColorRGB=[1, 0, 0],
+                    lineWidth=4,
+                )
 
     def initialize_debug_muscle_force_visualization(self):
         """ Initialization of debug lines in pybullet for muscle force
@@ -222,7 +221,6 @@ cdef class BulletInterface(PhysicsInterface):
                 lineToXYZ=[0, 0, 0],
                 lineColorRGB=[0, 1, 0],
                 lineWidth=4,
-                lifeTime=0
             )
 
     def update_local_points_to_global(self):
