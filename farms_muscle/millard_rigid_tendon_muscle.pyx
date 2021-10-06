@@ -389,16 +389,16 @@ cdef class MillardRigidTendonMuscle(Muscle):
     cdef void c_ode_rhs(self) nogil:
         """Muscle Model ODE rhs.
             Returns
-            ----------
-            ode_rhs: list < cas.SX >
+            -------
+            ode_rhs: list <cas.SX>
                 description
         """
 
         # printf('c_ode_rhs muscle ....\n')
         cdef double _act = self._activation.c_get_value()
 
-        #: State Update
-        #: Muscle Actvation Dynamics
+        # State Update
+        # Muscle Actvation Dynamics
         # printf('self.c_activation_rate ....\n')
         self._adot.c_set_value(self.c_activation_rate(
             _act,
