@@ -90,6 +90,8 @@ class MusculoSkeletalSystem(object):
                 for j, muscle in enumerate(self.muscles.values()):
                     muscle.compute_initial_l_ce()
         self.integrator.set_initial_value(x0, 0.0)
+        # Initialize the forces
+        self.muscle_sys.py_update_outputs()
 
     def step(self, dt=1e-3):
         """ Step the complete bio-mechanical system.
