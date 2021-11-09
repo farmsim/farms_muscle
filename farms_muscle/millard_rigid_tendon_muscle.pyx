@@ -463,9 +463,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
     cdef void c_compute_Ib(self) nogil:
         """ Compute Ib afferent from muscle fiber. """
-        cdef double _f_norm = (
-            self._f_se.c_get_value() - self._fth)/self._f_max if self._f_se.c_get_value() >= self._fth else 0.0
-        self._Ib_aff.c_set_value(self._kF*_f_norm)
+        cdef double _Ib_aff = self._kF*self._f_se.c_get_value()/self._f_max
+        self._Ib_aff.c_set_value(_Ib_aff if _Ib_aff > 0.0 else 0.0)
 
     cdef void c_update_sensory_afferents(self) nogil:
         """ Compute all the sensory afferents and update them. """
