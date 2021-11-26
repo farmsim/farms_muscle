@@ -118,6 +118,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         #: Muscle length change
         self._l_mtu = container.muscles.parameters.add_parameter(
             'lmtu_'+self._name)[0]
+        self._v_mtu = container.muscles.parameters.add_parameter(
+            'vmtu_'+self._name)[0]
         #: External Muscle stimulation
         self._stim = container.muscles.activations.add_parameter(
             'stim_' + self._name)[0]
@@ -375,10 +377,12 @@ cdef class MillardRigidTendonMuscle(Muscle):
         """ Compute the active force. """
         return activation*self.c_force_length(l_ce)*self.c_force_velocity(v_ce)
 
-    cdef inline double c_muscle_velocity(
-            self, double l_mtu_curr, double l_mtu_prev, double dt) nogil:
+    cdef double c_muscle_velocity(
+            self, double l_mtu_curr, double l_mtu_prev, double v_mtu_prev, double dt) nogil:
         """ Compute the fiber length. """
-        return (l_mtu_curr - l_mtu_prev)/(dt)
+        cdef double vel = (l_mtu_curr - l_mtu_prev)/(dt)
+        vel = (1-0.1)*v_mtu_prev + 0.1*vel
+        return vel
 
     cdef inline double c_fiber_length(self, double l_mtu, double alpha) nogil:
         """ Compute the fiber length. """
@@ -413,7 +417,10 @@ cdef class MillardRigidTendonMuscle(Muscle):
         cdef double alpha = self.c_calc_pennation_angle(l_mtu)
         cdef double l_ce_norm = self.c_fiber_length(l_mtu, alpha)/self._l_opt.c_get_value()
         cdef double v_mtu = self.c_muscle_velocity(
-            l_mtu, self._l_mtu.c_get_prev_value(), self.dt)
+            l_mtu, self._l_mtu.c_get_prev_value(), self._v_mtu.c_get_prev_value(),
+            self.dt
+        )
+        self._v_mtu.c_set_value(v_mtu)
         cdef double v_ce_norm = self.c_fiber_velocity(v_mtu, alpha)/(self._l_opt.c_get_value()*self._v_max)
         cdef double act = self._activation.c_get_value()
         cdef double l_se = l_mtu - l_ce_norm*ccos(alpha)*self._l_opt.c_get_value()
