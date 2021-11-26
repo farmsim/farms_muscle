@@ -62,7 +62,7 @@ cdef class MuscleSystemGenerator(object):
 
         self.c_muscles = cnp.ndarray((self.num_muscles,), dtype=CMuscle)
 
-    def generate_muscles(self, container, config_data):
+    def generate_muscles(self, container, config_data, time_step):
         """Generate all the muscles in the system .
         Instatiate a muscle model for each muscle in the config.
         Returns
@@ -84,7 +84,7 @@ cdef class MuscleSystemGenerator(object):
             #: ADD DT
             self.muscles[muscle['name']] = new_muscle(
                 container, MuscleParameters(
-                    **muscle))
+                    **muscle), dt=time_step)
             self.c_muscles[j] = <CMuscle > self.muscles[muscle['name']]
         return self.muscles
 

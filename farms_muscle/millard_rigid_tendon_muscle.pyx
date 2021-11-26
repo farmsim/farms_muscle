@@ -33,7 +33,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
     https://doi.org/10.1007/s10439-016-1591-9
     """
 
-    def __init__(self, container, parameters, dt=0.001, physics_engine='BULLET', model_id=1):
+    def __init__(self, container, parameters, dt, physics_engine='BULLET', model_id=1):
         """This function initializes the muscle model.
         A default muscle name is given as muscle
 

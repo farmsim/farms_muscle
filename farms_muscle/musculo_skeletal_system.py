@@ -16,7 +16,7 @@ class MusculoSkeletalSystem(object):
     2. Joint Generation
     3. Muscle-Joint Generation : Binding muscles and joints"""
 
-    def __init__(self, container, config_path=None, opts=None):
+    def __init__(self, container, time_step, config_path=None, opts=None):
         """ Initialize the joints and muscles.
         Need to initialize the class with a valid json file"""
         if config_path is None:
@@ -38,7 +38,7 @@ class MusculoSkeletalSystem(object):
             config_path)
 
         #: Generate the muscles in the system
-        self.muscles = self.generate_muscles(config_data)
+        self.muscles = self.generate_muscles(config_data, time_step)
 
     @staticmethod
     def load_config_file(config_path):
@@ -56,13 +56,13 @@ class MusculoSkeletalSystem(object):
                 config_path))
             raise ValueError()
 
-    def generate_muscles(self, config_data):
+    def generate_muscles(self, config_data, time_step):
         """This function creates muscle objects based on the config file.
         The function stores the created muscle objects in a dict."""
         num_muscles = len(config_data['muscles'])
         self.muscle_sys = MuscleSystemGenerator(self.container, num_muscles)
         self.muscles = self.muscle_sys.generate_muscles(
-            self.container, config_data)
+            self.container, config_data, time_step)
         return self.muscles
 
     def setup_integrator(self, x0=None, integrator='dopri5', atol=1e-6,
