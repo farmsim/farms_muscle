@@ -53,7 +53,6 @@ cdef class MillardRigidTendonMuscle(Muscle):
         super(MillardRigidTendonMuscle, self).__init__(parameters.name,
                                                        dt,
                                                        physics_engine)
-
         self.E_REF = 0.04  #: Reference strain
         self.W = 0.56  #: Shape factor pylint: disable=invalid-name
         self.tau_act = 1e-3  # Time constant for the activation function???
@@ -99,7 +98,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
             'pennation_' + self._name, parameters.pennation)
         #: FUCK : Need to update beta in parameters class
         (_, self._beta) = container.muscles.constants.add_parameter(
-            'beta_' + self._name, 0.1)
+            'beta_' + self._name, 0.01)
 
         self._cos_alpha = np.cos(np.deg2rad(self._pennation))
         self._sin_alpha = np.sin(np.deg2rad(self._pennation))
