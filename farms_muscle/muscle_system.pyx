@@ -70,18 +70,18 @@ cdef class MuscleSystemGenerator(object):
         out : <bool>
             Return true if successfully created the muscles
         """
-        #: Get all the muscles data in the system
+        # Get all the muscles data in the system
         muscles_data = config_data['muscles']
 
-        #: Factory to generate different muscles
+        # Factory to generate different muscles
         factory = MuscleFactory()
 
-        #: Generate the muscles
+        # Generate the muscles
         for j, (name, muscle) in enumerate(muscles_data.items()):
             pylog.debug('Generating muscle model : {} of type {}'.format(
                 name, muscle['model']))
             new_muscle = factory.gen_muscle(muscle['model'])
-            #: ADD DT
+            # ADD DT
             self.muscles[muscle['name']] = new_muscle(
                 container, MuscleParameters(
                     **muscle), dt=time_step)
@@ -92,7 +92,7 @@ cdef class MuscleSystemGenerator(object):
     cdef double[:] c_ode(self, double t, double[:] state):
         self.states.c_set_values(state)
         cdef unsigned int j
-        #: Loop over all the muscles
+        # Loop over all the muscles
         for j in range(self.num_muscles):
             (< CMuscle > self.c_muscles[j]).c_ode_rhs()
         return self.dstates.c_get_values()
@@ -100,7 +100,7 @@ cdef class MuscleSystemGenerator(object):
     cdef void c_update_outputs(self):
         cdef unsigned int j
         cdef CMuscle m
-        #: Loop over all the muscles
+        # Loop over all the muscles
         for j in range(self.num_muscles):
             m = self.c_muscles[j]
             m.p_interface.c_compute_muscle_length()
