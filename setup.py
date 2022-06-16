@@ -58,6 +58,12 @@ extensions = [
               include_dirs=[numpy.get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
+              ),
+    Extension("farms_muscle.mujoco_callback",
+              ["farms_muscle/mujoco_callback.pyx"],
+              include_dirs=[numpy.get_include()],
+              extra_compile_args=['-ffast-math', '-O3'],
+              extra_link_args=['-O3', '-lm']
               )
 ]
 
