@@ -33,7 +33,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
     https://doi.org/10.1007/s10439-016-1591-9
     """
 
-    def __init__(self, container, parameters, dt, physics_engine='BULLET', model_id=1):
+    def __init__(self, container, options, dt, physics_engine='NONE', model_id=1):
         """This function initializes the muscle model.
         A default muscle name is given as muscle
 
@@ -50,9 +50,9 @@ cdef class MillardRigidTendonMuscle(Muscle):
             Returns an instance of class Muscle
 
         """
-        super(MillardRigidTendonMuscle, self).__init__(parameters.name,
-                                                       dt,
-                                                       physics_engine)
+        super(MillardRigidTendonMuscle, self).__init__(
+            options.name, dt, physics_engine
+        )
         self.E_REF = 0.04  #: Reference strain
         self.W = 0.56  #: Shape factor pylint: disable=invalid-name
         self.tau_act = 1e-3  # Time constant for the activation function???
@@ -87,15 +87,15 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
         #: Internal properties
         self._l_slack, _l_slack = container.muscles.parameters.add_parameter(
-            'l_slack_' + self._name, parameters.l_slack)
+            'l_slack_' + self._name, options.tendon_slack)
         self._l_opt, _l_opt = container.muscles.parameters.add_parameter(
-            'l_opt_' + self._name, parameters.l_opt)
+            'l_opt_' + self._name, options.optimal_fiber)
         (_, self._v_max) = container.muscles.constants.add_parameter(
-            'v_max_' + self._name, parameters.v_max)
+            'v_max_' + self._name, options.max_velocity)
         (_, self._f_max) = container.muscles.constants.add_parameter(
-            'f_max_' + self._name, parameters.f_max)
+            'f_max_' + self._name, options.max_force)
         (_, self._pennation) = container.muscles.constants.add_parameter(
-            'pennation_' + self._name, parameters.pennation)
+            'pennation_' + self._name, options.pennation_angle)
         #: FUCK : Need to update beta in parameters class
         (_, self._beta) = container.muscles.constants.add_parameter(
             'beta_' + self._name, 0.01)
@@ -105,11 +105,11 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
         self._parallelogram_height = _l_opt*self._sin_alpha
 
-        self._type = parameters.muscle_type
+        self._type = options.model
 
         # #: Muscle Contractile Length
         self._l_ce = container.muscles.parameters.add_parameter(
-            "l_ce_" + self._name, parameters.l_ce0)[0]
+            "l_ce_" + self._name, options.init_fiber)[0]
         self._v_ce = container.muscles.parameters.add_parameter(
             "v_ce_" + self._name, 0.0)[0]
 
@@ -126,7 +126,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         # #: MUSCLE STATES
         #: Muscle Activation
         self._activation = container.muscles.states.add_parameter(
-            'activation_' + self._name, parameters.a0)[0]
+            'activation_' + self._name, options.init_activation
+        )[0]
 
         #: Derivatives
         self._adot = container.muscles.dstates.add_parameter(
@@ -153,21 +154,21 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
         #: Sensory afferents
         #: Ia afferent constants
-        self._kv = parameters.kv
-        self._pv = parameters.pv
-        self._k_dI = parameters.k_dI
-        self._k_nI = parameters.k_nI
-        self._const_I = parameters.const_I
-        self._lth = parameters.lth
+        self._kv = options.type_I_kv
+        self._pv = options.type_I_pv
+        self._k_dI = options.type_I_k_dI
+        self._k_nI = options.type_I_k_nI
+        self._const_I = options.type_I_const_I
+        self._lth = options.type_I_lth
 
         #: Ib afferent constants
-        self._kF = parameters.kF
-        self._fth = parameters.fth
+        self._kF = options.type_Ib_kF
+        self._fth = options.type_Ib_fth
 
         #: II afferent constants
-        self._k_dII = parameters.k_dII
-        self._k_nII = parameters.k_nII
-        self._const_II = parameters.const_II
+        self._k_dII = options.type_II_k_dII
+        self._k_nII = options.type_II_k_nII
+        self._const_II = options.type_II_const_II
 
         self._Ia_aff = container.muscles.Ia.add_parameter(
             "Ia_" + self._name, 0.0)[0]
@@ -185,7 +186,8 @@ cdef class MillardRigidTendonMuscle(Muscle):
         elif physics_engine == 'BULLET':
             self.p_interface = BulletInterface(
                 model_id, self._l_mtu, self._f_se, self._stim,
-                parameters.waypoints, parameters.visualize)
+                options.waypoints, options.visualize
+            )
             pylog.debug(
                 "Muscle {} connected to any Bullet engine".format(self._name))
 

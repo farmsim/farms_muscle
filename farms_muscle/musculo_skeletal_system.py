@@ -1,69 +1,75 @@
 """ MusculoSkeletalSystem class """
 
-import yaml
 import os
 import sys
-import numpy as np
-from farms_muscle.muscle_system import MuscleSystemGenerator
-from scipy.integrate import ode
+
 import farms_pylog as pylog
+import numpy as np
+import yaml
+from farms_core.io.yaml import read_yaml
+from farms_core.model.options import MuscleOptions
+from scipy.integrate import ode
+
+from farms_muscle.muscle_system import MuscleSystemGenerator
+
 pylog.set_level('debug')
 
 
-class MusculoSkeletalSystem(object):
+class MusculoSkeletalSystem():
     """ Class to generate musculo-skeletal module.
     1. Muscle Generation
     2. Joint Generation
     3. Muscle-Joint Generation : Binding muscles and joints"""
 
-    def __init__(self, container, time_step, config_path=None, opts=None):
+    def __init__(self, container, time_step, muscles_options):
         """ Initialize the joints and muscles.
         Need to initialize the class with a valid json file"""
-        if config_path is None:
-            pylog.error('Missing config file .....')
-            raise RuntimeError()
-        elif not os.path.isfile(config_path):
-            pylog.error('Wrong config path .....')
-            raise RuntimeError()
 
         #: Create muscles namespace in the container
         self.container = container
         self.container.add_namespace('muscles')
-        self.muscles = {}
         self.muscles_sys = None
         self.integrator = None
 
-        #: Load config file
-        config_data = MusculoSkeletalSystem.load_config_file(
-            config_path)
-
         #: Generate the muscles in the system
-        self.muscles = self.generate_muscles(config_data, time_step)
+        self.generate_muscles(muscles_options, time_step)
 
-    @staticmethod
-    def load_config_file(config_path):
-        """Load the muscle configuration file"""
+    @classmethod
+    def from_file(cls, container, time_step, file_path):
+        """ Load musculo_skeletal_system from config file """
+        if not os.path.isfile(file_path):
+            pylog.error('Wrong config path .....')
+            raise RuntimeError()
+        # Read data from the config file
+        muscle_config = read_yaml(file_path)
+        muscles_options = [
+            MuscleOptions(
+                muscle_name=name,
+                muscle_type=muscle['model'],
+                max_force=muscle['f_max'],
+                max_velocity=muscle['v_max'],
+                optimal_fiber=muscle['l_opt'],
+                tendon_slack=muscle['l_slack'],
+                pennation_angle=muscle['pennation'],
+                waypoints=[
+                    [waypoint[0]['link'], waypoint[1]['point']]
+                    for waypoint in muscle['waypoints']
+                ]
+            )
+            for name, muscle in muscle_config['muscles'].items()
+        ]
+        return cls(container, time_step, muscles_options)
 
-        try:
-            stream = open(
-                os.path.realpath(config_path), 'r')
-            config_data = yaml.safe_load(stream)
-            pylog.info('Successfully loaded the file : {}'.format(
-                os.path.split(config_path)[-1]))
-            return config_data
-        except ValueError:
-            pylog.error('Unable to read the file {}'.format(
-                config_path))
-            raise ValueError()
-
-    def generate_muscles(self, config_data, time_step):
+    def generate_muscles(self, muscles_options, time_step):
         """This function creates muscle objects based on the config file.
         The function stores the created muscle objects in a dict."""
-        num_muscles = len(config_data['muscles'])
-        self.muscle_sys = MuscleSystemGenerator(self.container, num_muscles)
+        num_muscles = len(muscles_options)
+        self.muscle_sys = MuscleSystemGenerator(
+            self.container, num_muscles
+        )
         self.muscles = self.muscle_sys.generate_muscles(
-            self.container, config_data, time_step)
-        return self.muscles
+            self.container, muscles_options, time_step
+        )
 
     def setup_integrator(self, x0=None, integrator='dopri5', atol=1e-6,
                          rtol=1e-6, method='bdf'):
