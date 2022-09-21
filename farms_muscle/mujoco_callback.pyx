@@ -10,23 +10,29 @@
 
 """ Call back functions for mujoco """
 
-from libc.stdio cimport printf
-from libc.math cimport sqrt as csqrt
-from libc.math cimport sin as csin
-from libc.math cimport pow as cpow
-from libc.math cimport cos as ccos
-from libc.math cimport atan as catan
 from libc.math cimport acos as cacos
-from libc.math cimport fmax as cfmax
-from libc.math cimport fabs as cfabs
-from libc.math cimport log as clog
-from libc.math cimport exp as cexp
 from libc.math cimport acosh as cacosh
+from libc.math cimport atan as catan
+from libc.math cimport cos as ccos
+from libc.math cimport exp as cexp
+from libc.math cimport fabs as cfabs
+from libc.math cimport fmax as cfmax
+from libc.math cimport log as clog
+from libc.math cimport pow as cpow
+from libc.math cimport sin as csin
+from libc.math cimport sqrt as csqrt
+from libc.stdio cimport printf
+
 import numpy as np
+
 cimport numpy as cnp
 
 
 def mjcb_muscle_gain(mj_model, mj_data, mj_id):
+    """ mujoco callback function interface for actuator gain.
+    In the hill-type formulation the active force component is represented
+    as the actuator gain in mujoco
+    """
     l_mtu = mj_data.actuator_length[mj_id]
     v_mtu = mj_data.actuator_velocity[mj_id]
     gainprm = mj_model.actuator_gainprm[mj_id]
@@ -34,11 +40,16 @@ def mjcb_muscle_gain(mj_model, mj_data, mj_id):
     l_opt = gainprm[1]
     l_slack = gainprm[2]
     v_max = gainprm[3]
-    alpha = gainprm[4]
+    alpha_opt = gainprm[4]
+    alpha = c_pennation_angle(l_mtu, l_opt, l_slack, alpha_opt)
     return c_active_force(l_mtu, v_mtu, l_opt, l_slack, alpha, f_max, v_max)
 
 
 def mjcb_muscle_bias(mj_model, mj_data, mj_id):
+    """ mujoco callback function interface for actuator bias.
+    In the hill-type formulation the passive force component is represented
+    as the actuator bias in mujoco
+    """
     l_mtu = mj_data.actuator_length[mj_id]
     v_mtu = mj_data.actuator_velocity[mj_id]
     gainprm = mj_model.actuator_gainprm[mj_id]
@@ -46,9 +57,10 @@ def mjcb_muscle_bias(mj_model, mj_data, mj_id):
     l_opt = gainprm[1]
     l_slack = gainprm[2]
     v_max = gainprm[3]
-    alpha = gainprm[4]
+    alpha_opt = gainprm[4]
+    alpha = c_pennation_angle(l_mtu, l_opt, l_slack, alpha_opt)
     pf = c_passive_force(l_mtu, v_mtu, l_opt, l_slack, alpha, f_max, v_max)
-    # print(pf)
+    damping = c_damping_force(v_mtu, alpha, f_max)
     return pf
 
 
@@ -59,7 +71,7 @@ cdef inline double c_active_force(
     """ Compute the active force. """
     cdef double l_ce_norm = c_fiber_length(l_mtu, l_slack, alpha)/l_opt
     cdef double v_ce_norm = c_fiber_velocity(v_mtu, alpha)/v_max
-    return -1*f_max*c_force_length(l_ce_norm)*c_force_velocity(v_ce_norm)
+    return -ccos(alpha)*f_max*c_force_length(l_ce_norm)*c_force_velocity(v_ce_norm)
 
 
 cdef inline double c_passive_force(
@@ -71,12 +83,15 @@ cdef inline double c_passive_force(
     # passive-force constants
     kpe = 4.0
     e0 = 0.6
-
     cdef double l_ce_norm = c_fiber_length(l_mtu, l_slack, alpha)/l_opt
-    # printf("%f \n", l_ce_norm)
     cdef double _den = cexp(kpe) - 1.0
     cdef double _num = cexp((kpe*(l_ce_norm) - kpe)/e0) - 1.0
-    return -1*(_num/_den) if l_ce_norm >= 1.0 else 0.0
+    return -ccos(alpha)*f_max*(_num/_den) if l_ce_norm >= 1.0 else 0.0
+
+
+cdef inline double c_damping_force(double v_mtu, double alpha, double f_max) nogil:
+    """ Muscle damping """
+    return -ccos(alpha)*f_max*0.1*c_fiber_velocity(v_mtu, alpha)
 
 
 cdef inline double c_force_length(double l_ce) nogil:
@@ -123,9 +138,25 @@ cdef inline double c_force_velocity(double v_ce) nogil:
     return d1*clog(exp1 + csqrt(exp2)) + d4
 
 
+cdef inline double c_pennation_angle(
+    double l_mtu, double l_opt, double l_slack, double alpha_opt
+) nogil:
+    """ Calculate pennation angle """
+    # Not sure if this method is better over the other implementation??
+    # cdef double parallelogram_height = l_opt*csin(alpha_opt)
+    # cdef double zero_pennate_fiber_length = (l_mtu - l_slack)
+    # zero_pennate_fiber_length *= (zero_pennate_fiber_length > 0.0)
+    # # compute angle
+    # cdef double fiber_length = (
+    #     csqrt(zero_pennate_fiber_length**2 + parallelogram_height**2)
+    # )
+    # return cacos(zero_pennate_fiber_length/fiber_length)
+    return catan((l_opt*csin(alpha_opt))/(l_mtu-l_slack))
+
+
 cdef inline double c_fiber_velocity(double v_mtu, double alpha) nogil:
     """ Compute the fiber velocity. """
-    return v_mtu/ccos(2*alpha)
+    return v_mtu*ccos(alpha)
 
 
 cdef inline double c_fiber_length(double l_mtu, double l_slack, double alpha) nogil:
