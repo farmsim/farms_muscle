@@ -60,7 +60,7 @@ def mjcb_muscle_bias(mj_model, mj_data, mj_id):
     alpha_opt = gainprm[4]
     alpha = c_pennation_angle(l_mtu, l_opt, l_slack, alpha_opt)
     pf = c_passive_force(l_mtu, v_mtu, l_opt, l_slack, alpha, f_max, v_max)
-    damping = c_damping_force(v_mtu, alpha, f_max)
+    damping = c_damping_force(v_mtu, alpha, f_max, v_max)
     return pf + damping
 
 
@@ -89,9 +89,11 @@ cdef inline double c_passive_force(
     return -ccos(alpha)*f_max*(_num/_den) if l_ce_norm >= 1.0 else 0.0
 
 
-cdef inline double c_damping_force(double v_mtu, double alpha, double f_max) nogil:
+cdef inline double c_damping_force(
+    double v_mtu, double alpha, double f_max, double v_max
+) nogil:
     """ Muscle damping """
-    return -ccos(alpha)*f_max*0.1*c_fiber_velocity(v_mtu, alpha)
+    return -ccos(alpha)*f_max*0.1*c_fiber_velocity(v_mtu, alpha)/v_max
 
 
 cdef inline double c_force_length(double l_ce) nogil:
