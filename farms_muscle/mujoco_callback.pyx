@@ -93,7 +93,7 @@ cdef inline double c_damping_force(
     double v_mtu, double alpha, double f_max, double v_max
 ) nogil:
     """ Muscle damping """
-    return -ccos(alpha)*f_max*0.1*c_fiber_velocity(v_mtu, alpha)/v_max
+    return -ccos(alpha)*f_max*1e-1*c_fiber_velocity(v_mtu, alpha)/v_max
 
 
 cdef inline double c_force_length(double l_ce) nogil:
