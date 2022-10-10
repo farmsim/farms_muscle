@@ -391,7 +391,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
 
     cdef inline double c_fiber_velocity(self, double v_mtu, double alpha) nogil:
         """ Compute the fiber velocity. """
-        return v_mtu/ccos(2*alpha)
+        return v_mtu*ccos(alpha)
 
     cdef void c_ode_rhs(self) nogil:
         """Muscle Model ODE rhs.
