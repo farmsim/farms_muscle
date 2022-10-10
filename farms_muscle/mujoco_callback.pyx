@@ -64,7 +64,7 @@ def mjcb_muscle_bias(mj_model, mj_data, mj_id):
     return pf + damping
 
 
-cdef inline double c_active_force(
+cpdef inline double c_active_force(
     double l_mtu, double v_mtu, double l_opt, double l_slack,
     double alpha, double f_max, double v_max
 ) nogil:
@@ -74,7 +74,7 @@ cdef inline double c_active_force(
     return -ccos(alpha)*f_max*c_force_length(l_ce_norm)*c_force_velocity(v_ce_norm)
 
 
-cdef inline double c_passive_force(
+cpdef inline double c_passive_force(
     double l_mtu, double v_mtu, double l_opt, double l_slack,
     double alpha, double f_max, double v_max
 ) nogil:
@@ -89,14 +89,14 @@ cdef inline double c_passive_force(
     return -ccos(alpha)*f_max*(_num/_den) if l_ce_norm >= 1.0 else 0.0
 
 
-cdef inline double c_damping_force(
+cpdef inline double c_damping_force(
     double v_mtu, double alpha, double f_max, double v_max
 ) nogil:
     """ Muscle damping """
     return -ccos(alpha)*f_max*1e-1*c_fiber_velocity(v_mtu, alpha)/v_max
 
 
-cdef inline double c_force_length(double l_ce) nogil:
+cpdef inline double c_force_length(double l_ce) nogil:
     """ force-length computation. """
 
     # force-length constants
@@ -126,7 +126,7 @@ cdef inline double c_force_length(double l_ce) nogil:
     return _force_length
 
 
-cdef inline double c_force_velocity(double v_ce) nogil:
+cpdef inline double c_force_velocity(double v_ce) nogil:
     """ force-velocity computation """
 
     # force-velocity constants
@@ -140,7 +140,7 @@ cdef inline double c_force_velocity(double v_ce) nogil:
     return d1*clog(exp1 + csqrt(exp2)) + d4
 
 
-cdef inline double c_pennation_angle(
+cpdef inline double c_pennation_angle(
     double l_mtu, double l_opt, double l_slack, double alpha_opt
 ) nogil:
     """ Calculate pennation angle """
@@ -156,11 +156,11 @@ cdef inline double c_pennation_angle(
     return catan((l_opt*csin(alpha_opt))/(l_mtu-l_slack))
 
 
-cdef inline double c_fiber_velocity(double v_mtu, double alpha) nogil:
+cpdef inline double c_fiber_velocity(double v_mtu, double alpha) nogil:
     """ Compute the fiber velocity. """
     return v_mtu*ccos(alpha)
 
 
-cdef inline double c_fiber_length(double l_mtu, double l_slack, double alpha) nogil:
+cpdef inline double c_fiber_length(double l_mtu, double l_slack, double alpha) nogil:
     """ Compute the fiber length. """
     return (l_mtu - l_slack)/ccos(alpha)
