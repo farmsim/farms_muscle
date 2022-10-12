@@ -42,7 +42,9 @@ def mjcb_muscle_gain(mj_model, mj_data, mj_id):
     v_max = gainprm[3]
     alpha_opt = gainprm[4]
     alpha = c_pennation_angle(l_mtu, l_opt, l_slack, alpha_opt)
-    return c_active_force(l_mtu, v_mtu, l_opt, l_slack, alpha, f_max, v_max)
+    l_ce_norm = c_fiber_length(l_mtu, l_slack, alpha)/l_opt
+    v_ce_norm = c_fiber_velocity(v_mtu, alpha)/v_max
+    return -f_max*c_active_force(l_ce_norm, v_ce_norm, alpha)
 
 
 def mjcb_muscle_bias(mj_model, mj_data, mj_id):
@@ -59,41 +61,38 @@ def mjcb_muscle_bias(mj_model, mj_data, mj_id):
     v_max = gainprm[3]
     alpha_opt = gainprm[4]
     alpha = c_pennation_angle(l_mtu, l_opt, l_slack, alpha_opt)
-    pf = c_passive_force(l_mtu, v_mtu, l_opt, l_slack, alpha, f_max, v_max)
-    damping = c_damping_force(v_mtu, alpha, f_max, v_max)
-    return pf + damping
+    l_ce_norm = c_fiber_length(l_mtu, l_slack, alpha)/l_opt
+    v_ce_norm = c_fiber_velocity(v_mtu, alpha)/v_max
+    pf = c_passive_force(l_ce_norm, v_ce_norm, alpha)
+    damping = c_damping_force(l_ce_norm, v_ce_norm, alpha)
+    return -f_max*(pf + damping)
 
 
 cpdef inline double c_active_force(
-    double l_mtu, double v_mtu, double l_opt, double l_slack,
-    double alpha, double f_max, double v_max
+    double l_ce_norm, double v_ce_norm, double alpha,
 ) nogil:
     """ Compute the active force. """
-    cdef double l_ce_norm = c_fiber_length(l_mtu, l_slack, alpha)/l_opt
-    cdef double v_ce_norm = c_fiber_velocity(v_mtu, alpha)/v_max
-    return -ccos(alpha)*f_max*c_force_length(l_ce_norm)*c_force_velocity(v_ce_norm)
+    return ccos(alpha)*c_force_length(l_ce_norm)*c_force_velocity(v_ce_norm)
 
 
 cpdef inline double c_passive_force(
-    double l_mtu, double v_mtu, double l_opt, double l_slack,
-    double alpha, double f_max, double v_max
+    double l_ce_norm, double v_ce_norm, double alpha
 ) nogil:
     """ passive-force computation """
 
     # passive-force constants
     kpe = 4.0
     e0 = 0.6
-    cdef double l_ce_norm = c_fiber_length(l_mtu, l_slack, alpha)/l_opt
     cdef double _den = cexp(kpe) - 1.0
     cdef double _num = cexp((kpe*(l_ce_norm) - kpe)/e0) - 1.0
-    return -ccos(alpha)*f_max*(_num/_den) if l_ce_norm >= 1.0 else 0.0
+    return ccos(alpha)*(_num/_den) if l_ce_norm >= 1.0 else 0.0
 
 
 cpdef inline double c_damping_force(
-    double v_mtu, double alpha, double f_max, double v_max
+    double l_ce_norm, double v_ce_norm, double alpha
 ) nogil:
     """ Muscle damping """
-    return -ccos(alpha)*f_max*1e-1*c_fiber_velocity(v_mtu, alpha)/v_max
+    return 1e-1*ccos(alpha)*v_ce_norm
 
 
 cpdef inline double c_force_length(double l_ce) nogil:
