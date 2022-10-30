@@ -4,6 +4,7 @@ from distutils.extension import Extension
 from Cython.Compiler import Options
 import numpy
 import Cython
+from farms_container import get_include
 
 Options.docstrings = True
 Options.fast_fail = True
@@ -13,55 +14,55 @@ Options.warning_errors = False
 extensions = [
     Extension("farms_muscle.muscle",
               ["farms_muscle/muscle.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.geyer_muscle",
               ["farms_muscle/geyer_muscle.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.millard_rigid_tendon_muscle",
               ["farms_muscle/millard_rigid_tendon_muscle.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.millard_damped_equillibrium_muscle",
               ["farms_muscle/millard_damped_equillibrium_muscle.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.muscle_system",
               ["farms_muscle/muscle_system.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.degroote_muscle",
               ["farms_muscle/degroote_muscle.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.physics_interface",
               ["farms_muscle/physics_interface.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
     Extension("farms_muscle.bullet_interface",
               ["farms_muscle/bullet_interface.pyx"],
-              include_dirs=[numpy.get_include()],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               ),
-    Extension("farms_muscle.mujoco_callback",
-              ["farms_muscle/mujoco_callback.pyx"],
-              include_dirs=[numpy.get_include()],
+    Extension("farms_muscle.rigid_tendon",
+              ["farms_muscle/rigid_tendon.pyx"],
+              include_dirs=[numpy.get_include(), get_include()],
               extra_compile_args=['-ffast-math', '-O3'],
               extra_link_args=['-O3', '-lm']
               )
