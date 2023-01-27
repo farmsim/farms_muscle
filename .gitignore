@@ -1,25 +1,25 @@
-#: CPP
+# CPP
 build
 *.so
 *.dylib
 *.exe
 
-#: Python
+# Python
 *.pyc
 *.egg-info
 
-#: Temp
+# Temp
 *.*~
 
-#: Cython
+# Cython
 *.c
 *.html
 
-#: Webots
+# Webots
 *.wbproj
 
-#: Results
+# Results
 Results
 
-#: Profiling
+# Profiling
 *.prof
