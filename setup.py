@@ -10,7 +10,26 @@ Options.docstrings = True
 Options.fast_fail = True
 Options.annotate = True
 Options.warning_errors = False
+Options.embedsignature = True
+Options.docstrings = True
+Options.embed_pos_in_docstring = False
+Options.generate_cleanup_code = False
+Options.clear_to_none = True
+Options.annotate = False
+Options.fast_fail = False
+Options.warning_errors = False
+Options.error_on_unknown_names = True
+Options.error_on_uninitialized = True
+Options.convert_range = True
+Options.cache_builtins = True
+Options.gcc_branch_hints = True
+Options.lookup_module_cpdef = False
+Options.embed = None
+Options.cimport_from_pyx = False
+Options.buffer_max_dims = 8
+Options.closure_freelist_size = 8
 
+DEBUG = False
 extensions = [
     Extension("farms_muscle.muscle",
               ["farms_muscle/muscle.pyx"],
@@ -85,7 +104,38 @@ setuptools.setup(
                       'scipy',
                       'farms_pylog'],
     zip_safe=False,
-    ext_modules=cythonize(extensions, annotate=False),
+    ext_modules=cythonize(
+        extensions, annotate=False,
+        compiler_directives={
+            # Directives
+            'binding': False,
+            'embedsignature': True,
+            'cdivision': True,
+            'language_level': 3,
+            'infer_types': True,
+            'profile': True,
+            'wraparound': False,
+            'boundscheck': DEBUG,
+            'nonecheck': DEBUG,
+            'initializedcheck': DEBUG,
+            'overflowcheck': DEBUG,
+            'overflowcheck.fold': DEBUG,
+            'cdivision_warnings': DEBUG,
+            'always_allow_keywords': DEBUG,
+            'linetrace': DEBUG,
+            # Optimisations
+            'optimize.use_switch': True,
+            'optimize.unpack_method_calls': True,
+            # Warnings
+            'warn.undeclared': True,
+            'warn.unreachable': True,
+            'warn.maybe_uninitialized': True,
+            'warn.unused': True,
+            'warn.unused_arg': True,
+            'warn.unused_result': True,
+            'warn.multiple_declarators': True,
+        },
+    ),
     package_data={
         'farms_muscle': ['*.pxd'],
     },
