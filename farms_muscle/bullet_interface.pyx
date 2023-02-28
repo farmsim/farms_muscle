@@ -17,7 +17,7 @@ import numpy as np
 from libc.math cimport pow as cpow
 from numpy cimport NPY_FLOAT
 import pybullet as p
-from physics_interface cimport PhysicsInterface
+from farms_muscle.physics_interface cimport PhysicsInterface
 cimport numpy as np
 cimport cython
 

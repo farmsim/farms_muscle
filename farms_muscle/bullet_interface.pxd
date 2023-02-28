@@ -3,7 +3,7 @@
 from libc.math cimport sqrt as csqrt
 import numpy as np
 import pybullet as p
-from physics_interface cimport PhysicsInterface
+from farms_muscle.physics_interface cimport PhysicsInterface
 cimport numpy as np
 
 
