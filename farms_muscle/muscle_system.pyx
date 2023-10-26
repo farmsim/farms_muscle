@@ -72,7 +72,7 @@ cdef class MuscleSystemGenerator(object):
         """
         # Factory to generate different muscles
         factory = MuscleFactory()
-
+        cdef int j
         # Generate the muscles
         for j, options in enumerate(muscles_options):
             pylog.debug(
