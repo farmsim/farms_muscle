@@ -16,7 +16,6 @@ Options.embed_pos_in_docstring = False
 Options.generate_cleanup_code = False
 Options.clear_to_none = True
 Options.annotate = False
-Options.fast_fail = False
 Options.warning_errors = False
 Options.error_on_unknown_names = True
 Options.error_on_uninitialized = True
