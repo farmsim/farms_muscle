@@ -26,7 +26,7 @@ muscles.dae.print_dae()
 muscles.setup_integrator()
 muscles['flexor'].initialize_muscle_length()
 
-#: Get motor
+# Get motor
 actuator = robot.getMotor('muscle')
 actuator_pos = robot.getPositionSensor('muscle_pos')
 actuator_pos.enable(int(robot.getBasicTimeStep()))

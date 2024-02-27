@@ -98,40 +98,40 @@ def convert_local_to_inertial(body_id, link_id, local_coordinate):
 
 def create_floor(pybullet):
     """
-    
+
     Parameters
     ----------
-    pybullet : 
+    pybullet :
 
 
     Returns
     -------
-    out : 
+    out :
 
     """
-    #: Create a plane
+    # Create a plane
     plane = pybullet.createCollisionShape(pybullet.GEOM_PLANE)
     floor = pybullet.createMultiBody(0, plane)
     return floor
 
 def create_model(pybullet, n_links, **kwargs):
     """
-    
+
     Parameters
     ----------
-    pybullet : 
+    pybullet :
 
-    n_links : 
+    n_links :
 
-    **kwargs : 
+    **kwargs :
 
 
     Returns
     -------
-    out : 
+    out :
 
     """
-    #: Create a multi-body with links and joints
+    # Create a multi-body with links and joints
     box_dimensions = kwargs.pop('box_dimensions', [0.5, 2.0, 0.5])
     colBoxId = pybullet.createCollisionShape(
         pybullet.GEOM_BOX,
@@ -164,7 +164,7 @@ def create_model(pybullet, n_links, **kwargs):
       indices.append(i)
       jointTypes.append(pybullet.JOINT_REVOLUTE)
       axis.append([1, 0, 0])
-      
+
     basePosition = [0, 0, box_dimensions[2]*0.5]
     baseOrientation = [0, 0, 0, 1]
     model_id = pybullet.createMultiBody(
@@ -186,24 +186,24 @@ def create_model(pybullet, n_links, **kwargs):
         linkJointAxis=axis,
     )
     return model_id
-    
+
 def main():
-    #: Connect to GUI
+    # Connect to GUI
     p.connect(p.GUI)
 
-    #: Create floor
+    # Create floor
     floor_id = create_floor(p)
 
-    #: Create model
+    # Create model
     box_dimensions = [0.5, 2.0, 0.5]
     model_id = create_model(p, 2, box_dimensions=box_dimensions)
 
-    #: Setup simulation
+    # Setup simulation
     p.setGravity(0, 0, -10)
     p.setRealTimeSimulation(0)
     dt = 1. / 240.
-    #: Disable velocity controllers
-    for i in range(p.getNumJoints(model_id)):  
+    # Disable velocity controllers
+    for i in range(p.getNumJoints(model_id)):
       p.setJointMotorControlArray(
         model_id,
         np.arange(p.getNumJoints(model_id)),
@@ -211,11 +211,11 @@ def main():
         targetVelocities=np.arange(p.getNumJoints(model_id))*0.0,
         forces=np.arange(p.getNumJoints(model_id))*0.0
       )
-    #: Debug
+    # Debug
     debug_force = p.addUserDebugParameter(
       "local URDF frame force", -100, 100, 0
     )
-    
+
     debug_line = p.addUserDebugLine(
       lineFromXYZ=[0., 0., 0],
       lineToXYZ=[0., 0., 0],
@@ -223,21 +223,21 @@ def main():
       lineColorRGB=[0, 0, 1],
     )
 
-    #: Set link ID to apply force on
+    # Set link ID to apply force on
     link_id = -1
     for j in range(-1, p.getNumJoints(model_id)):
       print(
         'Joint {} : {}'.format(j, p.getDynamicsInfo(model_id, j)[3])
       )
 
-    #: Describe the force vector position in local URDF frame
+    # Describe the force vector position in local URDF frame
     f_pos = np.asarray([0.0, box_dimensions[1]*0.0, 0.0])
 
-    #: apply force in local(0)/global(1)
+    # apply force in local(0)/global(1)
     apply_force_frame = 1
-    
-    #: Main loop
-    while (1):        
+
+    # Main loop
+    while (1):
       f_vec = np.asarray(
           [0., 0., p.readUserDebugParameter(debug_force)],
       )
@@ -268,7 +268,7 @@ def main():
               convert_local_to_global(model_id, link_id, f_vec),
               convert_local_to_global(model_id, link_id, f_pos),
               p.WORLD_FRAME
-          )        
+          )
           p.addUserDebugLine(
               lineFromXYZ=convert_local_to_global(model_id, link_id,
                   f_pos
@@ -280,9 +280,9 @@ def main():
               lineColorRGB=[0, 1, 0],
               replaceItemUniqueId=debug_line
           )
-          
 
-      #: step simulation
+
+      # step simulation
       p.stepSimulation()
       time.sleep(dt)
 

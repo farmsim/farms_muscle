@@ -85,7 +85,7 @@ def main():
     animal = HumanSimulation(container, sim_options)
     animal.run()
     container.dump(overwrite=True)
-    #: Plot
+    # Plot
     forces = pd.read_hdf('./Results/muscles/forces.h5')
     lengths = pd.read_hdf('./Results/muscles/parameters.h5')
     plt.figure()

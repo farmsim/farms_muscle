@@ -25,27 +25,27 @@ class OSIMModel(object):
             self.model = osim.Model()
         self.model.setName(name)
 
-        #: Set Gravity
+        # Set Gravity
         self.model.set_gravity = osim.Vec3(0, -9.81, 0.0)
 
         self.color = osim.Vec3(0,0,1)
 
-        #: Methods
+        # Methods
         self.generate_segments(n_links, length)
 
     def generate_segments(self, n_links, length, mass=2):
         """Generate n-link chain.
-     
+
          Parameters
          ----------
-         n_links : <int>    
+         n_links : <int>
          Number of links in the chain
         """
 
-        #: Generate base
+        # Generate base
         self.add_segment('link_0', length)
-        #: Base-link
-        #: pylint: disable=no-member
+        # Base-link
+        # pylint: disable=no-member
         base_link = osim.WeldJoint(
             'base_link', self.model.getGround(),
             osim.Vec3(0, 2*length + n_links, 0),
@@ -55,11 +55,11 @@ class OSIMModel(object):
 
         self.model.addJoint(base_link)
 
-        #: Generate n-links
+        # Generate n-links
         for n in range(n_links):
-            #: Create link
+            # Create link
             self.add_segment('link_' + str(n+1), length, mass)
-            #: Attach link
+            # Attach link
             _link = osim.PinJoint(
                 'link_'+str(n)+'_joint',
                 self.model.getBodySet().get('link_'+ str(n)),
@@ -70,23 +70,23 @@ class OSIMModel(object):
                 osim.Vec3(0))
             self.model.addJoint(_link)
 
-        #: Add muscles
+        # Add muscles
         self.add_muscle()
 
     def add_segment(self, seg_name, length, mass=2):
         """
-        Create link segment        
+        Create link segment
         Parameters
-        ----------        
+        ----------
         """
         radius = 0.05*length
-        
-        inertia = osim.Vec3() 
+
+        inertia = osim.Vec3()
         inertia[0] = (1/12.)*mass*(3*radius**2 + length**2)
         inertia[1] = (1/2.)*mass*radius**2
         inertia[2] = (1/12.)*mass*(3*radius**2 + length**2)
         pylog.debug('Inertia : {}'.format(inertia))
-        #: Create segment
+        # Create segment
         segment = osim.Body(seg_name,
                             mass,
                             osim.Vec3(0),
@@ -152,14 +152,14 @@ class OSIMModel(object):
 def main():
     """ Main function. """
 
-    #: osim model
+    # osim model
     model=osim.Model()
     gravity=osim.Vec3(0, -9.81, 0)
     model.set_gravity(gravity)
     OSIMModel(model, 'pendulum', n_links=1)
     # fly.add_muscle()
-    #: Visualization
-    #: pylint: disable=no-member
+    # Visualization
+    # pylint: disable=no-member
     # model.setUseVisualizer(True)
     # state = model.initSystem()
     # model.equilibrateMuscles(state)
@@ -172,7 +172,7 @@ def main():
     # manager.initialize(state)
     # state = manager.integrate(5)
 
-    #: Dump osim file
+    # Dump osim file
     model.finalizeConnections()
     file_name='pendulum.osim'
     model.printToXML(file_name)

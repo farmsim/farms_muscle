@@ -6,18 +6,18 @@ cdef class MuscleSystemGenerator(object):
         CMuscle[:] c_muscles
         readonly dict muscles
 
-        #: ODE States
+        # ODE States
         readonly Table states
         Table dstates
-        #: Muscle parameters
+        # Muscle parameters
         Table constants
         Table parameters
-        #: Input to each muscle
+        # Input to each muscle
         Table activations
-        #: Output of each muscle
+        # Output of each muscle
         Table forces
         Table outputs  # : Secondary outputs
-        #: Sensors
+        # Sensors
         Table Ia
         Table II
         Table Ib

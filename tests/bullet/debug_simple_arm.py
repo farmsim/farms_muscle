@@ -57,7 +57,7 @@ class SimpleArmSimulation(BulletSimulation):
             lineWidth=4,
             lifeTime=0)
 
-        #: Joint damping
+        # Joint damping
         p.changeDynamics(
             self.animal, self.link_id['arm'], jointDamping=10
         )
@@ -65,7 +65,7 @@ class SimpleArmSimulation(BulletSimulation):
     def controller_to_actuator(self):
         """ Implementation of abstractmethod. """
 
-        #: Draw
+        # Draw
         world_point_1 = np.asarray(
             BulletInterface.compute_world_space_point_in_base(
                 1, self.point_1
@@ -105,7 +105,7 @@ class SimpleArmSimulation(BulletSimulation):
             flags=p.WORLD_FRAME
         )
 
-        #: Update debug lines
+        # Update debug lines
         p.addUserDebugLine(
             lineFromXYZ=world_point_1,
             lineToXYZ=world_point_2,

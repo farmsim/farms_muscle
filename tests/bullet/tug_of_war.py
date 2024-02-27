@@ -75,7 +75,7 @@ base_mass = 0.  # : Static
 base_position = [0., 0., 0.1]
 base_orientation = [1., 0., 0., 0.]
 
-#: Moving block
+# Moving block
 mass = 20.
 position = [0., 0.0, 0.]
 orientation = p.getQuaternionFromEuler([0., 0., 0.])
@@ -99,10 +99,10 @@ rendering(1)
 container = Container(MAX_ITERATIONS=int(RUN_TIME/TIME_STEP))
 muscles = MusculoSkeletalSystem('../../farms_muscle/conf/test_tug_of_war.yaml')
 
-#: Initialize DAE
+# Initialize DAE
 container.initialize()
 
-#: integrator
+# integrator
 muscles.setup_integrator()
 
 u = container.muscles.activations
@@ -117,7 +117,7 @@ p.setJointMotorControlArray(system,
                             p.VELOCITY_CONTROL,
                             forces=np.zeros((num_joints, 1)))
 
-#: RUN
+# RUN
 RUN = True
 TIME = 0.0
 START = time.time()
@@ -149,5 +149,5 @@ print(END-START)
 
 container.dump()
 
-#: Plot results
+# Plot results
 plot_results.main('./Results/muscles')

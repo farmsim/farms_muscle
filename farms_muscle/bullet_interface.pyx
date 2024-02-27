@@ -21,7 +21,7 @@ from farms_muscle.physics_interface cimport PhysicsInterface
 cimport numpy as np
 cimport cython
 
-#: Utils for coordinate convertion
+# Utils for coordinate convertion
 
 
 def convert_local_to_global(body_id, link_id, local_coordinate):
@@ -126,7 +126,7 @@ cdef class BulletInterface(PhysicsInterface):
     ):
         super(BulletInterface, self).__init__(lmtu, force, stim, 'BULLET')
 
-        #: Initialization
+        # Initialization
         self.model_id = model_id
 
         self.n_attachments = <unsigned int>len(waypoints)
@@ -154,10 +154,10 @@ cdef class BulletInterface(PhysicsInterface):
             (2*self.n_attachments-2,), dtype=(np.int_)
         )
 
-        #: Add the waypoints
+        # Add the waypoints
         self.initialize_waypoints(waypoints)
 
-        #: Visualization
+        # Visualization
         if self.visualization:
             self.initialize_debug_muscle_line_visualization()
         if self.debug_visualization:
@@ -175,19 +175,19 @@ cdef class BulletInterface(PhysicsInterface):
             p.getJointInfo(self.model_id, index)[12].decode('UTF-8'): index
             for index in range(p.getNumJoints(self.model_id))
         }
-        #: Add base link
+        # Add base link
         link_name_to_index[
             p.getBodyInfo(self.model_id)[0].decode('UTF-8')
         ] = -1
 
         for j, attachment in enumerate(waypoints):
             link_index = link_name_to_index[attachment[0]['link']]
-            #: local
+            # local
             self.local_waypoints[j][0] = link_index
             self.local_waypoints[j][1][0] = attachment[1]['point'][0]
             self.local_waypoints[j][1][1] = attachment[1]['point'][1]
             self.local_waypoints[j][1][2] = attachment[1]['point'][2]
-            #: global
+            # global
             self.global_waypoints[j][:] = attachment[1]['point'][:]
 
     def initialize_debug_muscle_line_visualization(self):
@@ -214,7 +214,7 @@ cdef class BulletInterface(PhysicsInterface):
         ----------
         None
         """
-        #: Debug : Show forces
+        # Debug : Show forces
         for count in range(2*self.n_attachments-2):
             self.debug_force_ids[count] = p.addUserDebugLine(
                 lineFromXYZ=[0, 0, 0],
@@ -249,16 +249,16 @@ cdef class BulletInterface(PhysicsInterface):
     #################### C-FUNCTIONS ####################
     cdef void c_compute_muscle_length(self):
         """ Compute the muscle length based on the physics simulator. """
-        #: FUCK : This needs to be exposed to outside
+        # FUCK : This needs to be exposed to outside
         self.update_local_points_to_global()
-        #: Compute the length
+        # Compute the length
         cdef double length = 0.0
         cdef unsigned int j
         for j in range(self.n_attachments-1):
             length += c_distance_between_points(
                 self.global_waypoints[j], self.global_waypoints[j+1]
             )
-        #: Update the muscle length
+        # Update the muscle length
         self.lmtu.c_set_value(length)
 
     cdef void c_apply_muscle_forces(self):
@@ -270,12 +270,12 @@ cdef class BulletInterface(PhysicsInterface):
         cdef unsigned int j
         cdef int k
 
-        #: Apply forces
+        # Apply forces
         for j in range(self.n_attachments - 1):
-            #: link id
+            # link id
             link_id = self.local_waypoints[j][0]
 
-            #: compute force vector
+            # compute force vector
             c_scaled_unit_vector_from_points(
                 self.global_waypoints[j],
                 self.global_waypoints[j+1],
@@ -283,7 +283,7 @@ cdef class BulletInterface(PhysicsInterface):
                 f_vec
             )
 
-            #: Apply the force
+            # Apply the force
             p.applyExternalForce(
                 self.model_id,
                 link_id,
@@ -304,7 +304,7 @@ cdef class BulletInterface(PhysicsInterface):
                 )
 
         for j in range(1, self.n_attachments):
-            #: link id
+            # link id
             link_id = self.local_waypoints[j][0]
 
             c_scaled_unit_vector_from_points(
@@ -314,7 +314,7 @@ cdef class BulletInterface(PhysicsInterface):
                 f_vec
             )
 
-            #: Apply the force
+            # Apply the force
             p.applyExternalForce(
                 self.model_id,
                 link_id,

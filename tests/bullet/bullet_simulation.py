@@ -29,7 +29,7 @@ class BulletSimulation(metaclass=abc.ABCMeta):
         super(BulletSimulation, self).__init__()
         self.units = units
         self.container = container
-        #: Simulation options
+        # Simulation options
         self.GUI = p.DIRECT if kwargs["headless"] else p.GUI
         self.GRAVITY = np.array(
             kwargs.get("gravity", [0, 0, -9.81])
@@ -61,7 +61,7 @@ class BulletSimulation(metaclass=abc.ABCMeta):
         self.RECORD_MOVIE = kwargs.get('record', False)
         self.MOVIE_NAME = kwargs.get('moviename', 'default_movie.mp4')
 
-        #: Init
+        # Init
         self.TIME = 0.0
         self.physics_id = -1
         self.plane = None
@@ -72,9 +72,9 @@ class BulletSimulation(metaclass=abc.ABCMeta):
         self.joint_type = {}
         self.link_id = {}
         self.ground_sensors = {}
-        #: ADD PHYSICS SIMULATION namespace to container
+        # ADD PHYSICS SIMULATION namespace to container
         self.sim_data = self.container.add_namespace('physics')
-        #: ADD Tables to physics container
+        # ADD Tables to physics container
         self.sim_data.add_table('base_position')
         self.sim_data.add_table('joint_positions')
         self.sim_data.add_table('joint_velocities')
@@ -83,26 +83,26 @@ class BulletSimulation(metaclass=abc.ABCMeta):
 
         self.ZEROS_3x1 = np.zeros((3,))
 
-        #: Muscles
+        # Muscles
         if self.MUSCLE_CONFIG_FILE:
             self.MUSCLES = True
         else:
             self.MUSCLES = False
 
-        #: Setup
+        # Setup
         self.setup_simulation()
 
-        #: Enable rendering
+        # Enable rendering
         self.rendering(1)
 
         # Initialize pose
         if self.POSE_FILE:
             self.initialize_position(self.POSE_FILE)
 
-        #: Initialize simulation
+        # Initialize simulation
         self.initialize_simulation()
 
-        #: Camera
+        # Camera
         if self.GUI == p.GUI:
             base = np.array(self.base_position)
             p.resetDebugVisualizerCamera(
@@ -148,7 +148,7 @@ class BulletSimulation(metaclass=abc.ABCMeta):
             self.physics_id = p.connect(self.GUI)
         # p.resetSimulation()
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        #: everything should fall down
+        # everything should fall down
         p.setGravity(self.GRAVITY[0], self.GRAVITY[1], self.GRAVITY[2])
         p.setRealTimeSimulation(0)
         p.setPhysicsEngineParameter(
@@ -161,7 +161,7 @@ class BulletSimulation(metaclass=abc.ABCMeta):
             contactERP=0.0,
             frictionERP=0.0,
         )
-        #: Turn off rendering while loading the models
+        # Turn off rendering while loading the models
         self.rendering(0)
 
         ########## ADD FLOOR ##########
@@ -181,8 +181,8 @@ class BulletSimulation(metaclass=abc.ABCMeta):
                 p.getQuaternionFromEuler([0., 0., 0.]))
         self.num_joints = p.getNumJoints(self.animal)
 
-        #: Generate joint_name to id dict
-        #: FUCK : Need to clean this section
+        # Generate joint_name to id dict
+        # FUCK : Need to clean this section
         self.link_id[p.getBodyInfo(self.animal)[0].decode('UTF-8')] = -1
         for n in range(self.num_joints):
             info = p.getJointInfo(self.animal, n)
@@ -209,18 +209,18 @@ class BulletSimulation(metaclass=abc.ABCMeta):
             self.controller = NeuralSystem(
                 self.CONTROLLER, self.container)
 
-        #: ADD base position parameters
+        # ADD base position parameters
         self.sim_data.base_position.add_parameter('x')
         self.sim_data.base_position.add_parameter('y')
         self.sim_data.base_position.add_parameter('z')
 
-        #: ADD joint paramters
+        # ADD joint paramters
         for name, _ in self.joint_id.items():
             self.sim_data.joint_positions.add_parameter(name)
             self.sim_data.joint_velocities.add_parameter(name)
             self.sim_data.joint_torques.add_parameter(name)
 
-        #: ADD applied torques parameter
+        # ADD applied torques parameter
         self.applied_torques = {
             key: 0.0 for key in self.joint_id.keys()
         }
@@ -429,7 +429,7 @@ class BulletSimulation(metaclass=abc.ABCMeta):
 
     def update_logs(self):
         """ Update all the physics logs. """
-        #: Update log
+        # Update log
         self.sim_data.base_position.values = np.asarray(
             self.base_position)
         self.sim_data.joint_positions.values = np.asarray(
@@ -491,7 +491,7 @@ class BulletSimulation(metaclass=abc.ABCMeta):
         -------
         out :
         """
-        #: Camera
+        # Camera
         if self.GUI == p.GUI and self.track_animal:
             base = np.array(self.base_position)
             p.resetDebugVisualizerCamera(
@@ -499,27 +499,27 @@ class BulletSimulation(metaclass=abc.ABCMeta):
                 self.camera_yaw,
                 self.camera_pitch,
                 base)
-        #: update the feedback to controller
+        # update the feedback to controller
         self.feedback_to_controller()
-        #: Step controller
+        # Step controller
         if self.CONTROLLER:
             self.controller.step(self.TIME_STEP)
-        #: update the controller_to_actuator
+        # update the controller_to_actuator
         self.controller_to_actuator()
-        #: Step muscles
+        # Step muscles
         if self.MUSCLES:
             self.muscles.step()
-        #: Step TIME
+        # Step TIME
         self.TIME += self.TIME_STEP
-        #: Update logs
+        # Update logs
         self.update_logs()
-        #: Update container log
+        # Update container log
         self.container.update_log()
-        #: Step physics
+        # Step physics
         p.stepSimulation()
         if self.slow_down:
             time.sleep(self.sleep_time)
-        #: Check if optimization is to be killed
+        # Check if optimization is to be killed
         if optimization:
             optimization_status = self.optimization_check()
             return optimization_status

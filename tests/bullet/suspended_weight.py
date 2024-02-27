@@ -66,7 +66,7 @@ def main():
     base_position = [0., 0.0, 1.]
     base_orientation = [1., 0., 0., 0.]
 
-    #: Moving block
+    # Moving block
     mass = 20.
     position = [0., 0.0, 0.5]
     orientation = p.getQuaternionFromEuler([0., 0., 0.])
@@ -93,10 +93,10 @@ def main():
         '../../farms_muscle/conf/test_suspended_weight.yaml'
     )
 
-    #: Initialize DAE
+    # Initialize DAE
     container.initialize()
 
-    #: integrator
+    # integrator
     muscles.setup_integrator()
 
     u = container.muscles.activations
@@ -108,7 +108,7 @@ def main():
                                 p.VELOCITY_CONTROL,
                                 forces=np.zeros((num_joints, 1)))
 
-    #: RUN
+    # RUN
     RUN = True
     TIME = 0.0
     START = time.time()
@@ -127,13 +127,13 @@ def main():
     END = time.time()
     print(END-START)
 
-    #: Dump results
+    # Dump results
     container.dump(OVERWRITE=True)
 
-    #: Read results
+    # Read results
     forces = pd.read_hdf("./Results/muscles/forces.h5")
     states = pd.read_hdf("./Results/muscles/states.h5")
-    #:
+    #
     plt.figure()
     plt.title("Forces")
     plt.plot(forces)
@@ -152,6 +152,6 @@ if __name__ == '__main__':
     cProfile.runctx("main()", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
     s.strip_dirs().sort_stats("time").print_stats(10)
-    #: Plot results
+    # Plot results
     # import plot_results
     # plot_results.main('./Results')

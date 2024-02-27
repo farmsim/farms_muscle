@@ -7,7 +7,7 @@ import os
 import pandas as pd
 
 def main(FILE_PATH):
-    #: Logging
+    # Logging
     musculo_x = pd.read_hdf(os.path.join(FILE_PATH, 'states.h5'))
     musculo_xdot = pd.read_hdf(os.path.join(FILE_PATH, 'dstates.h5'))
     musculo_y = pd.read_hdf(os.path.join(FILE_PATH, 'outputs.h5'))
@@ -23,7 +23,7 @@ def main(FILE_PATH):
     plt.plot(musculo_x[_names])
     plt.legend(tuple(_names))
     plt.grid(True)
-    
+
     plt.figure()
     plt.title('musculo_v_ce')
     _names = [key for key in musculo_xdot.keys() if 'v_ce' in key]
@@ -148,7 +148,7 @@ def main(FILE_PATH):
 
 
 if __name__ == '__main__':
-    #: Argparser
+    # Argparser
     parser = ArgumentParser()
 
     parser.add_argument('--results_path', '-r',
@@ -158,5 +158,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     FILE_PATH = args.results_path
-    
+
     main(FILE_PATH)

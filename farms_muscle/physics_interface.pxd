@@ -5,12 +5,12 @@ from farms_container.parameter cimport Parameter as cparameter
 cdef class PhysicsInterface(object):
     """Interface between physics engine and muscle model
     """
-    #: Properties
+    # Properties
     cdef:
          str engine
-         cparameter lmtu #: Parameter of muscle tendon unit
-         cparameter force #: Parameter of Muscle-Tendon force
-         cparameter stim #: Parameter of Muscle stimulation
+         cparameter lmtu # Parameter of muscle tendon unit
+         cparameter force # Parameter of Muscle-Tendon force
+         cparameter stim # Parameter of Muscle stimulation
 
     #################### C-FUNCTIONS ####################
     cdef:

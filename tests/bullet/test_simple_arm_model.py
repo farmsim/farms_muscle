@@ -95,7 +95,7 @@ def main():
     animal.run()
     container.dump(overwrite=True)
 
-    #: Plot
+    # Plot
     states = pd.read_hdf('./Results/muscles/states.h5')
     activations = pd.read_hdf('./Results/muscles/activations.h5')
     forces = pd.read_hdf('./Results/muscles/forces.h5')

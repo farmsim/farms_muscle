@@ -13,11 +13,11 @@ cdef class GeyerMuscle(Muscle):
         readonly float  K
         readonly float  e_ref  # : Reference strain
         readonly float  w  # : Shape factor pylint: disable=invalid-name
-        readonly float  tau_act   #: Time constant for the activation function
-        readonly unsigned int  F_per_m2   #: Force per m2 of muscle PCSA
+        readonly float  tau_act   # Time constant for the activation function
+        readonly unsigned int  F_per_m2   # Force per m2 of muscle PCSA
         readonly unsigned int  density
 
-    #: Muscle Parameters
+    # Muscle Parameters
     cdef:
         double tol
         double _td_to_sc
@@ -28,20 +28,20 @@ cdef class GeyerMuscle(Muscle):
         str _type
         unsigned short int num_joints
 
-        #: Pennation angle alpha
+        # Pennation angle alpha
         double _cos_alpha
         double _sin_alpha
         double _parallelogram_height
 
-        #: Inputs
+        # Inputs
         Parameter _stim
         Parameter _l_mtu
 
-        #: Derivatives
+        # Derivatives
         Parameter _v_ce
         Parameter _adot
 
-        #: Outputs
+        # Outputs
         Parameter _l_se
         Parameter _l_mtc
         Parameter _f_be
@@ -51,7 +51,7 @@ cdef class GeyerMuscle(Muscle):
         Parameter _f_ce
         Parameter _f_se
 
-        #: Afferents
+        # Afferents
         double _kv
         double _pv
         double _k_dI
@@ -59,18 +59,18 @@ cdef class GeyerMuscle(Muscle):
         double _const_I
         double _lth
 
-        #: II afferent constants
+        # II afferent constants
         double _kF
         double _fth
 
-        #: Ib afferent constants
+        # Ib afferent constants
         double _k_dII
         double _k_nII
         double _const_II
 
     cdef:
         cdef double[:] c_global_waypoints(self)
-        #: SUB-MUSCLE FUNCTIONS
+        # SUB-MUSCLE FUNCTIONS
         inline double c_pennation_angle(self, double l_ce) nogil
         inline double c_tendon_force(self, double l_se) nogil
         inline double c_parallel_star_force(self, double l_ce) nogil
@@ -84,12 +84,12 @@ cdef class GeyerMuscle(Muscle):
         inline double c_contractile_velocity(self, double f_v) nogil
         inline double c_contractile_force(
             self, double activation, double l_ce, double v_ce) nogil
-        #: Sensory afferents
+        # Sensory afferents
         void c_compute_Ia(self) nogil
         void c_compute_II(self) nogil
         void c_compute_Ib(self) nogil
         void c_update_sensory_afferents(self) nogil
-        #: ODE
+        # ODE
         void c_ode_rhs(self) nogil
-        #: OUTPUT
+        # OUTPUT
         void c_output(self) nogil

@@ -35,7 +35,7 @@ p.setPhysicsEngineParameter(
 
 rendering(0)
 
-#: Add floor
+# Add floor
 plane = p.loadURDF("plane.urdf", [0, 0, 0], globalScaling=1)
 
 
@@ -56,13 +56,13 @@ activation = p.addUserDebugParameter("Activation", 0, 1, 0.75)
 rendering(1)
 
 ########## MUSCLE ##########
-#: DAE
+# DAE
 muscles = MusculoSkeletalSystem('../../farms_muscle/conf/linear_muscle.yaml')
 
-#: Integrate the network
+# Integrate the network
 muscle_act = {'m1': 0.75}
 
-#: Initialize DAE
+# Initialize DAE
 muscles.dae.initialize_dae()
 
 x0 = np.array([0.11, 0.0])
@@ -77,7 +77,7 @@ mline = p.addUserDebugLine(
     lifeTime=0)
 
 
-#: integrator
+# integrator
 muscles.setup_integrator(x0)
 u = muscles.dae.u
 force = muscles.dae.y.get_param('tendon_force_m1')
@@ -107,7 +107,7 @@ for j in range(100000):
     p.stepSimulation()
 
 musculo_dae = muscles.dae
-#: Muscle Logging
+# Muscle Logging
 musculo_x = pd.DataFrame(musculo_dae.x.log)
 musculo_x.columns = musculo_dae.x.names
 musculo_x.to_hdf('./Results/musculo_x.h5', 'musculo_x', mode='w')
@@ -125,7 +125,6 @@ musculo_u = pd.DataFrame(musculo_dae.u.log)
 musculo_u.columns = musculo_dae.u.names
 musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
-#: Plot results
+# Plot results
 import plot_results
 # plot_results.main('./Results')
-

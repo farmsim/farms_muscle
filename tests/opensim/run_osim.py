@@ -7,17 +7,17 @@ from osim_rl import OsimModel
 
 def main():
     """ Main file. """
-    #: osim model
+    # osim model
     model = OsimModel('./pendulum.osim',
                     visualize=True)
-    #: Initialize
+    # Initialize
     model.reset()
     model.reset_manager()
 
-    #: List model components
+    # List model components
     model.list_elements()
 
-    #: Integrate
+    # Integrate
     for j in range(0, 5000):
         model.integrate()
         # model.actuate([np.abs(np.sin(2*np.pi*j/1000*0.25)),

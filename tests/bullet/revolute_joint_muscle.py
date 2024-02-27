@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import transformations as T
 
 def main():
-        
+
     p.connect(p.GUI)
     # without GUI: p.connect(p.DIRECT)
     p.resetSimulation()
@@ -117,15 +117,15 @@ def main():
     rendering(1)
 
     ########## MUSCLE ##########
-    #: DAE
+    # DAE
     muscles = MusculoSkeletalSystem('../../farms_muscle/conf/muscles.yaml')
 
-    #: Initialize DAE
+    # Initialize DAE
     container = Container.get_instance()
     container.initialize()
 
 
-    #: integrator
+    # integrator
     # x0 = np.array([0.25-0.13, 0.05, 0.25-0.13, 0.05])
     muscles.setup_integrator()
     u = container.muscles.activations
@@ -143,7 +143,7 @@ def main():
 
     p.resetJointState(chainUid, 0, targetValue=0)
 
-    #: Init
+    # Init
     for j in range(N):
         keys = p.getKeyboardEvents()
         if keys.get(113):
@@ -157,25 +157,25 @@ def main():
         #     forces=np.arange(num_links)*0.)
         # p.setJointMotorControl2(
         #     chainUid, 0, p.POSITION_CONTROL,
-        #     targetPosition=np.sin(2*np.pi*j/1000*1.)*np.pi)# 
+        #     targetPosition=np.sin(2*np.pi*j/1000*1.)*np.pi)#
         # p.setJointMotorControl2(chainUid, 0, p.TORQUE_CONTROL,force=0.)
 
         # ls = p.getLinkState(chainUid, 0)
         (_, _, _, _, pos, orient, *_) = p.getLinkState(chainUid, 0)
 
-        #: Build Homogeneous Matrix
+        # Build Homogeneous Matrix
         jstate = p.getJointState(chainUid, 0)
         jangle[j] = jstate[0]
         _act1 = p.readUserDebugParameter(activation1)
         _act2 = p.readUserDebugParameter(activation2)
         stim1.value = _act1
-        stim2.value = _act2    
+        stim2.value = _act2
         muscles.step()
         # time.sleep(0.001)
         p.stepSimulation()
 
     # musculo_dae = muscles.dae
-    # #: Muscle Logging
+    # # Muscle Logging
     # musculo_x = pd.DataFrame(musculo_dae.x.log)
     # musculo_x.columns = musculo_dae.x.names
     # musculo_x.to_hdf('./Results/musculo_x.h5', 'musculo_x', mode='w')
@@ -193,12 +193,12 @@ def main():
     # musculo_u.columns = musculo_dae.u.names
     # musculo_u.to_hdf('./Results/musculo_u.h5', 'musculo_u', mode='w')
 
-    #: Plot results
+    # Plot results
     # plot_results.main('./Results')
 
 if __name__ == '__main__':
     # profile.py
     import pstats, cProfile
-    cProfile.runctx("main()", globals(), locals(), "Profile.prof")    
+    cProfile.runctx("main()", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
     s.strip_dirs().sort_stats("time").print_stats(10)

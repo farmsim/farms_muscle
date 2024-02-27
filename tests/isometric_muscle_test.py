@@ -22,23 +22,23 @@ plt.rc('ytick', labelsize=14.0)    # fontsize of the tick labels
 
 
 def isometric_contraction():
-    #: DAE
+    # DAE
     muscles = MusculoSkeletalSystem('../farms_muscle/conf/muscles.yaml')
 
-    #: Initialize network parameters
-    #: pylint: disable=invalid-name
-    dt = 1  #: Time step
-    _time = np.arange(0, 100, dt)  #: Time
+    # Initialize network parameters
+    # pylint: disable=invalid-name
+    dt = 1  # Time step
+    _time = np.arange(0, 100, dt)  # Time
 
-    #: Integrate the network
+    # Integrate the network
     muscle_act = {'m1': 0.75}
 
-    #: Initialize DAE
+    # Initialize DAE
     muscles.dae.initialize_dae()
 
     x0 = np.array([0.11, 0.0])
 
-    #: integrator
+    # integrator
     muscles.setup_integrator(x0)
 
     start = time.time()
@@ -58,7 +58,7 @@ def isometric_contraction():
     end = time.time()
     print('TIME {}'.format(end-start))
 
-    #: PLOTTING
+    # PLOTTING
     data_y = muscles.dae.y.log
     data_u = muscles.dae.u.log
     print(muscles.dae.y.name_idx)

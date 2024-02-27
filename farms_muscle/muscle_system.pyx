@@ -35,29 +35,29 @@ cdef class MuscleSystemGenerator(object):
         ----------
         """
         super(MuscleSystemGenerator, self).__init__()
-        #: Attributes
-        #: ODE States
+        # Attributes
+        # ODE States
         self.states = <Table > container.muscles.add_table('states')
         self.dstates = <Table > container.muscles.add_table('dstates')
-        #: Muscle parameters
+        # Muscle parameters
         self.constants = <Table > container.muscles.add_table(
             'constants', table_type='CONSTANT')
         self.parameters = <Table > container.muscles.add_table('parameters')
-        #: Input to each muscle
+        # Input to each muscle
         self.activations = <Table > container.muscles.add_table('activations')
-        #: Output of each muscle
+        # Output of each muscle
         self.forces = <Table > container.muscles.add_table('forces')
-        #: Secondary outputs
+        # Secondary outputs
         self.outputs = <Table > container.muscles.add_table('outputs')
-        #: Sensors
+        # Sensors
         self.Ia = <Table > container.muscles.add_table('Ia')
         self.II = <Table > container.muscles.add_table('II')
         self.Ib = <Table > container.muscles.add_table('Ib')
 
-        #: _muscles dictionary
+        # _muscles dictionary
         self.muscles = {}
 
-        #: Get the number of neurons in the model
+        # Get the number of neurons in the model
         self.num_muscles = num_muscles
 
         self.c_muscles = cnp.ndarray((self.num_muscles,), dtype=CMuscle)

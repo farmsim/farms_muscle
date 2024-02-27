@@ -53,14 +53,14 @@ activation2 = p.addUserDebugParameter("Activation-2", 0, 1, 0.5)
 rendering(1)
 
 ########## MUSCLE ##########
-#: DAE
+# DAE
 muscles = MusculoSkeletalSystem('../../farms_muscle/conf/test_mouse.yaml')
 
-#: Initialize DAE
+# Initialize DAE
 muscles.dae.initialize_dae()
 
 
-#: integrator
+# integrator
 muscles.setup_integrator()
 u = muscles.dae.u
 stim1 = u.get_param('stim_m1')
@@ -68,12 +68,12 @@ stim2 = u.get_param('stim_m2')
 
 N = 10000
 
-#: Init
+# Init
 for j in range(N):
     keys = p.getKeyboardEvents()
     if keys.get(113):
         break
-    
+
     # p.setJointMotorControlArray(
     #     mouse, np.arange(num_links), p.POSITION_CONTROL,
     #     targetPositions=np.arange(num_links)*np.sin(2*np.pi*j/1000))
@@ -82,19 +82,19 @@ for j in range(N):
     #     forces=np.arange(num_links)*0.)
     # p.setJointMotorControl2(
     #     mouse, 0, p.POSITION_CONTROL,
-    #     targetPosition=np.sin(2*np.pi*j/1000*1.)*np.pi)# 
+    #     targetPosition=np.sin(2*np.pi*j/1000*1.)*np.pi)#
     # p.setJointMotorControl2(mouse, 0, p.TORQUE_CONTROL,force=0.)
 
     _act1 = p.readUserDebugParameter(activation1)
     _act2 = p.readUserDebugParameter(activation2)
     stim1.value = _act1
-    stim2.value = _act2    
+    stim2.value = _act2
     muscles.step()
     # time.sleep(0.001)
     p.stepSimulation()
 
 musculo_dae = muscles.dae
-#: Muscle Logging
+# Muscle Logging
 musculo_x = pd.DataFrame(musculo_dae.x.log)
 musculo_x.columns = musculo_dae.x.names
 musculo_x.to_hdf('./Results/mouse_musculo_x.h5', 'musculo_x', mode='w')
@@ -112,6 +112,6 @@ musculo_u = pd.DataFrame(musculo_dae.u.log)
 musculo_u.columns = musculo_dae.u.names
 musculo_u.to_hdf('./Results/mouse_musculo_u.h5', 'musculo_u', mode='w')
 
-#: Plot results
+# Plot results
 import plot_results
 # plot_results.main('./Results')

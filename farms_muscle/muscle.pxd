@@ -5,7 +5,7 @@ from farms_muscle.physics_interface cimport PhysicsInterface
 from farms_muscle.bullet_interface cimport BulletInterface
 
 cdef class Muscle(object):
-    #: Properties
+    # Properties
     cdef:
         str _name
         str _physics_engine
@@ -15,26 +15,26 @@ cdef class Muscle(object):
         double _v_max
         double _pennation
         PhysicsInterface p_interface
-        #: Time Step
+        # Time Step
         double dt
 
-    #: States
+    # States
     cdef:
         Parameter _activation
         Parameter _l_ce
 
-    #: Sensory afferents
+    # Sensory afferents
     cdef:
         Parameter _Ia_aff
         Parameter _II_aff
         Parameter _Ib_aff
 
-    #: Methods
+    # Methods
     cdef:
         void c_ode_rhs(self) nogil
-        #: OUTPUT
+        # OUTPUT
         void c_output(self) nogil
-        #: Sensory afferents
+        # Sensory afferents
         void c_compute_Ia(self) nogil
         void c_compute_II(self) nogil
         void c_compute_Ib(self) nogil

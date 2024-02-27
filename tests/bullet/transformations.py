@@ -1652,16 +1652,16 @@ def _import_module(module_name, warn=True, prefix='_py_', ignore='_'):
 def axis_angle_from_vectors(vec1, vec2):
     """ Compute the axis angle between two vectors. """
 
-    #: CHECK THAT VECTORS HAVE COMMON POINT OF ROTATION [TO-DO]
+    # CHECK THAT VECTORS HAVE COMMON POINT OF ROTATION [TO-DO]
 
-    #: Convert the vectors into unit vectors
+    # Convert the vectors into unit vectors
     u_vec1 = unit_vector(vec1)
     u_vec2 = unit_vector(vec2)
 
-    #: Compute the rotation axis
+    # Compute the rotation axis
     axis = numpy.cross(u_vec1, u_vec2)
 
-    #: Compute axis-angle
+    # Compute axis-angle
     angle = math.acos(numpy.dot(u_vec1, u_vec2)/(
         numpy.linalg.norm(u_vec1)*numpy.linalg.norm(u_vec2)))
 
@@ -1670,9 +1670,9 @@ def axis_angle_from_vectors(vec1, vec2):
 
 def euler_from_vectors(vec1, vec2, axes='sxyz', units='r'):
     """ Compute euler rotations between two vectors. """
-    #: Get the axis angle representation between the vectors
+    # Get the axis angle representation between the vectors
     (angle, axis) = axis_angle_from_vectors(vec1, vec2)
-    #: Get the euler from axis angle
+    # Get the euler from axis angle
     euler = euler_about_axis(angle, axis, axes=axes)
     if units == 'd':
         return numpy.rad2deg(euler)

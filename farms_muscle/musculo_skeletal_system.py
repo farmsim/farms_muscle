@@ -25,13 +25,13 @@ class MusculoSkeletalSystem():
         """ Initialize the joints and muscles.
         Need to initialize the class with a valid json file"""
 
-        #: Create muscles namespace in the container
+        # Create muscles namespace in the container
         self.container = container
         self.container.add_namespace('muscles')
         self.muscles_sys = None
         self.integrator = None
 
-        #: Generate the muscles in the system
+        # Generate the muscles in the system
         self.generate_muscles(muscles_options, time_step)
 
     @classmethod
@@ -83,7 +83,7 @@ class MusculoSkeletalSystem():
         else:
             self.integrator = None
 
-        #: Initialize DAE
+        # Initialize DAE
         if x0 is None:
             x0 = np.ones((self.muscle_sys.num_states,))*0.05
             if self.muscle_sys.num_states == 2*len(self.muscles):
@@ -110,7 +110,7 @@ class MusculoSkeletalSystem():
         muscle_stim: dict
             Dictionary of muscle activations
         """
-        #: Step the musculo_skeletal_system.
+        # Step the musculo_skeletal_system.
         if self.integrator:
             self.integrator.set_initial_value(self.integrator.y,
                                               self.integrator.t + dt)

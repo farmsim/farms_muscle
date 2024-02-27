@@ -56,20 +56,20 @@ cdef class DeGrooteMuscle(Muscle):
         self.c = float(np.log(0.05))  # pylint: disable=no-member
         self.N = 1.5
         self.K = 5.0
-        self.E_REF = 0.04  #: Reference strain
+        self.E_REF = 0.04  # Reference strain
         self.tau_act = 0.01  # Time constant for the activation function
         self.F_per_m2 = 300000  # Force per m2 of muscle PCSA
 
         self.density = 1060
-        self.tol = 1e-6  #: Tolerance
+        self.tol = 1e-6  # Tolerance
 
-        #: Tendon constants
+        # Tendon constants
         self.c1 = 0.2
         self.c2 = 0.995
         self.c3 = 0.250
         self.kT = 35
 
-        #: Force-Length Constants
+        # Force-Length Constants
         self.b1[0] = 0.815
         self.b2[0] = 1.055
         self.b3[0] = 0.162
@@ -85,17 +85,17 @@ cdef class DeGrooteMuscle(Muscle):
         self.b3[2] = 0.354
         self.b4[2] = 0.0
 
-        #: Passive element constants
+        # Passive element constants
         self.kpe = 4.0
         self.e0 = 0.6
 
-        #: Force-Velocity constants
+        # Force-Velocity constants
         self.d1 = -0.318
         self.d2 = -8.149
         self.d3 = -0.374
         self.d4 = 0.886
 
-        #: Internal properties
+        # Internal properties
         self._l_slack, _l_slack = container.muscles.parameters.add_parameter(
             'l_slack_' + self._name, parameters.l_slack)
         self._l_opt, _l_opt = container.muscles.parameters.add_parameter(
@@ -112,32 +112,32 @@ cdef class DeGrooteMuscle(Muscle):
 
         self._type = parameters.muscle_type
 
-        #: Shape factor pylint: disable=invalid-name
+        # Shape factor pylint: disable=invalid-name
         self.W = _l_opt*self._sin_alpha
 
-        # #: MUSCLE STATES
-        # #: Muscle Contractile Length
+        # # MUSCLE STATES
+        # # Muscle Contractile Length
         self._l_ce = container.muscles.states.add_parameter(
             'l_ce_' + self._name, parameters.l_ce0)[0]
-        #: Muscle Activation
+        # Muscle Activation
         self._activation = container.muscles.states.add_parameter(
             'activation_' + self._name, parameters.a0)[0]
 
-        #: INPUTS TO THE MODEL
-        #: Muscle length change
+        # INPUTS TO THE MODEL
+        # Muscle length change
         self._l_mtu = container.muscles.parameters.add_parameter(
             'lmtu_'+self._name)[0]
-        #: External Muscle stimulation
+        # External Muscle stimulation
         self._stim = container.muscles.activations.add_parameter(
             'stim_' + self._name)[0]
 
-        #: Derivatives
+        # Derivatives
         self._v_ce = container.muscles.dstates.add_parameter(
             "v_ce_" + self._name, 0.0)[0]
         self._adot = container.muscles.dstates.add_parameter(
             "dA_" + self._name, 0.0)[0]
 
-        #: Outputs
+        # Outputs
         self._l_se = container.muscles.outputs.add_parameter(
             "tendon_length_"+self._name, _l_slack)[0]
         self._f_be = container.muscles.outputs.add_parameter(
@@ -151,12 +151,12 @@ cdef class DeGrooteMuscle(Muscle):
         self._f_ce = container.muscles.outputs.add_parameter(
             "active_force_"+self._name, 0.0)[0]
 
-        #: Main output of the muslce
+        # Main output of the muslce
         self._f_se = container.muscles.forces.add_parameter(
             "tendon_force_"+self._name, 0.0)[0]
 
-        #: Sensory afferents
-        #: Ia afferent constants
+        # Sensory afferents
+        # Ia afferent constants
         self._kv = parameters.kv
         self._pv = parameters.pv
         self._k_dI = parameters.k_dI
@@ -164,11 +164,11 @@ cdef class DeGrooteMuscle(Muscle):
         self._const_I = parameters.const_I
         self._lth = parameters.lth
 
-        #: Ib afferent constants
+        # Ib afferent constants
         self._kF = parameters.kF
         self._fth = parameters.fth
 
-        #: II afferent constants
+        # II afferent constants
         self._k_dII = parameters.k_dII
         self._k_nII = parameters.k_nII
         self._const_II = parameters.const_II
@@ -180,7 +180,7 @@ cdef class DeGrooteMuscle(Muscle):
         self._Ib_aff = container.muscles.Ib.add_parameter(
             "Ib_" + self._name, 0.0)[0]
 
-        #: PhysicsInterface
+        # PhysicsInterface
         if physics_engine == 'NONE':
             self.p_interface = PhysicsInterface(
                 self._l_mtu, self._f_se, self._stim)
@@ -227,7 +227,7 @@ cdef class DeGrooteMuscle(Muscle):
     def _py_force_velocity(self, l_mtu, v_mtu):
         return self.c_force_velocity(l_mtu, v_mtu)
 
-    #: Properties
+    # Properties
     @property
     def muscle_force_idx(self):
         """Get the index of muscle force in the data table"""
@@ -243,7 +243,7 @@ cdef class DeGrooteMuscle(Muscle):
         """ Set the muscle stimulation"""
         self._stim.c_set_value(value)
 
-    #: LengthInfo
+    # LengthInfo
     @property
     def muscle_tendon_length(self):
         """ Get the length of muscle tendon unit.  """
@@ -260,13 +260,13 @@ cdef class DeGrooteMuscle(Muscle):
         """ Get the length of series tendon length  """
         return self.fiber_tendon_length - self.fiber_length
 
-    #: Velocity Info
+    # Velocity Info
     @property
     def fiber_velocity(self):
         """ Get the fiber velocity.  """
         return self.c_contractile_velocity(self.force_velocity)
 
-    #: Dynamics Info
+    # Dynamics Info
     @property
     def activation(self):
         """ Get the muscle activation.  """
@@ -356,8 +356,8 @@ cdef class DeGrooteMuscle(Muscle):
         # printf('c_ode_rhs muscle ....\n')
         cdef double _act = self._activation.c_get_value()
 
-        #: State Update
-        #: Muscle Actvation Dynamics
+        # State Update
+        # Muscle Actvation Dynamics
         # printf('self.c_activation_rate ....\n')
         self._adot.c_set_value(self.c_activation_rate(
             _act,
@@ -365,32 +365,32 @@ cdef class DeGrooteMuscle(Muscle):
 
     cdef void c_output(self) nogil:
         """ Compute the outputs of the system. """
-        #: Attributes needed for output computation
+        # Attributes needed for output computation
         cdef double l_mtu = self._l_mtu.c_get_value()
         cdef double v_mtu = self.c_muscle_velocity(
             l_mtu, self._l_mtu.c_get_prev_value(), self.dt
         )
         cdef double act = self._activation.c_get_value()
 
-        #: Tendon length
+        # Tendon length
         self._l_se.c_set_value(self._l_slack.c_get_value())
-        #: Passive force
+        # Passive force
         self._f_pe.c_set_value(self.c_passive_force(l_mtu))
-        #: Force length
+        # Force length
         self._f_lce.c_set_value(self.c_force_length(l_mtu))
-        #: Force velocity
+        # Force velocity
         self._f_vce.c_set_value(self.c_force_velocity(l_mtu, v_mtu))
-        #: Contractile force
+        # Contractile force
         self._f_ce.c_set_value(self.c_contractile_force(
             act, self._f_lce.c_get_value(), self._f_vce.c_get_value())
         )
-        #: Tendon force
+        # Tendon force
         self._f_se.c_set_value(
             self._f_max*(self._f_ce.c_get_value()+self._f_pe.c_get_value()) *
             (l_mtu - self._l_slack.c_get_value())/self.c_fiber_length(l_mtu)
         )
 
-    #: Sensory afferents
+    # Sensory afferents
     cdef void c_compute_Ia(self) nogil:
         """ Compute Ia afferent from muscle fiber. """
         cdef double _v_norm = self._v_ce.c_get_value()/self._lth

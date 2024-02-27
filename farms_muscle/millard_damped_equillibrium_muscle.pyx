@@ -54,21 +54,21 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self.c = float(np.log(0.05))  # pylint: disable=no-member
         self.N = 1.5
         self.K = 5.0
-        self.E_REF = 0.04  #: Reference strain
-        self.W = 0.56  #: Shape factor pylint: disable=invalid-name
+        self.E_REF = 0.04  # Reference strain
+        self.W = 0.56  # Shape factor pylint: disable=invalid-name
         self.tau_act = 0.01  # Time constant for the activation function
         self.F_per_m2 = 300000  # Force per m2 of muscle PCSA
 
         self.density = 1060
-        self.tol = 1e-6  #: Tolerance
+        self.tol = 1e-6  # Tolerance
 
-        #: Tendon constants
+        # Tendon constants
         self.c1 = 0.2
         self.c2 = 0.995
         self.c3 = 0.250
         self.kT = 35
 
-        #: Force-Length Constants
+        # Force-Length Constants
         self.b1[0] = 0.815
         self.b2[0] = 1.055
         self.b3[0] = 0.162
@@ -84,17 +84,17 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self.b3[2] = 0.354
         self.b4[2] = 0.0
 
-        #: Passive element constants
+        # Passive element constants
         self.kpe = 4.0
         self.e0 = 0.6
 
-        #: Force-Velocity constants
+        # Force-Velocity constants
         self.d1 = -0.318
         self.d2 = -8.149
         self.d3 = -0.374
         self.d4 = 0.886
 
-        #: Internal properties
+        # Internal properties
         self._l_slack, _l_slack = container.muscles.parameters.add_parameter(
             'l_slack_' + self._name, parameters.l_slack)
         self._l_opt, _l_opt = container.muscles.parameters.add_parameter(
@@ -113,29 +113,29 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
 
         self._type = parameters.muscle_type
 
-        # #: MUSCLE STATES
-        # #: Muscle Contractile Length
+        # # MUSCLE STATES
+        # # Muscle Contractile Length
         self._l_ce = container.muscles.states.add_parameter(
             'l_ce_' + self._name, parameters.l_ce0)[0]
-        #: Muscle Activation
+        # Muscle Activation
         self._activation = container.muscles.states.add_parameter(
             'activation_' + self._name, parameters.a0)[0]
 
-        #: INPUTS TO THE MODEL
-        #: Muscle length change
+        # INPUTS TO THE MODEL
+        # Muscle length change
         self._l_mtu = container.muscles.parameters.add_parameter(
             'lmtu_'+self._name)[0]
-        #: External Muscle stimulation
+        # External Muscle stimulation
         self._stim = container.muscles.activations.add_parameter(
             'stim_' + self._name)[0]
 
-        #: Derivatives
+        # Derivatives
         self._v_ce = container.muscles.dstates.add_parameter(
             "v_ce_" + self._name, 0.0)[0]
         self._adot = container.muscles.dstates.add_parameter(
             "dA_" + self._name, 0.0)[0]
 
-        #: Outputs
+        # Outputs
         self._l_se = container.muscles.outputs.add_parameter(
             "tendon_length_"+self._name, _l_slack)[0]
         self._f_be = container.muscles.outputs.add_parameter(
@@ -149,12 +149,12 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self._f_ce = container.muscles.outputs.add_parameter(
             "active_force_"+self._name, 0.0)[0]
 
-        #: Main output of the muslce
+        # Main output of the muslce
         self._f_se = container.muscles.forces.add_parameter(
             "tendon_force_"+self._name, 0.0)[0]
 
-        #: Sensory afferents
-        #: Ia afferent constants
+        # Sensory afferents
+        # Ia afferent constants
         self._kv = parameters.kv
         self._pv = parameters.pv
         self._k_dI = parameters.k_dI
@@ -162,11 +162,11 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self._const_I = parameters.const_I
         self._lth = parameters.lth
 
-        #: Ib afferent constants
+        # Ib afferent constants
         self._kF = parameters.kF
         self._fth = parameters.fth
 
-        #: II afferent constants
+        # II afferent constants
         self._k_dII = parameters.k_dII
         self._k_nII = parameters.k_nII
         self._const_II = parameters.const_II
@@ -178,7 +178,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self._Ib_aff = container.muscles.Ib.add_parameter(
             "Ib_" + self._name, 0.0)[0]
 
-        #: PhysicsInterface
+        # PhysicsInterface
         if physics_engine == 'NONE':
             self.p_interface = PhysicsInterface(self._l_mtu, self._f_se)
             pylog.warning(
@@ -233,7 +233,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
     def _py_inverse_force_velocity(self, f_v):
         return self.c_inverse_force_velocity(f_v)
 
-    #: Properties
+    # Properties
     @property
     def muscle_force_idx(self):
         """Get the index of muscle force in the data table"""
@@ -249,7 +249,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         """ Set the muscle stimulation"""
         self._stim.c_set_value(value)
 
-    #: LengthInfo
+    # LengthInfo
     @property
     def fiber_tendon_length(self):
         """ Get the length of muscle tendon unit.  """
@@ -266,7 +266,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         """ Get the length of series tendon length  """
         return self.fiber_tendon_length - self.fiber_length
 
-    #: Velocity Info
+    # Velocity Info
     # @property
     # def fiber_velocity(self):
     #     """ Get the fiber velocity.  """
@@ -274,7 +274,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
     #         self.force_velocity
     #     )
 
-    #: Dynamics Info
+    # Dynamics Info
     @property
     def activation(self):
         """ Get the muscle activation.  """
@@ -376,7 +376,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         cdef double _act = self._activation.c_get_value()
         cdef double _l_ce_tol = cfmax(self._l_ce.c_get_value(), 0.0)
         printf('l_ce_tol %f ....\n', self._l_ce.c_get_value())
-        #: Algrebaic Equation
+        # Algrebaic Equation
         cdef double _l_mtu = self._l_mtu.c_get_value()
         printf('l_mtu %f ....\n', _l_mtu)
         cdef double _alpha = self.c_pennation_angle(_l_ce_tol)
@@ -384,27 +384,27 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         cdef double _l_se = _l_mtu - _l_ce_tol*ccos(_alpha)
         printf('_l_se = %f \n', _l_se)
 
-        # #: Muscle Dynamics
-        # #: Series Force
+        # # Muscle Dynamics
+        # # Series Force
         cdef double _f_se = self.c_tendon_force(_l_se)
         printf('self.c_tendon_force(_l_se) = %f \n', _f_se)
 
-        # #: Force-Length Relationship
+        # # Force-Length Relationship
         cdef double _f_l = self.c_force_length(_l_ce_tol)
         printf('self.c_force_length(_l_ce_tol) = %f \n', _f_l)
 
-        # #: Passive Force
+        # # Passive Force
         cdef double _f_pe = self.c_passive_force(_l_ce_tol)
         printf('self.c_passive_force(_l_ce_tol) = %f \n', _f_pe)
 
-        #: State Update
-        #: Muscle Actvation Dynamics
+        # State Update
+        # Muscle Actvation Dynamics
         # printf('self.c_activation_rate ....\n')
         self._adot.c_set_value(self.c_activation_rate(
             _act,
             self._stim.c_get_value()))
 
-        #: Muscle Contractile Velocity
+        # Muscle Contractile Velocity
         self._v_ce.c_set_value(
             self.c_contractile_velocity(_act, _f_l, _f_pe, _f_se, _alpha)
         )
@@ -414,7 +414,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
 
     cdef void c_output(self) nogil:
         """ Compute the outputs of the system. """
-        #: Attributes needed for output computation
+        # Attributes needed for output computation
         cdef double l_ce = self._l_ce.c_get_value()
         cdef double v_ce = self._v_ce.c_get_value()
         cdef double act = self._activation.c_get_value()
@@ -422,21 +422,21 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         cdef double cos_alpha = ccos(self.c_pennation_angle(l_ce))
         cdef double l_se = l_mtu - l_ce*cos_alpha
 
-        #: Tendon length
+        # Tendon length
         self._l_se.c_set_value(l_se)
-        #: Passive force
+        # Passive force
         self._f_pe.c_set_value(self.c_passive_force(l_ce))
-        #: Force length
+        # Force length
         self._f_lce.c_set_value(self.c_force_length(l_ce))
-        #: Force velocity
+        # Force velocity
         self._f_vce.c_set_value(self.c_force_velocity(v_ce))
-        #: Contractile force
+        # Contractile force
         self._f_ce.c_set_value(self.c_contractile_force(act, l_ce, v_ce))
-        #: Tendon force
+        # Tendon force
         self._f_se.c_set_value(
             self._f_max*self.c_tendon_force(l_se)*cos_alpha)
 
-    #: Sensory afferents
+    # Sensory afferents
     cdef void c_compute_Ia(self) nogil:
         """ Compute Ia afferent from muscle fiber. """
         cdef double _v_norm = self._v_ce.c_get_value()/self._lth

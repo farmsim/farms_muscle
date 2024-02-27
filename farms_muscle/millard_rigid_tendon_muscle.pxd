@@ -10,9 +10,9 @@ cdef class MillardRigidTendonMuscle(Muscle):
     cdef:
         readonly float  E_REF  # : Reference strain
         readonly float  W  # : Shape factor pylint: disable=invalid-name
-        readonly float  tau_act   #: Time constant for the activation function
+        readonly float  tau_act   # Time constant for the activation function
 
-    #: Muscle Parameters
+    # Muscle Parameters
     cdef:
         double tol
         double _td_to_sc
@@ -23,40 +23,40 @@ cdef class MillardRigidTendonMuscle(Muscle):
         str _type
         unsigned short int num_joints
 
-        #: Force-Length Constants
+        # Force-Length Constants
         double b1[3]
         double b2[3]
         double b3[3]
         double b4[3]
 
-        #: Force-Velocity constants
+        # Force-Velocity constants
         double d1
         double d2
         double d3
         double d4
 
-        #: Passive element constants
+        # Passive element constants
         double kpe
         double e0
 
-        #: Pennation angle alpha
+        # Pennation angle alpha
         double _cos_alpha
         double _sin_alpha
         double _parallelogram_height
 
-        #: Damping constant
+        # Damping constant
         double _beta
 
-        #: Inputs
+        # Inputs
         Parameter _stim
         Parameter _l_mtu
         Parameter _v_mtu
 
-        #: Derivatives
+        # Derivatives
         Parameter _v_ce
         Parameter _adot
 
-        #: Outputs
+        # Outputs
         Parameter _l_se
         Parameter _l_mtc
         Parameter _f_be
@@ -66,7 +66,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         Parameter _f_ce
         Parameter _f_se
 
-        #: Afferents
+        # Afferents
         double _kv
         double _pv
         double _k_dI
@@ -74,17 +74,17 @@ cdef class MillardRigidTendonMuscle(Muscle):
         double _const_I
         double _lth
 
-        #: II afferent constants
+        # II afferent constants
         double _kF
         double _fth
 
-        #: Ib afferent constants
+        # Ib afferent constants
         double _k_dII
         double _k_nII
         double _const_II
 
     cdef:
-        #: SUB-MUSCLE FUNCTIONS
+        # SUB-MUSCLE FUNCTIONS
         inline double c_pennation_angle(self, double l_mtu) nogil
         inline double c_calc_pennation_angle(self, double l_mtu) nogil
         inline double c_tendon_force(self, double l_se) nogil
@@ -99,12 +99,12 @@ cdef class MillardRigidTendonMuscle(Muscle):
         inline double c_fiber_length(self, double l_mtu, double alpha) nogil
         inline double c_fiber_velocity(self, double v_mtu, double alpha) nogil
 
-        #: Sensory afferents
+        # Sensory afferents
         void c_compute_Ia(self) nogil
         void c_compute_II(self) nogil
         void c_compute_Ib(self) nogil
         void c_update_sensory_afferents(self) nogil
-        #: ODE
+        # ODE
         void c_ode_rhs(self) nogil
-        #: OUTPUT
+        # OUTPUT
         void c_output(self) nogil

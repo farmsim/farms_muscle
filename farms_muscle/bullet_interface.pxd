@@ -7,7 +7,7 @@ from farms_muscle.physics_interface cimport PhysicsInterface
 cimport numpy as np
 
 
-#: Vector operations
+# Vector operations
 cdef inline double c_distance_between_points(
     double[:] point_1, double[:] point_2
 ) nogil:
@@ -64,7 +64,7 @@ cdef inline void c_scaled_unit_vector_from_points(
 
 
 cdef class BulletInterface(PhysicsInterface):
-    #: Properties
+    # Properties
     cdef:
         int model_id
         unsigned int n_attachments

@@ -109,16 +109,16 @@ class MuscleParameters(SystemParameters):
         self.units['waypoints'] = '<list>'
         self.units['visualize'] = 'bool'
         self.units['debug'] = 'bool'
-        #: Afferents
+        # Afferents
         self.units['kv'] = '-'
         self.units['pv'] = '-'
         self.units['k_dI'] = '-'
         self.units['k_nI'] = '-'
         self.units['lth'] = '-'
         self.units['const_I'] = '-'
-        #: II afferent constants
+        # II afferent constants
         self.units['kF'] = '-'
-        #: Ib afferent constants
+        # Ib afferent constants
         self.units['k_dII'] = '-'
         self.units['k_nII'] = '-'
         self.units['fth'] = '-'
@@ -138,22 +138,22 @@ class MuscleParameters(SystemParameters):
         self.parameters['waypoints'] = kwargs.get('waypoints', [])
         self.parameters['visualize'] = kwargs.get('visualize', True)
         self.parameters['debug'] = kwargs.get('debug', False)
-        #: Afferents
+        # Afferents
         self.parameters['kv'] = kwargs.get('kv', 6.2)
         self.parameters['pv'] = kwargs.get('pv', 0.6)
         self.parameters['k_dI'] = kwargs.get('k_dI', 2.0)
         self.parameters['k_nI'] = kwargs.get('k_nI', 0.06)
         self.parameters['const_I'] = kwargs.get('const_I', 0.05)
         self.parameters['lth'] = kwargs.get('lth', self.l_opt)
-        #: II afferent constants
+        # II afferent constants
         self.parameters['kF'] = kwargs.get('kF', 1.0)
-        #: Ib afferent constants
+        # Ib afferent constants
         self.parameters['k_dII'] = kwargs.get('k_dII', 1.5)
         self.parameters['k_nII'] = kwargs.get('k_nII', 0.06)
         self.parameters['const_II'] = kwargs.get('const_II', 0.05)
         self.parameters['fth'] = kwargs.get('fth', self.f_max)
 
-    #: Afferents
+    # Afferents
     @property
     def kv(self):
         """ Get kv """
@@ -179,13 +179,13 @@ class MuscleParameters(SystemParameters):
         """ Get const_I """
         return self.parameters['const_I']
 
-    #: II afferent constants
+    # II afferent constants
     @property
     def kF(self):
         """ Get kF """
         return self.parameters['kF']
 
-    #: Ib afferent constants
+    # Ib afferent constants
     @property
     def k_dII(self):
         """ Get k_dII """
@@ -236,13 +236,13 @@ class MuscleParameters(SystemParameters):
         """ Get const_I """
         self.parameters['const_I'] = value
 
-    #: II afferent constants
+    # II afferent constants
     @kF.setter
     def kF(self, value):
         """ Get kF """
         self.parameters['kF'] = value
 
-    #: Ib afferent constants
+    # Ib afferent constants
     @k_dII.setter
     def k_dII(self, value):
         """ Get k_dII """
