@@ -10,7 +10,7 @@ cimport numpy as np
 # Vector operations
 cdef inline double c_distance_between_points(
     double[:] point_1, double[:] point_2
-) nogil:
+):
     """ Compute distance between two points. """
     cdef double dist = 0.
     cdef unsigned int j
@@ -20,7 +20,7 @@ cdef inline double c_distance_between_points(
 
 cdef inline void c_vector_from_points(
     double[:] point_1, double[:] point_2, double[:] output_vector
-) nogil:
+):
     """ Compute vector from points """
     cdef unsigned int j
     for j in range(point_1.shape[0]):
@@ -28,14 +28,14 @@ cdef inline void c_vector_from_points(
 
 cdef inline void c_unit_vector_from_points(
     double[:] point_1, double[:] point_2, double[:] output_vector
-) nogil:
+):
     """ Compute unit vector from points """
     cdef unsigned int j
     cdef double norm = c_distance_between_points(point_1, point_2)
     for j in range(point_1.shape[0]):
         output_vector[j] = (point_2[j] - point_1[j])/norm
 
-cdef inline double c_vector_norm(double[:] vector) nogil:
+cdef inline double c_vector_norm(double[:] vector):
     """ Compute vector norm. """
     cdef double norm = 0.
     cdef unsigned int j
@@ -45,7 +45,7 @@ cdef inline double c_vector_norm(double[:] vector) nogil:
 
 cdef inline void c_unit_vector_from_vector(
     double[:] vector, double[:] output_vector
-) nogil:
+):
     """ Compute unit vector of the given vector """
     cdef unsigned int j
     cdef double norm = c_vector_norm(vector)
@@ -55,7 +55,7 @@ cdef inline void c_unit_vector_from_vector(
 cdef inline void c_scaled_unit_vector_from_points(
     double[:] point_1, double[:] point_2, double scale_factor,
     double[:] output_vector
-)nogil:
+):
     """ Compute a scaled unit vector from the given set of points. """
     cdef unsigned int j
     cdef double norm = c_distance_between_points(point_1, point_2)

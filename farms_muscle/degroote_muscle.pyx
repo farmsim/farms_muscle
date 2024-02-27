@@ -283,14 +283,14 @@ cdef class DeGrooteMuscle(Muscle):
         return self._f_ce.c_get_value()
 
     #################### C-FUNCTIONS ####################
-    cdef inline double c_tendon_force(self, double l_se) nogil:
+    cdef inline double c_tendon_force(self, double l_se):
         """ Setup the equations for tendon force. """
         cdef double _tendon_force
         cdef double _l_se_norm = l_se/self._l_slack.c_get_value()
         _tendon_force = self.c1*cexp(self.kT*(_l_se_norm-self.c2)) - self.c3
         return _tendon_force
 
-    cdef inline double c_passive_force(self, double l_mtu) nogil:
+    cdef inline double c_passive_force(self, double l_mtu):
         """ Setup the equations for passive force """
         cdef double _num
         cdef double _den
@@ -299,7 +299,7 @@ cdef class DeGrooteMuscle(Muscle):
         _den = cexp(self.kpe) - 1.0
         return _num/_den
 
-    cdef inline double c_activation_rate(self, double act, double stim) nogil:
+    cdef inline double c_activation_rate(self, double act, double stim):
         """ Define the change in activation. dA/dt. """
         cdef:
             double _stim_range, _d_act
@@ -307,11 +307,11 @@ cdef class DeGrooteMuscle(Muscle):
         _d_act = (_stim_range - act)/self.tau_act
         return _d_act
 
-    cdef inline double c_fiber_length(self, double l_mtu) nogil:
+    cdef inline double c_fiber_length(self, double l_mtu):
         """ Compute the fiber length. """
         return csqrt((l_mtu-self._l_slack.c_get_value())**2 + self.W**2)
 
-    cdef inline double c_force_length(self, double l_mtu) nogil:
+    cdef inline double c_force_length(self, double l_mtu):
         """ Define the force length relationship. """
         cdef double _force_length = 0.0
         cdef double _l_ce_norm = csqrt(self.c_fiber_length(l_mtu))/self._l_opt.c_get_value()
@@ -324,7 +324,7 @@ cdef class DeGrooteMuscle(Muscle):
             _force_length += self.b1[j]*cexp(_num/_den)
         return _force_length
 
-    cdef inline double c_force_velocity(self, double l_mtu, double v_mtu) nogil:
+    cdef inline double c_force_velocity(self, double l_mtu, double v_mtu):
         """ Define the force velocity relationship. """
         cdef double _v_ce_norm = (self.c_fiber_velocity(l_mtu, v_mtu))/(cfabs(self._v_max)*self._l_opt.c_get_value())
         cdef double exp1 = self.d2*_v_ce_norm + self.d3
@@ -332,20 +332,20 @@ cdef class DeGrooteMuscle(Muscle):
         return self.d1*clog(exp1 + csqrt(exp2)) + self.d4
 
     cdef inline double c_muscle_velocity(
-            self, double l_mtu_curr, double l_mtu_prev, double dt) nogil:
+            self, double l_mtu_curr, double l_mtu_prev, double dt):
         """ Compute the fiber length. """
         return (l_mtu_curr - l_mtu_prev)/(dt)
 
-    cdef inline double c_fiber_velocity(self, double l_mtu, double v_mtu) nogil:
+    cdef inline double c_fiber_velocity(self, double l_mtu, double v_mtu):
         """ Define the contractile velocity."""
         return v_mtu*(l_mtu - self._l_slack.c_get_value())/self.c_fiber_length(l_mtu)
 
     cdef inline double c_contractile_force(
-            self, double activation, double f_l, double f_v) nogil:
+            self, double activation, double f_l, double f_v):
         """ Compute the active force. """
         return activation*f_l*f_v
 
-    cdef void c_ode_rhs(self) nogil:
+    cdef void c_ode_rhs(self):
         """Muscle Model ODE rhs.
             Returns
             ----------
@@ -363,7 +363,7 @@ cdef class DeGrooteMuscle(Muscle):
             _act,
             self._stim.c_get_value()))
 
-    cdef void c_output(self) nogil:
+    cdef void c_output(self):
         """ Compute the outputs of the system. """
         # Attributes needed for output computation
         cdef double l_mtu = self._l_mtu.c_get_value()
@@ -391,7 +391,7 @@ cdef class DeGrooteMuscle(Muscle):
         )
 
     # Sensory afferents
-    cdef void c_compute_Ia(self) nogil:
+    cdef void c_compute_Ia(self):
         """ Compute Ia afferent from muscle fiber. """
         cdef double _v_norm = self._v_ce.c_get_value()/self._lth
 
@@ -401,7 +401,7 @@ cdef class DeGrooteMuscle(Muscle):
         self._Ia_aff.c_set_value(self._kv*cpow(
             cfabs(_v_norm), self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
 
-    cdef void c_compute_II(self) nogil:
+    cdef void c_compute_II(self):
         """ Compute II afferent from muscle fiber. """
         cdef double _d_norm = (
             self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
@@ -409,14 +409,14 @@ cdef class DeGrooteMuscle(Muscle):
         self._II_aff.c_set_value(
             self._k_dII*_d_norm + self._k_nII*self._stim.c_get_value() + self._const_II)
 
-    cdef void c_compute_Ib(self) nogil:
+    cdef void c_compute_Ib(self):
         """ Compute Ib afferent from muscle fiber. """
         cdef double _f_norm = (
             self._f_se.c_get_value() - self._fth)/self._f_max if self._f_se.c_get_value() >= self._fth else 0.0
 
         self._Ib_aff.c_set_value(self._kF*_f_norm)
 
-    cdef void c_update_sensory_afferents(self) nogil:
+    cdef void c_update_sensory_afferents(self):
         """ Compute all the sensory afferents and update them. """
         self.c_compute_Ia()
         self.c_compute_II()

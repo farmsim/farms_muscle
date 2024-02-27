@@ -304,7 +304,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
             self._v_ce.c_get_value())
 
     #################### C-FUNCTIONS ####################
-    cdef inline double c_activation_rate(self, double act, double stim) nogil:
+    cdef inline double c_activation_rate(self, double act, double stim):
         """ Define the change in activation. dA/dt. """
 
         cdef:
@@ -313,18 +313,18 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         _d_act = (_stim_range - act)/self.tau_act
         return _d_act
 
-    cdef inline double c_tendon_force(self, double l_se) nogil:
+    cdef inline double c_tendon_force(self, double l_se):
         """ Setup the equations for tendon force. """
         return self.c1 * \
             cexp(self.kT*((l_se/self._l_slack.c_get_value())-self.c2)) - self.c3
 
-    cdef inline double c_passive_force(self, double l_ce) nogil:
+    cdef inline double c_passive_force(self, double l_ce):
         """ Setup the equations for passive force """
         cdef double _den = cexp(self.kpe) - 1.0
         cdef double _num = cexp((self.kpe*(l_ce/self._l_opt.c_get_value()) - self.kpe)/self.e0) - 1.0
         return _num/_den
 
-    cdef inline double c_force_length(self, double l_ce) nogil:
+    cdef inline double c_force_length(self, double l_ce):
         """ Define the force length relationship. """
 
         cdef double _force_length = 0.0
@@ -337,34 +337,34 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
             _force_length += self.b1[j]*cexp(_num/_den)
         return _force_length
 
-    cdef inline double c_force_velocity(self, double v_ce) nogil:
+    cdef inline double c_force_velocity(self, double v_ce):
         """ Define the force velocity relationship. """
         cdef double _v_ce_norm = v_ce/(self._v_max*self._l_opt.c_get_value())
         cdef double exp1 = self.d2*_v_ce_norm + self.d3
         cdef double exp2 = ((self.d2*_v_ce_norm + self.d3)**2) + 1.
         return self.d1*clog(exp1 + csqrt(exp2)) + self.d4
 
-    cdef inline double c_inverse_force_velocity(self, double f_v) nogil:
+    cdef inline double c_inverse_force_velocity(self, double f_v):
         """ Define the Inverse force-velocity relationship."""
         return (-self.d3 + cexp((-self.d4 + f_v)/self.d1) /
                 2.0 - cexp((self.d4 - f_v)/self.d1)/2.0)/self.d2
 
     cdef inline double c_contractile_velocity(
-            self, double act, double f_l, double f_pe, double f_t, double alpha) nogil:
+            self, double act, double f_l, double f_pe, double f_t, double alpha):
         """ Compute contractile velocity """
         return self.c_inverse_force_velocity((f_t/ccos(alpha) - f_pe)/(act*f_l))
 
     cdef inline double c_contractile_force(
-            self, double activation, double l_ce, double v_ce) nogil:
+            self, double activation, double l_ce, double v_ce):
         """ Compute the active force. """
         return activation*self.c_force_length(l_ce)*self.c_force_velocity(v_ce)
 
-    cdef inline double c_pennation_angle(self, double l_ce) nogil:
+    cdef inline double c_pennation_angle(self, double l_ce):
         """ Compute the pennation angles """
         # return casin(self._parallelogram_height/l_ce)
         return 0.0
 
-    cdef void c_ode_rhs(self) nogil:
+    cdef void c_ode_rhs(self):
         """Muscle Model ODE rhs.
             Returns
             ----------
@@ -412,7 +412,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
                self._v_ce.c_get_value()
                )
 
-    cdef void c_output(self) nogil:
+    cdef void c_output(self):
         """ Compute the outputs of the system. """
         # Attributes needed for output computation
         cdef double l_ce = self._l_ce.c_get_value()
@@ -437,7 +437,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
             self._f_max*self.c_tendon_force(l_se)*cos_alpha)
 
     # Sensory afferents
-    cdef void c_compute_Ia(self) nogil:
+    cdef void c_compute_Ia(self):
         """ Compute Ia afferent from muscle fiber. """
         cdef double _v_norm = self._v_ce.c_get_value()/self._lth
 
@@ -447,7 +447,7 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self._Ia_aff.c_set_value(self._kv*cpow(
             cfabs(_v_norm), self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
 
-    cdef void c_compute_II(self) nogil:
+    cdef void c_compute_II(self):
         """ Compute II afferent from muscle fiber. """
         cdef double _d_norm = (
             self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
@@ -455,14 +455,14 @@ cdef class MillardDampedEquillibriumMuscle(Muscle):
         self._II_aff.c_set_value(
             self._k_dII*_d_norm + self._k_nII*self._stim.c_get_value() + self._const_II)
 
-    cdef void c_compute_Ib(self) nogil:
+    cdef void c_compute_Ib(self):
         """ Compute Ib afferent from muscle fiber. """
         cdef double _f_norm = (
             self._f_se.c_get_value() - self._fth)/self._f_max if self._f_se.c_get_value() >= self._fth else 0.0
 
         self._Ib_aff.c_set_value(self._kF*_f_norm)
 
-    cdef void c_update_sensory_afferents(self) nogil:
+    cdef void c_update_sensory_afferents(self):
         """ Compute all the sensory afferents and update them. """
         self.c_compute_Ia()
         self.c_compute_II()

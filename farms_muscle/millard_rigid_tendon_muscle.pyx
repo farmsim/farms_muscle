@@ -322,7 +322,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
             self._v_ce.c_get_value())
 
     #################### C-FUNCTIONS ####################
-    cdef inline double c_activation_rate(self, double act, double stim) nogil:
+    cdef inline double c_activation_rate(self, double act, double stim):
         """ Define the change in activation. dA/dt. """
         cdef:
             double _stim_range, _d_act
@@ -330,11 +330,11 @@ cdef class MillardRigidTendonMuscle(Muscle):
         _d_act = (_stim_range - act)/self.tau_act
         return _d_act
 
-    cdef inline double c_pennation_angle(self, double l_mtu) nogil:
+    cdef inline double c_pennation_angle(self, double l_mtu):
         """ Compute the pennation angles """
         return catan(self._parallelogram_height/(l_mtu-self._l_slack.c_get_value()))
 
-    cdef inline double c_calc_pennation_angle(self, double l_mtu) nogil:
+    cdef inline double c_calc_pennation_angle(self, double l_mtu):
         """ Calculate pennation angle"""
         cdef double zero_pennate_fiber_length = (
             l_mtu - self._l_slack.c_get_value()
@@ -346,17 +346,17 @@ cdef class MillardRigidTendonMuscle(Muscle):
         )
         return cacos(zero_pennate_fiber_length/fiber_length)
 
-    cdef inline double c_tendon_force(self, double l_se) nogil:
+    cdef inline double c_tendon_force(self, double l_se):
         """ Setup the equations for tendon force. """
         return 0.0
 
-    cdef inline double c_passive_force(self, double l_ce) nogil:
+    cdef inline double c_passive_force(self, double l_ce):
         """ Setup the equations for passive force* """
         cdef double _den = cexp(self.kpe) - 1.0
         cdef double _num = cexp((self.kpe*(l_ce) - self.kpe)/self.e0) - 1.0
         return _num/_den if l_ce > 1.0 else 0.0
 
-    cdef inline double c_force_length(self, double l_ce) nogil:
+    cdef inline double c_force_length(self, double l_ce):
         """ Define the force length relationship. """
         cdef double _force_length = 0.0
         cdef double _num, _den
@@ -367,33 +367,33 @@ cdef class MillardRigidTendonMuscle(Muscle):
             _force_length += self.b1[j]*cexp(_num/_den)
         return _force_length
 
-    cdef inline double c_force_velocity(self, double v_ce) nogil:
+    cdef inline double c_force_velocity(self, double v_ce):
         """ Define the force velocity relationship. """
         cdef double exp1 = self.d2*v_ce + self.d3
         cdef double exp2 = ((self.d2*v_ce + self.d3)**2) + 1.
         return self.d1*clog(exp1 + csqrt(exp2)) + self.d4
 
     cdef inline double c_contractile_force(
-            self, double activation, double l_ce, double v_ce) nogil:
+            self, double activation, double l_ce, double v_ce):
         """ Compute the active force. """
         return activation*self.c_force_length(l_ce)*self.c_force_velocity(v_ce)
 
     cdef double c_muscle_velocity(
-            self, double l_mtu_curr, double l_mtu_prev, double v_mtu_prev, double dt) nogil:
+            self, double l_mtu_curr, double l_mtu_prev, double v_mtu_prev, double dt):
         """ Compute the fiber length. """
         cdef double vel = (l_mtu_curr - l_mtu_prev)/(dt)
         vel = (1-0.1)*v_mtu_prev + 0.1*vel
         return vel
 
-    cdef inline double c_fiber_length(self, double l_mtu, double alpha) nogil:
+    cdef inline double c_fiber_length(self, double l_mtu, double alpha):
         """ Compute the fiber length. """
         return (l_mtu - self._l_slack.c_get_value())/ccos(alpha)
 
-    cdef inline double c_fiber_velocity(self, double v_mtu, double alpha) nogil:
+    cdef inline double c_fiber_velocity(self, double v_mtu, double alpha):
         """ Compute the fiber velocity. """
         return v_mtu*ccos(alpha)
 
-    cdef void c_ode_rhs(self) nogil:
+    cdef void c_ode_rhs(self):
         """Muscle Model ODE rhs.
             Returns
             -------
@@ -411,7 +411,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
             _act,
             self._stim.c_get_value()))
 
-    cdef void c_output(self) nogil:
+    cdef void c_output(self):
         """ Compute the outputs of the system. """
         # Attributes needed for output computation
         cdef double l_mtu = self._l_mtu.c_get_value()
@@ -451,7 +451,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         self._f_se.c_set_value(force)
 
     # Sensory afferents
-    cdef void c_compute_Ia(self) nogil:
+    cdef void c_compute_Ia(self):
         """ Compute Ia afferent from muscle fiber. """
         cdef double _v_norm = self._v_ce.c_get_value()/self._lth
 
@@ -461,7 +461,7 @@ cdef class MillardRigidTendonMuscle(Muscle):
         self._Ia_aff.c_set_value(self._kv*cpow(
             cfabs(_v_norm), self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
 
-    cdef void c_compute_II(self) nogil:
+    cdef void c_compute_II(self):
         """ Compute II afferent from muscle fiber. """
         cdef double _d_norm = (
             self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
@@ -469,12 +469,12 @@ cdef class MillardRigidTendonMuscle(Muscle):
         self._II_aff.c_set_value(
             self._k_dII*_d_norm + self._k_nII*self._stim.c_get_value() + self._const_II)
 
-    cdef void c_compute_Ib(self) nogil:
+    cdef void c_compute_Ib(self):
         """ Compute Ib afferent from muscle fiber. """
         cdef double _Ib_aff = self._kF*self._f_se.c_get_value()/self._f_max
         self._Ib_aff.c_set_value(_Ib_aff if _Ib_aff > 0.0 else 0.0)
 
-    cdef void c_update_sensory_afferents(self) nogil:
+    cdef void c_update_sensory_afferents(self):
         """ Compute all the sensory afferents and update them. """
         self.c_compute_Ia()
         self.c_compute_II()

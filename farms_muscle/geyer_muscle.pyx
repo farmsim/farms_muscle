@@ -284,33 +284,33 @@ cdef class GeyerMuscle(Muscle):
         """ Return global waypoints """
         return self.p_interface.global_waypoints
 
-    cdef inline double c_pennation_angle(self, double l_ce) nogil:
+    cdef inline double c_pennation_angle(self, double l_ce):
         """ Compute the pennation angles """
         return casin(self._l_opt.c_get_value()*self._parallelogram_height/l_ce)
 
-    cdef inline double c_activation_rate(self, double act, double stim) nogil:
+    cdef inline double c_activation_rate(self, double act, double stim):
         """ Define the change in activation. dA/dt. """
         cdef double _stim_range, _d_act
         _stim_range = max(0.05, min(stim, 1.))
         return (_stim_range - act)/self.tau_act
 
-    cdef inline double c_tendon_force(self, double l_se) nogil:
+    cdef inline double c_tendon_force(self, double l_se):
         """ Setup the equations for tendon force. """
         return (((l_se - 1.0) / self.e_ref)**2) * (l_se > 1.0)
 
-    cdef inline double c_parallel_star_force(self, double l_ce) nogil:
+    cdef inline double c_parallel_star_force(self, double l_ce):
         """ Setup the equations for parallell star pe* """
         return (((l_ce - 1.0) / (self.w))**2)*(l_ce > 1.0)
 
-    cdef inline double c_belly_force(self, double l_ce) nogil:
+    cdef inline double c_belly_force(self, double l_ce):
         """ Setup the equations for belly force  """
         return ((((1-self.w)-l_ce)/(0.5*self.w))**2)*(l_ce < 0.2)
 
-    cdef inline double c_force_length(self, double l_ce) nogil:
+    cdef inline double c_force_length(self, double l_ce):
         """ Define the force length relationship. """
         return cexp(self.c * (cfabs((l_ce - 1.0) / (self.w)))**3)
 
-    cdef inline double c_force_velocity(self, double v_ce) nogil:
+    cdef inline double c_force_velocity(self, double v_ce):
         """ Define the force velocity relationship. """
         if v_ce < 0.0:
             return (v_ce + 1.0)/(1.0 - self.K*v_ce)
@@ -319,12 +319,12 @@ cdef class GeyerMuscle(Muscle):
                 v_ce - 1.0)/(1.0 + 7.56*self.K*v_ce))
 
     cdef inline double c_force_velocity_from_force(
-            self, double f_se, double f_be, double act, double f_l, double f_pe_star, double cos_alpha) nogil:
+            self, double f_se, double f_be, double act, double f_l, double f_pe_star, double cos_alpha):
         """ Define the force velocity relationship from forces."""
         cdef double f_v = (f_se/cos_alpha + f_be)/((act*f_l) + f_pe_star)
         return max(0.0, min(1.5, (f_se + f_be)/((act*f_l) + f_pe_star)))
 
-    cdef inline double c_contractile_velocity(self, double f_v) nogil:
+    cdef inline double c_contractile_velocity(self, double f_v):
         """ Define the contractile velocity."""
         if f_v <= 1.0:
             return (f_v - 1.0)/(1.0 + f_v*self.K)
@@ -333,11 +333,11 @@ cdef class GeyerMuscle(Muscle):
                 + ((self.N - f_v)*1e-2 + 1)*(f_v > self.N)
 
     cdef inline double c_contractile_force(
-            self, double activation, double l_ce, double v_ce) nogil:
+            self, double activation, double l_ce, double v_ce):
         """ Compute the active force. """
         return activation*self.c_force_length(l_ce)*self.c_force_velocity(v_ce)
 
-    cdef void c_ode_rhs(self) nogil:
+    cdef void c_ode_rhs(self):
         """Muscle Model ODE rhs.
             Returns
             ----------
@@ -381,7 +381,7 @@ cdef class GeyerMuscle(Muscle):
         self._v_ce.c_set_value(self._v_max*self._l_opt.c_get_value() *
                                self.c_contractile_velocity(_f_v))
 
-    cdef void c_output(self) nogil:
+    cdef void c_output(self):
         """ Compute the outputs of the system. """
         # Attributes needed for output computation
         cdef double l_ce = self._l_ce.c_get_value()/self._l_opt.c_get_value()
@@ -408,7 +408,7 @@ cdef class GeyerMuscle(Muscle):
         self._f_se.c_set_value(self._f_max*self.c_tendon_force(l_se)/cos_alpha)
 
     # Sensory afferents
-    cdef void c_compute_Ia(self) nogil:
+    cdef void c_compute_Ia(self):
         """ Compute Ia afferent from muscle fiber. """
         cdef double _v_norm = self._v_ce.c_get_value()/self._lth
 
@@ -418,7 +418,7 @@ cdef class GeyerMuscle(Muscle):
         self._Ia_aff.c_set_value(self._kv*cpow(
             cfabs(_v_norm), self._pv) + self._k_dI*_d_norm + self._k_nI*self._stim.c_get_value() + self._const_I)
 
-    cdef void c_compute_II(self) nogil:
+    cdef void c_compute_II(self):
         """ Compute II afferent from muscle fiber. """
         cdef double _d_norm = (
             self._l_ce.c_get_value() - self._lth)/self._lth if self._l_ce.c_get_value() >= self._lth else 0.0
@@ -426,14 +426,14 @@ cdef class GeyerMuscle(Muscle):
         self._II_aff.c_set_value(
             self._k_dII*_d_norm + self._k_nII*self._stim.c_get_value() + self._const_II)
 
-    cdef void c_compute_Ib(self) nogil:
+    cdef void c_compute_Ib(self):
         """ Compute Ib afferent from muscle fiber. """
         cdef double _f_norm = (
             self._f_se.c_get_value() - self._fth)/self._f_max if self._f_se.c_get_value() >= self._fth else 0.0
 
         self._Ib_aff.c_set_value(self._kF*_f_norm)
 
-    cdef void c_update_sensory_afferents(self) nogil:
+    cdef void c_update_sensory_afferents(self):
         """ Compute all the sensory afferents and update them. """
         self.c_compute_Ia()
         self.c_compute_II()

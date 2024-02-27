@@ -31,11 +31,11 @@ cdef class Muscle(object):
 
     # Methods
     cdef:
-        void c_ode_rhs(self) nogil
+        void c_ode_rhs(self)
         # OUTPUT
-        void c_output(self) nogil
+        void c_output(self)
         # Sensory afferents
-        void c_compute_Ia(self) nogil
-        void c_compute_II(self) nogil
-        void c_compute_Ib(self) nogil
-        void c_update_sensory_afferents(self) nogil
+        void c_compute_Ia(self)
+        void c_compute_II(self)
+        void c_compute_Ib(self)
+        void c_update_sensory_afferents(self)
