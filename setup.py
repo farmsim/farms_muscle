@@ -2,20 +2,21 @@ import setuptools
 from Cython.Build import cythonize
 from distutils.extension import Extension
 from Cython.Compiler import Options
+from farms_core import get_include_paths
 import numpy
-import Cython
 from farms_container import get_include
 
+
+DEBUG = False
 Options.docstrings = True
 Options.fast_fail = True
-Options.annotate = True
+Options.annotate = DEBUG
 Options.warning_errors = False
 Options.embedsignature = True
 Options.docstrings = True
 Options.embed_pos_in_docstring = False
 Options.generate_cleanup_code = False
 Options.clear_to_none = True
-Options.annotate = False
 Options.warning_errors = False
 Options.error_on_unknown_names = True
 Options.error_on_uninitialized = True
@@ -28,7 +29,6 @@ Options.cimport_from_pyx = False
 Options.buffer_max_dims = 8
 Options.closure_freelist_size = 8
 
-DEBUG = False
 extensions = [
     Extension("farms_muscle.muscle",
               ["farms_muscle/muscle.pyx"],
@@ -88,23 +88,9 @@ extensions = [
 
 setuptools.setup(
     name='farms_muscle',
-    version='0.1',
-    description='Module to generate muscle models',
-    url='https://gitlab.com/FARMSIM/farms_muscle.git',
-    author='biorob-farms',
-    author_email='biorob-farms@groupes.epfl.ch',
-    license='MIT',
-    packages=setuptools.find_packages(exclude=['tests*']),
-    dependency_links=[
-        "https://gitlab.com/FARMSIM/farms_pylog.git"],
-    install_requires=['Cython',
-                      'pyyaml',
-                      'numpy',
-                      'scipy',
-                      'farms_pylog'],
-    zip_safe=False,
     ext_modules=cythonize(
-        extensions, annotate=False,
+        extensions,
+        include_path=[numpy.get_include()] + get_include_paths(),
         compiler_directives={
             # Directives
             'binding': False,
@@ -135,7 +121,5 @@ setuptools.setup(
             'warn.multiple_declarators': True,
         },
     ),
-    package_data={
-        'farms_muscle': ['*.pxd'],
-    },
+    zip_safe=False,
 )

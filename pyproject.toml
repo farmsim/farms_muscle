@@ -1,0 +1,54 @@
+[build-system]
+requires = [
+     "setuptools",
+     "Cython >= 0.15.1",
+     "numpy <= 1.26.4",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = "0.1.0"
+name = "farms_muscle"
+description = "Module to generate and simulate muscle models"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">= 3.11"
+dependencies = [
+    "tqdm",
+    "pyyaml",
+    "numpy",
+    "scipy",
+]
+keywords = ["farms", "framework", "animals", "robot", " modeling", "simulation"]
+classifiers = [
+  "Development Status :: 3 - Beta",
+  # Indicate who your project is intended for
+  "Intended Audience :: Science/Research",
+  "ScieTopic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Artificial Life",
+  # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3.11",
+]
+
+[project.urls]
+Homepage = "https://farmsim.dev"
+Documentation = "https://farmsim.dev"
+Repository = "https://github.com/farmsim/farms_muscle.git"
+Issues = "https://github.com/farmsim/farms_muscle/issues"
+Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+# This is equivalent to find_packages() with no arguments
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-dir]
+farms_muscle = "farms_muscle"
+
+[tool.setuptools.package-data]
+farms_muscle = [
+    "*.pxd",
+]
