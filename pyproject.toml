@@ -3,22 +3,23 @@ requires = [
      "setuptools",
      "Cython >= 0.15.1",
      "numpy <= 1.26.4",
+
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
-dynamic = "0.1.0"
+version = "0.1.0"
 name = "farms_muscle"
 description = "Module to generate and simulate muscle models"
+license = {file = "LICENSE"}
 readme = "README.md"
-license = "Apache-2.0"
-license-files = ["LICENSE"]
 requires-python = ">= 3.11"
 dependencies = [
     "tqdm",
     "pyyaml",
     "numpy",
     "scipy",
+    "farms_core",
 ]
 keywords = ["farms", "framework", "animals", "robot", " modeling", "simulation"]
 classifiers = [
