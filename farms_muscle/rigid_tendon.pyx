@@ -129,9 +129,6 @@ cpdef inline double c_force_length(double l_ce):
 cpdef inline double c_force_velocity(double v_ce_norm):
     """ force-velocity computation """
 
-    # Clip v_ce_norm to make sure force is always positive
-    v_ce_norm = max(-1.0, v_ce_norm)
-
     # force-velocity constants
     d1 = -0.318
     d2 = -8.149
@@ -140,7 +137,10 @@ cpdef inline double c_force_velocity(double v_ce_norm):
 
     cdef double exp1 = d2*v_ce_norm + d3
     cdef double exp2 = ((d2*v_ce_norm + d3)**2) + 1.
-    return d1*clog(exp1 + csqrt(exp2)) + d4
+    cdef double fv = d1*clog(exp1 + csqrt(exp2)) + d4
+
+    # Clip fv to make sure force is always positive
+    return max(0.0, fv)
 
 
 cpdef inline double c_pennation_angle(
