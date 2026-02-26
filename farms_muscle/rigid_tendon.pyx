@@ -69,14 +69,14 @@ def mjcb_muscle_bias(mj_model, mj_data, mj_id):
     return -f_max*(pf + damping)
 
 
-cpdef inline double c_active_force(
+cpdef  double c_active_force(
     double l_ce_norm, double v_ce_norm, double alpha,
 ):
     """ Compute the active force. """
     return ccos(alpha)*c_force_length(l_ce_norm)*c_force_velocity(v_ce_norm)
 
 
-cpdef inline double c_passive_force(
+cpdef  double c_passive_force(
     double l_ce_norm, double v_ce_norm, double alpha
 ):
     """ passive-force computation """
@@ -89,14 +89,14 @@ cpdef inline double c_passive_force(
     return ccos(alpha)*(_num/_den) if l_ce_norm >= 1.0 else 0.0
 
 
-cpdef inline double c_damping_force(
+cpdef  double c_damping_force(
     double l_ce_norm, double v_ce_norm, double alpha, double damping_factor
 ):
     """ Muscle damping """
     return damping_factor*ccos(alpha)*v_ce_norm
 
 
-cpdef inline double c_force_length(double l_ce):
+cpdef  double c_force_length(double l_ce):
     """ force-length computation. """
 
     # force-length constants
@@ -126,7 +126,7 @@ cpdef inline double c_force_length(double l_ce):
     return _force_length
 
 
-cpdef inline double c_force_velocity(double v_ce_norm):
+cpdef  double c_force_velocity(double v_ce_norm):
     """ force-velocity computation """
 
     # force-velocity constants
@@ -143,7 +143,7 @@ cpdef inline double c_force_velocity(double v_ce_norm):
     return max(0.0, fv)
 
 
-cpdef inline double c_pennation_angle(
+cpdef  double c_pennation_angle(
     double l_mtu, double l_opt, double l_slack, double alpha_opt
 ):
     """ Calculate pennation angle """
@@ -159,11 +159,11 @@ cpdef inline double c_pennation_angle(
     return catan((l_opt*csin(alpha_opt))/(l_mtu-l_slack))
 
 
-cpdef inline double c_fiber_velocity(double v_mtu, double alpha):
+cpdef  double c_fiber_velocity(double v_mtu, double alpha):
     """ Compute the fiber velocity. """
     return v_mtu*ccos(alpha)
 
 
-cpdef inline double c_fiber_length(double l_mtu, double l_slack, double alpha):
+cpdef  double c_fiber_length(double l_mtu, double l_slack, double alpha):
     """ Compute the fiber length. """
     return (l_mtu - l_slack)/ccos(alpha)
